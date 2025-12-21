@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, TrendingUp, Shield, ArrowRight, Users, BarChart3 } from "lucide-react";
+import { CheckCircle2, TrendingUp, Shield, ArrowRight, Users, Wand2 } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import heroImage from "@assets/generated_images/professional_financial_freedom_hero_background.png";
@@ -34,24 +34,24 @@ export default function Home() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
               </span>
-              Take Control of Your Future
+              Introducing the Dispute Wizard™
             </div>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-primary leading-tight mb-6">
-              Rebuild Your Credit, <br />
-              <span className="text-secondary">Reclaim Your Life.</span>
+              Automated Credit Repair <br />
+              <span className="text-secondary">Powered by AI.</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
-              Professional credit repair and financial empowerment services designed to help you approve for loans, lower interest rates, and build lasting wealth.
+              Use our intelligent Dispute Wizard™ to identify errors, generate legal challenges, and remove negative items from your report automatically.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/auth?tab=signup">
                 <Button size="lg" className="text-lg px-8 h-14 bg-primary text-white shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
-                  Start Free Consultation
+                  Start Dispute Wizard™
                 </Button>
               </Link>
               <Link href="/services">
                 <Button variant="outline" size="lg" className="text-lg px-8 h-14 border-primary/20 hover:bg-primary/5">
-                  View Our Plans
+                  View Pricing Plans
                 </Button>
               </Link>
             </div>
@@ -63,25 +63,25 @@ export default function Home() {
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-4">Why Choose RiseOra?</h2>
-            <p className="text-muted-foreground">We combine expert legal knowledge with cutting-edge technology to deliver results you can see.</p>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-4">Why Use The Dispute Wizard™?</h2>
+            <p className="text-muted-foreground">We combine Metro 2 compliance standards with automated precision to deliver results faster.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <FeatureCard 
               icon={<Shield className="h-10 w-10 text-secondary" />}
-              title="Secure & Compliant"
-              description="Bank-level 256-bit encryption and full FCRA compliance ensuring your data is always protected."
+              title="Metro 2 Compliance"
+              description="We verify that creditors are reporting data according to the strict Metro 2 format required by law."
             />
             <FeatureCard 
-              icon={<TrendingUp className="h-10 w-10 text-secondary" />}
-              title="Proven Results"
-              description="Our advanced dispute strategies have removed thousands of negative items for our clients."
+              icon={<Wand2 className="h-10 w-10 text-secondary" />}
+              title="Automated Challenges"
+              description="Our Dispute Wizard™ instantly identifies factual errors and generates challenges based on FCRA laws."
             />
             <FeatureCard 
               icon={<Users className="h-10 w-10 text-secondary" />}
-              title="Expert Support"
-              description="Dedicated case advisors available via secure messaging to guide you through every step."
+              title="Expert Review"
+              description="Every automated dispute is reviewed by our compliance team to ensure maximum effectiveness."
             />
           </div>
         </div>
@@ -91,9 +91,9 @@ export default function Home() {
       <section className="py-20 bg-primary text-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-white/10">
-            <Stat number="10k+" label="Clients Served" />
+            <Stat number="10k+" label="Disputes Won" />
             <Stat number="$2M+" label="Debt Removed" />
-            <Stat number="92%" label="Success Rate" />
+            <Stat number="92%" label="Wizard Success Rate" />
             <Stat number="24/7" label="Client Portal" />
           </div>
         </div>
@@ -102,13 +102,13 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-24 bg-secondary/5">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">Ready to improve your score?</h2>
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">Ready to fix your credit?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Don't let bad credit hold you back from the home, car, or life you deserve. Join RiseOra today.
+            Start with our basic plan at just $49/mo and unleash the power of the Dispute Wizard™.
           </p>
           <Link href="/auth?tab=signup">
             <Button size="lg" className="text-lg px-10 h-14 bg-secondary hover:bg-secondary/90 text-primary font-bold shadow-lg">
-              Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
+              Launch Dispute Wizard™ <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
         </div>

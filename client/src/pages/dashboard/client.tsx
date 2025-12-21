@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUp, Upload, FileText, AlertCircle, Clock } from "lucide-react";
+import { ArrowUp, Upload, FileText, AlertCircle, Clock, Wand2, ShieldCheck } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
 
@@ -18,9 +18,16 @@ const creditData = [
 export default function ClientDashboard() {
   return (
     <DashboardLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-serif font-bold text-primary mb-2">Welcome back, John</h1>
-        <p className="text-muted-foreground">Here's what's happening with your credit repair journey.</p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-primary mb-2">Welcome back, John</h1>
+          <p className="text-muted-foreground">Dispute Wizard™ is tracking your progress.</p>
+        </div>
+        <div className="flex items-center gap-2">
+           <Button className="bg-secondary text-primary hover:bg-secondary/90 shadow-sm font-semibold">
+              <Wand2 className="mr-2 h-4 w-4" /> Start New Dispute
+           </Button>
+        </div>
       </div>
 
       {/* Credit Score Overview */}
@@ -83,19 +90,21 @@ export default function ClientDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="shadow-sm border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Active Disputes</CardTitle>
+            <CardTitle>Dispute Wizard™ Activity</CardTitle>
             <Button variant="outline" size="sm">View All</Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {[
-                { creditor: "Chase Bank", item: "Late Payment", status: "In Progress", date: "May 15" },
-                { creditor: "Midland Credit", item: "Collection", status: "Reviewing", date: "May 10" },
-                { creditor: "Capital One", item: "Inquiry", status: "Sent", date: "May 02" },
+                { creditor: "Chase Bank", item: "Late Payment", status: "Metro 2 Analysis", date: "Just now", icon: Wand2, color: "text-purple-600" },
+                { creditor: "Midland Credit", item: "Collection", status: "Reviewing", date: "May 10", icon: ShieldCheck, color: "text-emerald-600" },
+                { creditor: "Capital One", item: "Inquiry", status: "Letter Sent", date: "May 02", icon: FileText, color: "text-blue-600" },
               ].map((dispute, i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
                   <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <div className="p-2 bg-white rounded-md border border-slate-100">
+                      <dispute.icon className={`h-4 w-4 ${dispute.color}`} />
+                    </div>
                     <div>
                       <p className="font-medium text-primary">{dispute.creditor}</p>
                       <p className="text-xs text-muted-foreground">{dispute.item}</p>

@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/home";
 import Services from "@/pages/services";
+import Resources from "@/pages/resources";
 import About from "@/pages/about";
 import AuthPage from "@/pages/auth";
 import ClientDashboard from "@/pages/dashboard/client";
@@ -21,6 +22,7 @@ function Router() {
       {/* Public Routes */}
       <Route path="/" component={Home} />
       <Route path="/services" component={Services} />
+      <Route path="/resources" component={Resources} />
       <Route path="/about" component={About} />
       <Route path="/auth" component={AuthPage} />
 
