@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowUp, Upload, FileText, AlertCircle, Clock, Wand2, ShieldCheck } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 
 const creditData = [
   { month: "Jan", score: 580 },
@@ -16,11 +17,13 @@ const creditData = [
 ];
 
 export default function ClientDashboard() {
+  const { user } = useAuth();
+  
   return (
     <DashboardLayout>
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-primary mb-2">Welcome back, John</h1>
+          <h1 className="text-3xl font-serif font-bold text-primary mb-2">Welcome back, {user?.firstName}</h1>
           <p className="text-muted-foreground">Dispute Wizard™ is tracking your progress.</p>
         </div>
         <div className="flex items-center gap-2">

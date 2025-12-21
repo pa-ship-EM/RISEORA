@@ -1,20 +1,12 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useLocation } from "wouter";
-
-type UserRole = "client" | "affiliate" | "admin" | null;
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatar?: string;
-}
+import { mockDb } from "@/lib/mock-db";
+import { User, Role } from "@/lib/schema";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (role: UserRole) => Promise<void>;
+  login: (email: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -25,30 +17,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
 
-  const login = async (role: UserRole) => {
+  const login = async (email: string) => {
     setIsLoading(true);
-    // Simulate API delay
+    // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 800));
     
-    let mockUser: User;
-    switch(role) {
-      case "admin":
-        mockUser = { id: "1", name: "Admin User", email: "admin@riseora.org", role: "admin" };
-        break;
-      case "affiliate":
-        mockUser = { id: "2", name: "Sarah Partner", email: "sarah@partner.com", role: "affiliate" };
-        break;
-      default:
-        mockUser = { id: "3", name: "John Doe", email: "john@example.com", role: "client" };
-    }
+    // Use Mock DB to find user
+    const dbUser = mockDb.getUserByEmail(email);
     
-    setUser(mockUser);
-    setIsLoading(false);
-
-    // Redirect based on role
-    if (role === "admin") setLocation("/admin");
-    else if (role === "affiliate") setLocation("/affiliate");
-    else setLocation("/dashboard");
+    if (dbUser) {
+      setUser(dbUser);
+      setIsLoading(false);
+      
+      // Redirect based on role
+      if (dbUser.role === "ADMIN") setLocation("/admin");
+      else if (dbUser.role === "AFFILIATE") setLocation("/affiliate");
+      else setLocation("/dashboard");
+    } else {
+      // Fallback for demo if email doesn't match predefined users
+      const mockUser: User = { 
+        id: "temp-user", 
+        email, 
+        firstName: "New", 
+        lastName: "User", 
+        role: "CLIENT",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      setUser(mockUser);
+      setIsLoading(false);
+      setLocation("/dashboard");
+    }
   };
 
   const logout = async () => {

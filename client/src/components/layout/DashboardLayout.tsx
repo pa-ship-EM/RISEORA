@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Role } from "@/lib/schema";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -26,19 +27,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Define navigation based on role
   const navItems = {
-    client: [
+    CLIENT: [
       { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/dashboard/disputes", label: "My Disputes", icon: FileText },
       { href: "/dashboard/documents", label: "Documents", icon: FileText },
       { href: "/dashboard/settings", label: "Settings", icon: Settings },
     ],
-    affiliate: [
+    AFFILIATE: [
       { href: "/affiliate", label: "Overview", icon: LayoutDashboard },
       { href: "/affiliate/referrals", label: "My Referrals", icon: Users },
       { href: "/affiliate/payouts", label: "Payouts", icon: DollarSign },
       { href: "/affiliate/settings", label: "Settings", icon: Settings },
     ],
-    admin: [
+    ADMIN: [
       { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
       { href: "/admin/clients", label: "Clients", icon: Users },
       { href: "/admin/disputes", label: "Disputes", icon: ShieldCheck },
@@ -47,7 +48,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     ]
   };
 
-  const currentNav = user?.role ? navItems[user.role] : [];
+  const currentNav = user?.role ? navItems[user.role as Role] || [] : [];
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -76,14 +77,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="p-4 border-t border-slate-100">
           <div className="flex items-center gap-3 mb-4 px-2">
             <Avatar className="h-9 w-9 border border-slate-200">
-              <AvatarImage src={user?.avatar} />
+              <AvatarImage />
               <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                {user?.name?.charAt(0) || "U"}
+                {user?.firstName?.charAt(0) || "U"}
               </AvatarFallback>
             </Avatar>
             <div className="overflow-hidden">
-              <p className="text-sm font-medium text-slate-900 truncate">{user?.name}</p>
-              <p className="text-xs text-slate-500 truncate capitalize">{user?.role}</p>
+              <p className="text-sm font-medium text-slate-900 truncate">{user?.firstName} {user?.lastName}</p>
+              <p className="text-xs text-slate-500 truncate capitalize">{user?.role?.toLowerCase()}</p>
             </div>
           </div>
           <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => logout()}>

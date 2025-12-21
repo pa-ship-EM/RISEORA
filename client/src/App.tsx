@@ -28,19 +28,19 @@ function Router() {
 
       {/* Protected Routes */}
       <Route path="/dashboard">
-        <ProtectedRoute allowedRoles={['client']}>
+        <ProtectedRoute allowedRoles={['CLIENT']}>
           <ClientDashboard />
         </ProtectedRoute>
       </Route>
 
       <Route path="/affiliate">
-        <ProtectedRoute allowedRoles={['affiliate']}>
+        <ProtectedRoute allowedRoles={['AFFILIATE']}>
           <AffiliateDashboard />
         </ProtectedRoute>
       </Route>
 
       <Route path="/admin">
-        <ProtectedRoute allowedRoles={['admin']}>
+        <ProtectedRoute allowedRoles={['ADMIN']}>
           <AdminDashboard />
         </ProtectedRoute>
       </Route>
