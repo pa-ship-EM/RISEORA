@@ -43,7 +43,7 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 }
 
-/* Light Mode - Trustworthy Financial Theme */
+/* Light Mode - Trustworthy Financial Theme with Warm Neutrals */
 :root {
   /* Navy Blue Primary */
   --primary: 215 50% 23%;
@@ -53,28 +53,28 @@
   --secondary: 35 60% 50%;
   --secondary-foreground: 0 0% 100%;
 
-  /* Backgrounds */
-  --background: 210 20% 98%;
+  /* Warm Neutral Backgrounds - Updated for "Warm Neutral" Requirement */
+  --background: 40 10% 98%; /* Warm, slight cream tint */
   --foreground: 215 25% 15%;
 
-  --card: 0 0% 100%;
+  --card: 0 0% 100%; /* Pure white cards for contrast against warm background */
   --card-foreground: 215 25% 15%;
 
   --popover: 0 0% 100%;
   --popover-foreground: 215 25% 15%;
 
   /* Muted/Accents */
-  --muted: 210 20% 90%;
-  --muted-foreground: 215 15% 45%;
+  --muted: 40 10% 92%; /* Warmer muted tone */
+  --muted-foreground: 215 15% 40%; /* Slightly darker for better legibility */
 
-  --accent: 210 20% 94%;
+  --accent: 40 10% 94%;
   --accent-foreground: 215 50% 23%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 210 15% 85%;
-  --input: 210 15% 85%;
+  --border: 210 10% 88%;
+  --input: 210 10% 88%;
   --ring: 215 50% 23%;
 
   --radius: 0.5rem;
@@ -84,9 +84,9 @@
   --sidebar-foreground: 215 25% 15%;
   --sidebar-primary: 215 50% 23%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 210 20% 94%;
+  --sidebar-accent: 40 10% 94%;
   --sidebar-accent-foreground: 215 50% 23%;
-  --sidebar-border: 210 15% 85%;
+  --sidebar-border: 210 10% 88%;
   --sidebar-ring: 215 50% 23%;
 
   /* Charts */
@@ -142,7 +142,7 @@
     @apply border-border;
   }
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased bg-background text-foreground text-base leading-relaxed;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Merriweather', serif;
