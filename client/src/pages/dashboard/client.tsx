@@ -7,10 +7,12 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { DisputeWizard } from "@/components/dashboard/DisputeWizard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { mockDb } from "@/lib/mock-db";
 import { formatDistanceToNow } from "date-fns";
 import { Dispute } from "@/lib/schema";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 
 const creditData = [
   { month: "Jan", score: 580 },
@@ -24,14 +26,31 @@ const creditData = [
 export default function ClientDashboard() {
   const { user } = useAuth();
   const [showWizard, setShowWizard] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
+  // Simulate data loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Get real disputes from mock DB
   const disputes = user ? mockDb.getDisputesForUser(user.id) : [];
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <DashboardSkeleton />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       {showWizard && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
           <div className="w-full max-w-2xl relative">
             <Button 
               variant="ghost" 
@@ -41,15 +60,18 @@ export default function ClientDashboard() {
             >
               <X className="h-6 w-6" />
             </Button>
-            <DisputeWizard 
-              onComplete={() => setShowWizard(false)} 
-              onCancel={() => setShowWizard(false)} 
-            />
+            
+            <SubscriptionGate featureName="Dispute Wizard™">
+              <DisputeWizard 
+                onComplete={() => setShowWizard(false)} 
+                onCancel={() => setShowWizard(false)} 
+              />
+            </SubscriptionGate>
           </div>
         </div>
       )}
 
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in slide-in-from-bottom-4 duration-500">
         <div>
           <h1 className="text-3xl font-serif font-bold text-primary mb-2">Welcome back, {user?.firstName}</h1>
           <p className="text-muted-foreground text-lg">Dispute Wizard™ is tracking your progress.</p>
@@ -57,7 +79,7 @@ export default function ClientDashboard() {
         <div className="flex items-center gap-2">
            <Button 
             onClick={() => setShowWizard(true)}
-            className="bg-secondary text-primary hover:bg-secondary/90 shadow-sm font-bold text-md h-12 px-6"
+            className="bg-secondary text-primary hover:bg-secondary/90 shadow-sm font-bold text-md h-12 px-6 transition-transform hover:scale-105"
            >
               <Wand2 className="mr-2 h-5 w-5" /> Start New Dispute
            </Button>
@@ -65,8 +87,8 @@ export default function ClientDashboard() {
       </div>
 
       {/* Credit Score Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <Card className="col-span-1 lg:col-span-2 shadow-sm border-slate-200 bg-white">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in slide-in-from-bottom-8 duration-500 delay-100">
+        <Card className="col-span-1 lg:col-span-2 shadow-sm border-slate-200 bg-white hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-xl">Credit Score History</CardTitle>
             <CardDescription>Experian • TransUnion • Equifax</CardDescription>
@@ -94,13 +116,13 @@ export default function ClientDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-slate-200 bg-primary text-white">
+        <Card className="shadow-sm border-slate-200 bg-primary text-white hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-white text-xl">Current Score</CardTitle>
             <CardDescription className="text-primary-foreground/70">Updated 2 days ago</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center pt-4">
-            <div className="relative flex items-center justify-center w-40 h-40 rounded-full border-8 border-secondary/30 mb-4">
+            <div className="relative flex items-center justify-center w-40 h-40 rounded-full border-8 border-secondary/30 mb-4 animate-in zoom-in duration-700">
               <div className="text-5xl font-bold font-serif text-white">642</div>
               <div className="absolute -bottom-2 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
                 <ArrowUp className="h-3 w-3" /> +62 pts
@@ -121,8 +143,8 @@ export default function ClientDashboard() {
       </div>
 
       {/* Action Items & Disputes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="shadow-sm border-slate-200 bg-white">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
+        <Card className="shadow-sm border-slate-200 bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-xl">Dispute Wizard™ Activity</CardTitle>
             <Button variant="outline" size="sm">View All</Button>
@@ -143,14 +165,14 @@ export default function ClientDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-slate-200 bg-white">
+        <Card className="shadow-sm border-slate-200 bg-white hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-xl">Action Required</CardTitle>
             <CardDescription>Please complete these items to continue.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-100">
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-100 hover:bg-amber-100/50 transition-colors">
                 <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-amber-900 text-lg">Upload ID Document</h4>
@@ -161,7 +183,7 @@ export default function ClientDashboard() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-slate-50 border border-slate-100">
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
                 <Clock className="h-5 w-5 text-slate-500 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-slate-900 text-lg">Schedule Strategy Call</h4>
@@ -201,7 +223,7 @@ function DisputeItem({ dispute }: { dispute: Dispute }) {
   const colorClass = getStatusColor(dispute.status);
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
+    <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors animate-in fade-in slide-in-from-left-2 duration-300">
       <div className="flex items-center gap-4">
         <div className={`p-2 rounded-md border ${colorClass} bg-opacity-20`}>
           <Icon className="h-5 w-5" />

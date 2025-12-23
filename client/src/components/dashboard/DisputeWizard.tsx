@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, ChevronRight, Wand2, ArrowLeft, Loader2 } from "lucide-react";
+import { CheckCircle2, ChevronRight, Wand2, ArrowLeft, Loader2, FileCheck, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { mockDb } from "@/lib/mock-db";
 import { useToast } from "@/hooks/use-toast";
@@ -60,8 +60,8 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
       setIsLoading(false);
       setStep("success");
       toast({
-        title: "Dispute Generated!",
-        description: "Your dispute letter has been created successfully.",
+        title: "Dispute Generated & Emailed!",
+        description: `Your compliant PDF letter has been sent to ${user?.email}`,
       });
     }
   };
@@ -87,11 +87,28 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 animate-in zoom-in duration-500">
             <CheckCircle2 className="h-10 w-10 text-emerald-600" />
           </div>
-          <h2 className="text-3xl font-serif font-bold text-primary mb-4">Dispute Generated Successfully!</h2>
+          <h2 className="text-3xl font-serif font-bold text-primary mb-4">Success!</h2>
           <p className="text-muted-foreground max-w-md mb-8 text-lg">
-            Our Dispute Wizard™ has analyzed your inputs and generated a Metro 2 compliant challenge letter for {formData.creditorName}.
+            Our Dispute Wizard™ has successfully analyzed your claim.
           </p>
           
+          <div className="flex flex-col gap-4 w-full max-w-sm mb-8">
+            <div className="flex items-center gap-3 p-4 bg-secondary/10 rounded-lg border border-secondary/20">
+              <FileCheck className="h-6 w-6 text-secondary" />
+              <div className="text-left">
+                <p className="font-bold text-primary">Metro 2 Letter Generated</p>
+                <p className="text-xs text-muted-foreground">Compliant legal format verified.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 bg-secondary/10 rounded-lg border border-secondary/20">
+              <Mail className="h-6 w-6 text-secondary" />
+              <div className="text-left">
+                <p className="font-bold text-primary">Email Sent</p>
+                <p className="text-xs text-muted-foreground">PDF copy sent to your inbox.</p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid gap-4 w-full max-w-sm">
             <Button size="lg" className="w-full bg-secondary text-primary font-bold hover:bg-secondary/90 h-12 text-lg" onClick={onComplete}>
               Return to Dashboard
@@ -247,6 +264,10 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
                 <span className="font-semibold">{formData.disputeReason}</span>
               </div>
             </div>
+            
+            <div className="text-center text-sm text-muted-foreground">
+              By clicking "Generate Letter", a PDF will be created and emailed to <strong>{user?.email}</strong>.
+            </div>
           </div>
         )}
       </CardContent>
@@ -272,7 +293,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
           className="bg-primary hover:bg-primary/90 min-w-[120px]"
         >
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-            step === "review" ? "Generate Letter" : <span className="flex items-center gap-1">Next <ChevronRight className="h-4 w-4" /></span>
+            step === "review" ? "Generate & Email" : <span className="flex items-center gap-1">Next <ChevronRight className="h-4 w-4" /></span>
           )}
         </Button>
       </CardFooter>
