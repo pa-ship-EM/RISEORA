@@ -12,6 +12,8 @@ import Services from "@/pages/services";
 import Resources from "@/pages/resources";
 import About from "@/pages/about";
 import AuthPage from "@/pages/auth";
+import InvestorOverview from "@/pages/investor";
+import TermsAndLegal from "@/pages/legal/terms";
 import ClientDashboard from "@/pages/dashboard/client";
 import AffiliateDashboard from "@/pages/dashboard/affiliate";
 import AdminDashboard from "@/pages/dashboard/admin";
@@ -25,6 +27,8 @@ function Router() {
       <Route path="/resources" component={Resources} />
       <Route path="/about" component={About} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/investors" component={InvestorOverview} />
+      <Route path="/legal" component={TermsAndLegal} />
 
       {/* Protected Routes */}
       <Route path="/dashboard">

@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { ShieldCheck, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { ShieldCheck, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Briefcase } from "lucide-react";
 
 export function Footer() {
   return (
@@ -25,7 +25,7 @@ export function Footer() {
               <li><Link href="/services" className="hover:text-white transition-colors">Services & Pricing</Link></li>
               <li><Link href="/resources" className="hover:text-white transition-colors">Info & Resources</Link></li>
               <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link href="/auth" className="hover:text-white transition-colors">Client Portal</Link></li>
+              <li><Link href="/investors" className="hover:text-white transition-colors flex items-center gap-2"><Briefcase className="h-3 w-3" /> Investors</Link></li>
             </ul>
           </div>
 
@@ -67,8 +67,9 @@ export function Footer() {
         <div className="border-t border-primary-foreground/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-primary-foreground/60">
           <p>&copy; {new Date().getFullYear()} RiseOra Financial. All rights reserved.</p>
           <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/legal" className="hover:text-white transition-colors">Legal & Terms</Link>
+            <Link href="/legal" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/legal" className="hover:text-white transition-colors">CROA Notice</Link>
           </div>
         </div>
       </div>
