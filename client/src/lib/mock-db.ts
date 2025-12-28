@@ -12,6 +12,15 @@ const initialUsers: User[] = [
     updatedAt: new Date().toISOString()
   },
   {
+    id: "user-test",
+    email: "test@riseora.org",
+    firstName: "Test",
+    lastName: "Account",
+    role: "CLIENT",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
     id: "user-2",
     email: "sarah@partner.com",
     firstName: "Sarah",
