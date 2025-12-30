@@ -1,0 +1,64 @@
+// File: client/src/components/DashboardTools.tsx
+import React from "react";
+
+const dashboardResources = [
+  {
+    name: "Credit Karma",
+    url: "https://www.creditkarma.com/r/your-affiliate-code",
+    description: "Monitor your credit for free and get insights."
+  },
+  {
+    name: "Experian Boost",
+    url: "https://www.experian.com/boost?ref=your-code",
+    description: "Increase your credit score using Experian Boost."
+  },
+  {
+    name: "Chime Bank",
+    url: "https://www.chime.com/?ref=your-affiliate-code",
+    description: "No-fee banking and early direct deposit."
+  },
+  {
+    name: "NerdWallet Credit Tools",
+    url: "https://www.nerdwallet.com/best/credit-cards?ref=your-code",
+    description: "Compare credit cards and track rewards."
+  }
+];
+
+export default function DashboardTools() {
+  return (
+    <section className="bg-warm-gray-50 px-6 py-12 rounded-lg shadow-md space-y-8">
+      <div className="text-center">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Tools & Resources</h2>
+        <p className="mt-2 text-gray-700 text-sm md:text-base">
+          Access our curated list of educational resources and recommended products. Some links are affiliate links. We may earn a commission at no extra cost to you.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {dashboardResources.map((res) => (
+          <div
+            key={res.name}
+            className="p-5 bg-white rounded-lg shadow hover:shadow-lg transition cursor-pointer"
+          >
+            <h3 className="text-lg font-semibold text-gray-800">{res.name}</h3>
+            <p className="text-gray-700 mt-1">{res.description}</p>
+            <a
+              href={res.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-block text-blue-600 font-bold underline"
+            >
+              Learn More
+            </a>
+          </div>
+        ))}
+      </div>
+
+      <div className="text-gray-600 text-xs mt-6">
+        <p>
+          RiseOra provides educational tools and guidance. We do not submit disputes for you and cannot guarantee outcomes. Affiliate links may provide a commission at no extra cost to you.
+        </p>
+      </div>
+    </section>
+  );
+}

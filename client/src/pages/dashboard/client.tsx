@@ -7,6 +7,7 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { DisputeWizard } from "@/components/dashboard/DisputeWizard";
+import DashboardTools from "@/components/dashboard/DashboardTools";
 import { useState, useEffect } from "react";
 import { mockDb } from "@/lib/mock-db";
 import { formatDistanceToNow } from "date-fns";
@@ -143,7 +144,7 @@ export default function ClientDashboard() {
       </div>
 
       {/* Action Items & Disputes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 animate-in slide-in-from-bottom-8 duration-500 delay-200">
         <Card className="shadow-sm border-slate-200 bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-xl">Dispute Wizard™ Activity</CardTitle>
@@ -194,6 +195,10 @@ export default function ClientDashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="animate-in slide-in-from-bottom-8 duration-500 delay-300">
+        <DashboardTools />
       </div>
     </DashboardLayout>
   );
