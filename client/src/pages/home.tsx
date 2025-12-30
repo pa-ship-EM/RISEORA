@@ -46,12 +46,12 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/auth?tab=signup">
                 <Button size="lg" className="text-lg px-8 h-14 bg-primary text-white shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
-                  Start Dispute Wizard™
+                  Join Beta Program
                 </Button>
               </Link>
               <Link href="/services">
                 <Button variant="outline" size="lg" className="text-lg px-8 h-14 border-primary/20 hover:bg-primary/5">
-                  View Pricing Plans
+                  Early Access Pricing
                 </Button>
               </Link>
             </div>
@@ -108,7 +108,7 @@ export default function Home() {
           </p>
           <Link href="/auth?tab=signup">
             <Button size="lg" className="text-lg px-10 h-14 bg-secondary hover:bg-secondary/90 text-primary font-bold shadow-lg">
-              Launch Dispute Wizard™ <ArrowRight className="ml-2 h-5 w-5" />
+              Get Early Access <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
         </div>

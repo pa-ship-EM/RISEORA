@@ -24,7 +24,7 @@ export default function Services() {
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <PricingCard 
-              title="Self-Starter"
+              title="Self-Starter (Beta)"
               originalPrice="$49"
               price="$39"
               discountBadge="20% OFF"
@@ -39,7 +39,7 @@ export default function Services() {
               icon={<Zap className="h-6 w-6 text-primary" />}
             />
             <PricingCard 
-              title="Growth"
+              title="Growth (Beta)"
               originalPrice="$99"
               price="$59"
               isPopular
@@ -56,7 +56,7 @@ export default function Services() {
               icon={<ShieldCheck className="h-6 w-6 text-primary" />}
             />
             <PricingCard 
-              title="Compliance+"
+              title="Compliance+ (Beta)"
               originalPrice="$149"
               price="$74.50"
               discountBadge="50% OFF FIRST 2 MO"
@@ -123,7 +123,7 @@ function PricingCard({ title, price, originalPrice, features, description, isPop
 
       <Link href="/auth?tab=signup">
         <Button className={`w-full h-12 text-lg font-semibold ${isPopular ? 'bg-secondary hover:bg-secondary/90 text-primary' : 'bg-primary hover:bg-primary/90 text-white'}`}>
-          Start Dispute Wizard™
+          Request Access (Beta)
         </Button>
       </Link>
     </div>
