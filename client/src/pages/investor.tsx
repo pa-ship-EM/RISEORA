@@ -89,18 +89,35 @@ export default function InvestorOverview() {
 
         {/* Market Opportunity */}
         <div className="py-16 bg-slate-50">
-          <div className="container mx-auto px-4 text-center max-w-3xl">
-            <h2 className="text-3xl font-serif font-bold text-primary mb-8">Why Now?</h2>
-            <p className="text-lg text-slate-600 mb-8">
-              Household debt is at an all-time high. Interest rates are rising. The demand for legitimate, effective credit optimization has never been greater. RiseOra is positioned to capture the "conscious consumer" segment of this market.
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link href="/auth?tab=signup">
-                <Button size="lg" className="bg-primary text-white hover:bg-primary/90">Join the Revolution</Button>
-              </Link>
-              <Link href="/about">
-                <Button variant="outline" size="lg">Meet the Team</Button>
-              </Link>
+          <div className="container mx-auto px-4 max-w-3xl">
+            <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-primary/10 mb-12">
+              <h2 className="text-3xl font-serif font-bold text-primary mb-6 text-center">VC-Style Summary</h2>
+              <div className="space-y-6 text-lg text-slate-700 leading-relaxed">
+                <p className="font-medium text-slate-900">
+                  RiseOra captures the demand for credit improvement while structurally avoiding the regulatory, operational, and scaling constraints that limit traditional credit repair companies.
+                </p>
+                <p>
+                  By combining education, guided workflows, and consumer-executed action, RiseOra delivers real value with lower legal risk and SaaS-level scalability.
+                </p>
+                <div className="pt-4 border-t border-slate-100 italic text-primary font-serif text-xl text-center">
+                  "This is not credit repair — it’s compliant financial infrastructure."
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <h2 className="text-3xl font-serif font-bold text-primary mb-8">Why Now?</h2>
+              <p className="text-lg text-slate-600 mb-8">
+                Household debt is at an all-time high. Interest rates are rising. The demand for legitimate, effective credit optimization has never been greater. RiseOra is positioned to capture the "conscious consumer" segment of this market.
+              </p>
+              <div className="flex justify-center gap-4">
+                <Link href="/auth?tab=signup">
+                  <Button size="lg" className="bg-primary text-white hover:bg-primary/90">Join the Revolution</Button>
+                </Link>
+                <Link href="/about">
+                  <Button variant="outline" size="lg">Meet the Team</Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
