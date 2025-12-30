@@ -1,5 +1,6 @@
 import { Link } from "wouter";
-import { ShieldCheck, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Briefcase } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Briefcase } from "lucide-react";
+import logoImage from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_12_PM_1767131263730.png";
 
 export function Footer() {
   return (
@@ -8,10 +9,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 font-serif font-bold text-2xl text-white">
-              <ShieldCheck className="h-8 w-8 text-secondary" />
-              <span>RiseOra</span>
-            </div>
+            <Link href="/" className="flex items-center transition-transform hover:scale-105">
+              <img src={logoImage} alt="RiseOra Logo" className="h-10 w-auto brightness-0 invert" />
+            </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed">
               Empowering individuals to take control of their financial future through expert credit repair and education.
             </p>

@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ShieldCheck } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import logoImage from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_12_PM_1767131263730.png";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,9 +20,8 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-serif font-bold text-xl text-primary transition-transform hover:scale-105">
-          <ShieldCheck className="h-8 w-8 text-secondary fill-secondary/10" />
-          <span className="bg-primary bg-clip-text text-transparent">RiseOra</span>
+        <Link href="/" className="flex items-center transition-transform hover:scale-105">
+          <img src={logoImage} alt="RiseOra Logo" className="h-10 w-auto" />
         </Link>
 
         {/* Desktop Nav */}
