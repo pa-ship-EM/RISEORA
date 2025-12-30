@@ -10,9 +10,7 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-105">
-              <div className="bg-white/90 p-1.5 rounded-lg">
-                <img src={logoIcon} alt="RiseOra Logo" className="h-8 w-auto object-contain" />
-              </div>
+              <img src={logoIcon} alt="RiseOra Logo" className="h-10 w-auto object-contain brightness-0 invert" />
               <span className="text-2xl font-serif font-bold tracking-tight text-white">
                 <span>Rise</span>
                 <span className="text-secondary">Ora</span>
