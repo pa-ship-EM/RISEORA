@@ -44,29 +44,42 @@ export default function Resources() {
 
           <div className="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-slate-200">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-serif font-bold text-primary mb-8 text-center">Recommended Tools & Partners</h2>
+              <h2 className="text-3xl font-serif font-bold text-primary mb-8 text-center">Credit Tools & Partners</h2>
+              <p className="text-center text-muted-foreground mb-12">
+                Explore our curated collection of credit tools, financial resources, and recommended products. Some links are affiliate links — we may earn a commission at no extra cost to you.
+              </p>
               
               <div className="grid md:grid-cols-2 gap-6">
                 <AffiliateLink 
                   title="Credit Monitoring"
-                  description="Get real-time alerts and full 3-bureau reports."
-                  partner="IdentityIQ"
+                  description="Free credit monitoring tool to track your score."
+                  partner="Credit Karma"
+                  url="https://www.creditkarma.com/r/your-affiliate-code"
                 />
                 <AffiliateLink 
-                  title="Rent Reporting"
-                  description="Add your rental history to your credit report to boost your score."
-                  partner="RentalKarma"
+                  title="Credit Builder"
+                  description="Increase your credit score using Experian Boost."
+                  partner="Experian Boost"
+                  url="https://www.experian.com/boost?ref=your-code"
                 />
                 <AffiliateLink 
-                  title="Credit Builder Loans"
-                  description="Save money while building payment history."
-                  partner="Self"
+                  title="Banking & Credit"
+                  description="No-fee banking and early direct deposit."
+                  partner="Chime Bank"
+                  url="https://www.chime.com/?ref=your-affiliate-code"
                 />
                 <AffiliateLink 
-                  title="Auto Refinance"
-                  description="Lower your monthly car payments with better rates."
-                  partner="RateGenius"
+                  title="Comparison Tool"
+                  description="Compare credit cards and track rewards."
+                  partner="NerdWallet"
+                  url="https://www.nerdwallet.com/best/credit-cards?ref=your-code"
                 />
+              </div>
+
+              <div className="mt-12 pt-8 border-t border-slate-100 text-slate-500 text-sm italic text-center">
+                <p>
+                  RiseOra provides educational resources and guidance. We do not submit disputes on your behalf, nor guarantee results. Affiliate links may provide a commission at no extra cost to you.
+                </p>
               </div>
             </div>
           </div>
@@ -95,10 +108,10 @@ function ResourceCard({ icon, title, description, link, linkText }: { icon: Reac
   );
 }
 
-function AffiliateLink({ title, description, partner }: { title: string, description: string, partner: string }) {
+function AffiliateLink({ title, description, partner, url = "#" }: { title: string, description: string, partner: string, url?: string }) {
   return (
-    <a href="#" className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-secondary/50 hover:bg-secondary/5 transition-all group">
-      <div className="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-primary group-hover:bg-white group-hover:shadow-sm">
+    <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-secondary/50 hover:bg-secondary/5 transition-all group">
+      <div className="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-primary group-hover:bg-white group-hover:shadow-sm shrink-0">
         {partner[0]}
       </div>
       <div className="flex-1">
