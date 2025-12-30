@@ -22,23 +22,23 @@ export default function Resources() {
             <ResourceCard 
               icon={<BookOpen className="h-8 w-8 text-secondary" />}
               title="Understanding Your Score"
-              description="Learn how FICO scores are calculated and what factors impact your credit health the most."
-              link="#"
-              linkText="Read Guide"
+              description="Your credit score is calculated based on 5 key factors: Payment History (35%), Amounts Owed (30%), Length of Credit History (15%), Credit Mix (10%), and New Credit (10%). Understanding these helps you prioritize your improvement efforts."
+              link="/resources/credit-score-guide"
+              linkText="View Full Guide"
             />
             <ResourceCard 
               icon={<CreditCard className="h-8 w-8 text-secondary" />}
               title="Secured Credit Cards"
-              description="The best secured cards to start rebuilding credit history with low deposits."
-              link="#"
-              linkText="View Recommendations"
+              description="A secured credit card requires a cash deposit that serves as your credit limit. This is one of the most effective ways to build or rebuild credit because it reports to all three major bureaus with minimal risk."
+              link="/resources/secured-cards"
+              linkText="Top Recommendations"
             />
             <ResourceCard 
               icon={<Home className="h-8 w-8 text-secondary" />}
               title="Mortgage Readiness"
-              description="A step-by-step checklist to prepare your credit profile for a home loan application."
-              link="#"
-              linkText="Download Checklist"
+              description="Lenders look for a steady income, a low debt-to-income ratio (DTI), and a FICO score typically above 620. Preparing 6-12 months in advance by optimizing your credit profile is key to securing lower interest rates."
+              link="/resources/mortgage-checklist"
+              linkText="Read Checklist"
             />
           </div>
 
