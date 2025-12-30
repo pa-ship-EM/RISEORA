@@ -12,6 +12,8 @@ import { mockDb } from "@/lib/mock-db";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
+import wizardLogo from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_14_PM_1767131297375.png";
+
 interface DisputeWizardProps {
   onComplete?: () => void;
   onCancel?: () => void;
@@ -139,8 +141,8 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
       <CardHeader className="border-b border-border/50 pb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-secondary/10 rounded-lg">
-              <Wand2 className="h-5 w-5 text-secondary" />
+            <div className="p-1">
+              <img src={wizardLogo} alt="Wizard" className="h-8 w-auto" />
             </div>
             <CardTitle className="text-xl">Dispute Wizard™ (Beta)</CardTitle>
           </div>

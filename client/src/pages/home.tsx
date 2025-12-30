@@ -6,6 +6,8 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import heroImage from "@assets/generated_images/professional_financial_freedom_hero_background.png";
 
+import wizardLogo from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_14_PM_1767131297375.png";
+
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
@@ -30,11 +32,8 @@ export default function Home() {
             className="max-w-3xl"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary-foreground text-sm font-semibold mb-6 border border-secondary/20">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
-              </span>
-              Introducing the Dispute Wizard™
+              <img src={wizardLogo} alt="Wizard" className="h-5 w-auto" />
+              Introducing the Dispute Wizard™ (Beta)
             </div>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-primary leading-tight mb-6">
               Automated Credit Repair <br />

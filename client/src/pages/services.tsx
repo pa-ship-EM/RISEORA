@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Check, ShieldCheck, Wand2, Zap, Scale } from "lucide-react";
 import { Link } from "wouter";
 
+import wizardLogo from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_14_PM_1767131297375.png";
+
 export default function Services() {
   return (
     <div className="min-h-screen flex flex-col">
@@ -13,7 +15,7 @@ export default function Services() {
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary-foreground text-sm font-semibold mb-6 border border-secondary/20">
-              <Wand2 className="h-4 w-4" />
+              <img src={wizardLogo} alt="Wizard" className="h-4 w-auto" />
               Powered by RiseOra Dispute Wizard™ (Beta)
             </div>
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary mb-6">Credit Education & Guided Workflows</h1>
