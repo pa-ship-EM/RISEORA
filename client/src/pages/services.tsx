@@ -26,6 +26,7 @@ export default function Services() {
             <PricingCard 
               title="Self-Starter"
               price="$49"
+              discountBadge="20% OFF"
               description="Access the Dispute Wizard™ to manage your own repair."
               features={[
                 "Access to Dispute Wizard™",
@@ -40,6 +41,7 @@ export default function Services() {
               title="Growth"
               price="$99"
               isPopular
+              discountBadge="40% OFF"
               description="Automated disputes with enhanced tracking."
               features={[
                 "Full Dispute Wizard™ Automation",
@@ -54,6 +56,7 @@ export default function Services() {
             <PricingCard 
               title="Compliance+"
               price="$149"
+              discountBadge="50% OFF FIRST 2 MO"
               description="Legal-grade Metro 2 compliance for complex cases."
               features={[
                 "Everything in Growth",
@@ -74,12 +77,18 @@ export default function Services() {
   );
 }
 
-function PricingCard({ title, price, features, description, isPopular, icon }: { title: string, price: string, features: string[], description: string, isPopular?: boolean, icon?: React.ReactNode }) {
+function PricingCard({ title, price, features, description, isPopular, icon, discountBadge }: { title: string, price: string, features: string[], description: string, isPopular?: boolean, icon?: React.ReactNode, discountBadge?: string }) {
   return (
     <div className={`relative rounded-2xl bg-white p-8 flex flex-col ${isPopular ? 'border-2 border-secondary shadow-2xl scale-105 z-10' : 'border border-slate-200 shadow-sm'}`}>
       {isPopular && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-secondary text-primary font-bold px-4 py-1 rounded-full text-sm flex items-center gap-1">
           <Wand2 className="h-3 w-3" /> Most Popular
+        </div>
+      )}
+
+      {discountBadge && (
+        <div className={`absolute top-4 right-4 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${isPopular ? 'bg-primary text-white' : 'bg-secondary text-primary'}`}>
+          {discountBadge}
         </div>
       )}
       
