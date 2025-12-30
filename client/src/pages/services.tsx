@@ -25,7 +25,8 @@ export default function Services() {
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <PricingCard 
               title="Self-Starter"
-              price="$49"
+              originalPrice="$49"
+              price="$39"
               discountBadge="20% OFF"
               description="Access the Dispute Wizard™ to manage your own repair."
               features={[
@@ -39,7 +40,8 @@ export default function Services() {
             />
             <PricingCard 
               title="Growth"
-              price="$99"
+              originalPrice="$99"
+              price="$59"
               isPopular
               discountBadge="40% OFF"
               description="Automated disputes with enhanced tracking."
@@ -55,7 +57,8 @@ export default function Services() {
             />
             <PricingCard 
               title="Compliance+"
-              price="$149"
+              originalPrice="$149"
+              price="$74.50"
               discountBadge="50% OFF FIRST 2 MO"
               description="Legal-grade Metro 2 compliance for complex cases."
               features={[
@@ -77,7 +80,7 @@ export default function Services() {
   );
 }
 
-function PricingCard({ title, price, features, description, isPopular, icon, discountBadge }: { title: string, price: string, features: string[], description: string, isPopular?: boolean, icon?: React.ReactNode, discountBadge?: string }) {
+function PricingCard({ title, price, originalPrice, features, description, isPopular, icon, discountBadge }: { title: string, price: string, originalPrice?: string, features: string[], description: string, isPopular?: boolean, icon?: React.ReactNode, discountBadge?: string }) {
   return (
     <div className={`relative rounded-2xl bg-white p-8 flex flex-col ${isPopular ? 'border-2 border-secondary shadow-2xl scale-105 z-10' : 'border border-slate-200 shadow-sm'}`}>
       {isPopular && (
@@ -100,7 +103,10 @@ function PricingCard({ title, price, features, description, isPopular, icon, dis
           <h3 className="text-2xl font-bold text-primary">{title}</h3>
         </div>
         <p className="text-muted-foreground text-sm mb-6 min-h-[40px]">{description}</p>
-        <div className="flex items-baseline gap-1">
+        <div className="flex items-baseline gap-2">
+          {originalPrice && (
+            <span className="text-xl text-muted-foreground line-through decoration-destructive/50">{originalPrice}</span>
+          )}
           <span className="text-4xl font-bold text-primary">{price}</span>
           <span className="text-muted-foreground">/month</span>
         </div>
