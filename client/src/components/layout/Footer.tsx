@@ -65,7 +65,12 @@ export function Footer() {
         </div>
 
         <div className="border-t border-primary-foreground/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-primary-foreground/60">
-          <p>&copy; {new Date().getFullYear()} RiseOra Financial. All rights reserved.</p>
+          <div className="max-w-md text-center md:text-left space-y-2">
+            <p>&copy; {new Date().getFullYear()} RiseOra Financial. All rights reserved.</p>
+            <p className="italic opacity-80">
+              RiseOra provides educational tools and guided support only. We do not submit disputes on behalf of consumers. Results vary. No guarantees are made.
+            </p>
+          </div>
           <div className="flex gap-6">
             <Link href="/legal" className="hover:text-white transition-colors">Legal & Terms</Link>
             <Link href="/legal" className="hover:text-white transition-colors">Privacy Policy</Link>
