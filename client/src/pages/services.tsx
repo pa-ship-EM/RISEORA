@@ -32,9 +32,7 @@ export default function Services() {
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <PricingCard 
               title="Self-Starter (Beta)"
-              originalPrice="$49"
-              price="$39"
-              discountBadge="20% OFF"
+              price="$49"
               description="Educational tools to manage your own credit audit and basic disputes."
               features={[
                 "Access to Dispute Wizard™ (Beta)",
@@ -47,10 +45,8 @@ export default function Services() {
             />
             <PricingCard 
               title="Growth (Beta)"
-              originalPrice="$99"
-              price="$59"
+              price="$99"
               isPopular
-              discountBadge="40% OFF"
               description="Enhanced guided workflows with unlimited document generation."
               features={[
                 "Full Dispute Wizard™ Workflow",
@@ -64,9 +60,7 @@ export default function Services() {
             />
             <PricingCard 
               title="Compliance+ (Beta)"
-              originalPrice="$149"
-              price="$74.50"
-              discountBadge="50% OFF FIRST 2 MO"
+              price="$149"
               description="Our most comprehensive educational support including Metro 2 guidance."
               features={[
                 "Everything in Growth",
