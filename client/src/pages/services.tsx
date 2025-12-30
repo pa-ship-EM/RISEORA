@@ -14,12 +14,19 @@ export default function Services() {
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary-foreground text-sm font-semibold mb-6 border border-secondary/20">
               <Wand2 className="h-4 w-4" />
-              Powered by RiseOra Dispute Wizard™
+              Powered by RiseOra Dispute Wizard™ (Beta)
             </div>
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary mb-6">Automated Credit Repair</h1>
+            <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary mb-6">Credit Education & Guided Workflows</h1>
             <p className="text-xl text-muted-foreground">
-              Leverage our proprietary Dispute Wizard™ technology to challenge negative items with precision. Choose the level of automation that fits your needs.
+              RiseOra provides the tools and education you need to manage your own credit repair. 
+              We empower you to challenge inaccuracies with precision using our proprietary software.
             </p>
+            <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-200 inline-block text-left">
+              <p className="text-sm text-amber-900 leading-relaxed">
+                <strong>Legal Notice:</strong> RiseOra is a software provider. We do not submit disputes on behalf of consumers. 
+                You remain in full control of all communications sent to credit bureaus.
+              </p>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -28,13 +35,13 @@ export default function Services() {
               originalPrice="$49"
               price="$39"
               discountBadge="20% OFF"
-              description="Access the Dispute Wizard™ to manage your own repair."
+              description="Educational tools to manage your own credit audit and basic disputes."
               features={[
-                "Access to Dispute Wizard™",
-                "Basic Credit Audit",
-                "2 Bureau Disputes / Month",
-                "Standard Letter Templates",
-                "Email Support"
+                "Access to Dispute Wizard™ (Beta)",
+                "Basic Credit Education Modules",
+                "2 Bureau Audit Workflows / Month",
+                "Standard Template Library",
+                "Self-Guided Support"
               ]}
               icon={<Zap className="h-6 w-6 text-primary" />}
             />
@@ -44,14 +51,14 @@ export default function Services() {
               price="$59"
               isPopular
               discountBadge="40% OFF"
-              description="Automated disputes with enhanced tracking."
+              description="Enhanced guided workflows with unlimited document generation."
               features={[
-                "Full Dispute Wizard™ Automation",
-                "Advanced Credit Audit",
-                "All 3 Bureaus Disputes",
-                "Unlimited Disputes",
-                "Score Tracking Dashboard",
-                "Priority Support"
+                "Full Dispute Wizard™ Workflow",
+                "Advanced Credit Analysis Tools",
+                "All 3 Bureaus Guided Paths",
+                "Unlimited Document Generation",
+                "Score Education Dashboard",
+                "Priority Support Access"
               ]}
               icon={<ShieldCheck className="h-6 w-6 text-primary" />}
             />
@@ -60,14 +67,14 @@ export default function Services() {
               originalPrice="$149"
               price="$74.50"
               discountBadge="50% OFF FIRST 2 MO"
-              description="Legal-grade Metro 2 compliance for complex cases."
+              description="Our most comprehensive educational support including Metro 2 guidance."
               features={[
                 "Everything in Growth",
-                "Metro 2 Compliance Verification",
-                "Cease & Desist Letters",
-                "Identity Theft Protocol",
-                "Legal Escalation Support",
-                "Personal Case Advisor"
+                "Metro 2 Compliance Education",
+                "Advanced Template Library",
+                "Identity Theft Educational Protocol",
+                "Personal Case Advisor Guidance",
+                "Strategic Support"
               ]}
               icon={<Scale className="h-6 w-6 text-primary" />}
             />
