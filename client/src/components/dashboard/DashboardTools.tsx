@@ -34,24 +34,24 @@ export default function DashboardTools() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
         {dashboardResources.map((res) => (
           <div
             key={res.name}
-            className="group p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-secondary/50 transition-all cursor-pointer"
+            className="group p-5 md:p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-secondary/50 transition-all cursor-pointer flex flex-col h-full"
           >
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-bold text-primary group-hover:text-secondary transition-colors">{res.name}</h3>
-              <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-secondary transition-colors" />
+              <h3 className="text-base md:text-lg font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">{res.name}</h3>
+              <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-secondary transition-colors shrink-0" />
             </div>
-            <p className="text-slate-600 text-sm mb-4 leading-relaxed">{res.description}</p>
+            <p className="text-slate-600 text-sm mb-4 leading-relaxed flex-grow">{res.description}</p>
             <a
               href={res.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-bold text-primary underline underline-offset-4 decoration-secondary/30 hover:decoration-secondary transition-all"
+              className="text-sm font-bold text-primary underline underline-offset-4 decoration-secondary/30 hover:decoration-secondary transition-all mt-auto inline-flex items-center gap-1"
             >
-              Learn More
+              Learn More (Beta)
             </a>
           </div>
         ))}
