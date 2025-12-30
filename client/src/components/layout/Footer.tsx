@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Briefcase } from "lucide-react";
-import logoImage from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_12_PM_1767131263730.png";
+import logoIcon from "@assets/Screenshot_2025-12-30_at_3.40.28_PM_1767131437717.png";
 
 export function Footer() {
   return (
@@ -9,8 +9,12 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center transition-transform hover:scale-105">
-              <img src={logoImage} alt="RiseOra Logo" className="h-10 w-auto brightness-0 invert" />
+            <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-105">
+              <img src={logoIcon} alt="RiseOra Logo" className="h-10 w-auto object-contain brightness-0 invert" />
+              <span className="text-2xl font-serif font-bold tracking-tight">
+                <span>Rise</span>
+                <span className="text-secondary">Ora</span>
+              </span>
             </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed">
               Empowering individuals to take control of their financial future through expert credit repair and education.
