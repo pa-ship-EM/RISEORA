@@ -43,58 +43,58 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 }
 
-/* Light Mode - Trustworthy Financial Theme with Warm Neutrals */
+/* Light Mode - Warm Forest Theme */
 :root {
-  /* Navy Blue Primary */
-  --primary: 215 50% 23%;
-  --primary-foreground: 0 0% 100%;
+  /* Deep Forest Green Primary */
+  --primary: 160 40% 15%;
+  --primary-foreground: 0 0% 98%;
 
-  /* Gold/Bronze Secondary */
-  --secondary: 35 60% 50%;
-  --secondary-foreground: 0 0% 100%;
+  /* Sage Green Secondary */
+  --secondary: 150 25% 65%;
+  --secondary-foreground: 160 40% 10%;
 
-  /* Warm Neutral Backgrounds - Updated for "Warm Neutral" Requirement */
-  --background: 40 10% 98%; /* Warm, slight cream tint */
-  --foreground: 215 25% 15%;
+  /* Warm Earthy Backgrounds */
+  --background: 45 35% 96%; /* Warm bone/cream */
+  --foreground: 160 25% 12%;
 
-  --card: 0 0% 100%; /* Pure white cards for contrast against warm background */
-  --card-foreground: 215 25% 15%;
+  --card: 45 35% 98%; 
+  --card-foreground: 160 25% 12%;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 215 25% 15%;
+  --popover: 45 35% 98%;
+  --popover-foreground: 160 25% 12%;
 
-  /* Muted/Accents */
-  --muted: 40 10% 92%; /* Warmer muted tone */
-  --muted-foreground: 215 15% 40%; /* Slightly darker for better legibility */
+  /* Muted/Accents - Using Sage/Forest tones */
+  --muted: 150 15% 90%; 
+  --muted-foreground: 160 15% 35%;
 
-  --accent: 40 10% 94%;
-  --accent-foreground: 215 50% 23%;
+  --accent: 150 20% 88%;
+  --accent-foreground: 160 40% 15%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 210 10% 88%;
-  --input: 210 10% 88%;
-  --ring: 215 50% 23%;
+  --border: 150 10% 85%;
+  --input: 150 10% 85%;
+  --ring: 160 40% 15%;
 
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 
   /* Sidebar */
-  --sidebar: 0 0% 100%;
-  --sidebar-foreground: 215 25% 15%;
-  --sidebar-primary: 215 50% 23%;
+  --sidebar: 45 35% 98%;
+  --sidebar-foreground: 160 25% 12%;
+  --sidebar-primary: 160 40% 15%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 40 10% 94%;
-  --sidebar-accent-foreground: 215 50% 23%;
-  --sidebar-border: 210 10% 88%;
-  --sidebar-ring: 215 50% 23%;
+  --sidebar-accent: 150 20% 88%;
+  --sidebar-accent-foreground: 160 40% 15%;
+  --sidebar-border: 150 10% 85%;
+  --sidebar-ring: 160 40% 15%;
 
-  /* Charts */
-  --chart-1: 215 50% 23%;
-  --chart-2: 35 60% 50%;
-  --chart-3: 150 40% 45%;
-  --chart-4: 0 60% 60%;
-  --chart-5: 270 40% 50%;
+  /* Charts - Natural Palette */
+  --chart-1: 160 40% 25%;
+  --chart-2: 150 30% 50%;
+  --chart-3: 35 60% 50%;
+  --chart-4: 160 20% 70%;
+  --chart-5: 150 10% 40%;
 }
 
 .dark {
