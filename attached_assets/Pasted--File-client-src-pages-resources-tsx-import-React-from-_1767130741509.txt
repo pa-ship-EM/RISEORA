@@ -1,0 +1,71 @@
+// File: client/src/pages/resources.tsx
+import React from "react";
+
+const affiliateLinks = [
+  {
+    name: "Credit Karma",
+    url: "https://www.creditkarma.com/r/your-affiliate-code",
+    description: "Free credit monitoring tool to track your score."
+  },
+  {
+    name: "Experian Boost",
+    url: "https://www.experian.com/boost?ref=your-code",
+    description: "Increase your credit score using Experian Boost."
+  },
+  {
+    name: "Chime Bank",
+    url: "https://www.chime.com/?ref=your-affiliate-code",
+    description: "No-fee banking and early direct deposit."
+  },
+  {
+    name: "NerdWallet Credit Tools",
+    url: "https://www.nerdwallet.com/best/credit-cards?ref=your-code",
+    description: "Compare credit cards and track rewards."
+  }
+];
+
+export default function Resources() {
+  return (
+    <main className="bg-warm-gray-50 min-h-screen text-gray-900 font-sans">
+      <section className="max-w-5xl mx-auto px-6 py-16 space-y-8">
+        {/* Page Header */}
+        <div className="text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
+            Credit Tools & Resources
+          </h1>
+          <p className="mt-4 text-lg md:text-xl text-gray-700">
+            Explore our curated collection of credit tools, financial resources, and recommended products. Some links are affiliate links — we may earn a commission at no extra cost to you.
+          </p>
+        </div>
+
+        {/* Affiliate Links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {affiliateLinks.map((link) => (
+            <div
+              key={link.name}
+              className="p-6 bg-white rounded-lg shadow hover:shadow-md transition"
+            >
+              <h2 className="text-xl font-semibold text-gray-800">{link.name}</h2>
+              <p className="text-gray-700 mt-1">{link.description}</p>
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-block text-blue-600 font-bold underline"
+              >
+                Learn More
+              </a>
+            </div>
+          ))}
+        </div>
+
+        {/* Disclaimer */}
+        <div className="text-gray-600 text-sm mt-8">
+          <p>
+            RiseOra provides educational resources and guidance. We do not submit disputes on your behalf, nor guarantee results. Affiliate links may provide a commission at no extra cost to you.
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}
