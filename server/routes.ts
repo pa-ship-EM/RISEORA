@@ -56,12 +56,17 @@ export async function registerRoutes(
         role: "CLIENT",
       });
       
-      // Set session
-      req.session.userId = user.id;
-      
-      // Return user (without password)
-      const { passwordHash: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      // Regenerate session to prevent session fixation
+      req.session.regenerate((err: any) => {
+        if (err) {
+          return next(err);
+        }
+        req.session.userId = user.id;
+        
+        // Return user (without password)
+        const { passwordHash: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      });
     } catch (error) {
       next(error);
     }
@@ -88,12 +93,17 @@ export async function registerRoutes(
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
-      // Set session
-      req.session.userId = user.id;
-      
-      // Return user (without password)
-      const { passwordHash: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      // Regenerate session to prevent session fixation
+      req.session.regenerate((err: any) => {
+        if (err) {
+          return next(err);
+        }
+        req.session.userId = user.id;
+        
+        // Return user (without password)
+        const { passwordHash: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      });
     } catch (error) {
       next(error);
     }

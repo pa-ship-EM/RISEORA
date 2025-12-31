@@ -50,3 +50,11 @@ waitForPort = 5000
 [agent]
 mockupState = "FULLSTACK"
 integrations = ["javascript_database:1.0.0"]
+
+[userenv]
+
+[userenv.development]
+ENCRYPTION_KEY = "dghNnRSqwnZ4S/38coTzVYfw6ENrhsJdaVc2pLuhds0="
+
+[userenv.production]
+ENCRYPTION_KEY = "isoGEKFof5nPJbceZagjXosidOr65W1FsydPv+lut4Q="

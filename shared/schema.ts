@@ -56,7 +56,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
 });
 
-export const insertDisputeSchema = createInsertSchema(disputes).omit({
+export const insertDisputeSchema = createInsertSchema(disputes, {
+  bureau: z.enum(["EXPERIAN", "TRANSUNION", "EQUIFAX"]),
+}).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
