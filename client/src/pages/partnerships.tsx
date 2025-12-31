@@ -38,7 +38,7 @@ export default function BusinessPartnerships() {
         </section>
 
         {/* Schools & Colleges */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-background/50">
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="space-y-6">
@@ -152,7 +152,7 @@ export default function BusinessPartnerships() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-background/50">
           <div className="container mx-auto px-4 text-center">
             <Card className="bg-primary text-white p-12 overflow-hidden relative">
               <div className="absolute top-0 right-0 p-8 opacity-10">
