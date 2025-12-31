@@ -24,6 +24,25 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Subscriptions table
+export const subscriptions = pgTable("subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  
+  tier: text("tier").notNull().default("FREE"), // FREE, SELF_STARTER, GROWTH, COMPLIANCE_PLUS
+  status: text("status").notNull().default("ACTIVE"), // ACTIVE, CANCELED, PAST_DUE
+  
+  // Stripe integration (for future use)
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  
+  currentPeriodEnd: timestamp("current_period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Disputes table
 export const disputes = pgTable("disputes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -64,7 +83,62 @@ export const insertDisputeSchema = createInsertSchema(disputes, {
   updatedAt: true,
 });
 
+export const insertSubscriptionSchema = createInsertSchema(subscriptions, {
+  tier: z.enum(["FREE", "SELF_STARTER", "GROWTH", "COMPLIANCE_PLUS"]),
+  status: z.enum(["ACTIVE", "CANCELED", "PAST_DUE"]),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertDispute = z.infer<typeof insertDisputeSchema>;
 export type Dispute = typeof disputes.$inferSelect;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type Subscription = typeof subscriptions.$inferSelect;
+
+// Tier feature definitions
+export const TIER_FEATURES = {
+  FREE: {
+    name: "DIY Scholar",
+    price: 0,
+    disputesPerMonth: 0,
+    hasDisputeWizard: false,
+    hasAdvancedAnalysis: false,
+    hasUnlimitedDocs: false,
+    hasMetro2Education: false,
+    hasPrioritySupport: false,
+  },
+  SELF_STARTER: {
+    name: "Self-Starter",
+    price: 49,
+    disputesPerMonth: 3,
+    hasDisputeWizard: true,
+    hasAdvancedAnalysis: false,
+    hasUnlimitedDocs: false,
+    hasMetro2Education: false,
+    hasPrioritySupport: false,
+  },
+  GROWTH: {
+    name: "Growth",
+    price: 99,
+    disputesPerMonth: -1, // unlimited
+    hasDisputeWizard: true,
+    hasAdvancedAnalysis: true,
+    hasUnlimitedDocs: true,
+    hasMetro2Education: false,
+    hasPrioritySupport: true,
+  },
+  COMPLIANCE_PLUS: {
+    name: "Compliance+",
+    price: 149,
+    disputesPerMonth: -1, // unlimited
+    hasDisputeWizard: true,
+    hasAdvancedAnalysis: true,
+    hasUnlimitedDocs: true,
+    hasMetro2Education: true,
+    hasPrioritySupport: true,
+  },
+} as const;
