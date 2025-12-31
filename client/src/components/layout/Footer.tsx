@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Briefcase } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Briefcase, Users } from "lucide-react";
 import logoIcon from "@assets/Screenshot_2025-12-30_at_3.40.28_PM_1767131437717.png";
 
 export function Footer() {
@@ -32,6 +32,7 @@ export function Footer() {
               <li><Link href="/resources" className="hover:text-white transition-colors">Info & Resources</Link></li>
               <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link href="/investors" className="hover:text-white transition-colors flex items-center gap-2"><Briefcase className="h-3 w-3" /> Investors</Link></li>
+              <li><Link href="/partnerships" className="hover:text-white transition-colors flex items-center gap-2"><Users className="h-3 w-3 text-secondary" /> B2B Opportunities</Link></li>
             </ul>
           </div>
 

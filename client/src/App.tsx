@@ -15,6 +15,7 @@ import About from "@/pages/about";
 import AuthPage from "@/pages/auth";
 import InvestorOverview from "@/pages/investor";
 import TermsAndLegal from "@/pages/legal/terms";
+import BusinessPartnerships from "@/pages/partnerships";
 import ClientDashboard from "@/pages/dashboard/client";
 import AffiliateDashboard from "@/pages/dashboard/affiliate";
 import AdminDashboard from "@/pages/dashboard/admin";
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/investors" component={InvestorOverview} />
       <Route path="/legal" component={TermsAndLegal} />
+      <Route path="/partnerships" component={BusinessPartnerships} />
 
       {/* Protected Routes */}
       <Route path="/dashboard">
