@@ -13,6 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
+import corporateMeetingImage from "@assets/generated_images/business_meeting_in_modern_corporate_office.png";
+
 export default function BusinessPartnerships() {
   return (
     <div className="min-h-screen flex flex-col">
@@ -84,32 +86,36 @@ export default function BusinessPartnerships() {
         {/* Corporate Partnerships & Programs */}
         <section className="py-20 bg-slate-50">
           <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <div className="inline-flex items-center gap-2 text-secondary font-bold uppercase tracking-wider text-sm mb-4">
-                <Briefcase className="h-5 w-5" /> Corporate Partnerships
+            <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 text-secondary font-bold uppercase tracking-wider text-sm mb-4">
+                  <Briefcase className="h-5 w-5" /> Corporate Partnerships
+                </div>
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary">B2B Employee Credit Education Programs</h2>
+                <p className="text-muted-foreground text-lg">
+                  Financial stress is the leading cause of productivity loss in the workplace. We partner with employers to provide RiseOra as a high-impact wellness benefit for the working class.
+                </p>
+                <div className="grid md:grid-cols-1 gap-4">
+                  <FeatureCard 
+                    icon={<ShieldCheck className="h-6 w-6" />}
+                    title="Employee Retention"
+                    description="Helping employees fix their credit leads to home ownership and stability, which in turn reduces workforce turnover."
+                  />
+                  <FeatureCard 
+                    icon={<Zap className="h-6 w-6" />}
+                    title="Reduced Stress"
+                    description="Our guided workflows remove the complexity and fear associated with credit challenges, allowing workers to focus on their jobs."
+                  />
+                </div>
               </div>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">B2B Employee Credit Education Programs</h2>
-              <p className="text-muted-foreground text-lg">
-                Financial stress is the leading cause of productivity loss in the workplace. We partner with employers to provide RiseOra as a high-impact wellness benefit for the working class.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8 mb-16">
-              <FeatureCard 
-                icon={<ShieldCheck className="h-8 w-8" />}
-                title="Employee Retention"
-                description="Helping employees fix their credit leads to home ownership and stability, which in turn reduces workforce turnover."
-              />
-              <FeatureCard 
-                icon={<Zap className="h-8 w-8" />}
-                title="Reduced Stress"
-                description="Our guided workflows remove the complexity and fear associated with credit challenges, allowing workers to focus on their jobs."
-              />
-              <FeatureCard 
-                icon={<Target className="h-8 w-8" />}
-                title="Career Advancement"
-                description="Many high-clearance or financial roles require clean credit. We help workers qualify for their next promotion."
-              />
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl group">
+                <img 
+                  src={corporateMeetingImage} 
+                  alt="Professional Business Meeting" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-primary/10 mix-blend-multiply"></div>
+              </div>
             </div>
 
             <div className="max-w-4xl mx-auto">
