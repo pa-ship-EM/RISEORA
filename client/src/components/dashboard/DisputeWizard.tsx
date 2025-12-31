@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, ChevronRight, Wand2, ArrowLeft, Loader2, FileCheck, Mail, AlertTriangle, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ChevronRight, Wand2, ArrowLeft, Loader2, FileCheck, Mail, AlertTriangle, ShieldCheck, Upload, FileText, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useDisputes } from "@/hooks/use-disputes";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +20,17 @@ interface DisputeWizardProps {
   onCancel?: () => void;
 }
 
-type WizardStep = "safety-check" | "personal-info" | "select-bureau" | "identify-item" | "reason" | "review" | "success";
+type WizardStep = "safety-check" | "personal-info" | "select-bureau" | "upload-report" | "identify-item" | "reason" | "review" | "success";
+
+interface ParsedAccount {
+  creditorName: string;
+  accountNumber: string | null;
+  accountType: string;
+  balance: string | null;
+  status: string;
+  recommendedReasons: string[];
+  confidence: "HIGH" | "MEDIUM" | "LOW";
+}
 
 export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const [step, setStep] = useState<WizardStep>("safety-check");
@@ -47,6 +57,12 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     customReason: "",
     metro2Check: false
   });
+  
+  const [reportText, setReportText] = useState("");
+  const [parsedAccounts, setParsedAccounts] = useState<ParsedAccount[]>([]);
+  const [selectedAccountIndex, setSelectedAccountIndex] = useState<number | null>(null);
+  const [isParsing, setIsParsing] = useState(false);
+  const [useManualEntry, setUseManualEntry] = useState(false);
 
   const handleNext = async () => {
     if (step === "safety-check") setStep("personal-info");
@@ -74,7 +90,33 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
         });
       }
     }
-    else if (step === "select-bureau" && formData.bureau) setStep("identify-item");
+    else if (step === "select-bureau" && formData.bureau) setStep("upload-report");
+    else if (step === "upload-report") {
+      if (useManualEntry) {
+        setStep("identify-item");
+      } else if (reportText.trim()) {
+        setIsParsing(true);
+        try {
+          const response = await apiRequest("POST", "/api/parse-credit-report", {
+            reportText: reportText.trim(),
+            bureau: formData.bureau,
+          });
+          const data = await response.json();
+          setParsedAccounts(data.accounts || []);
+          setIsParsing(false);
+          setStep("identify-item");
+        } catch (error: any) {
+          setIsParsing(false);
+          toast({
+            variant: "destructive",
+            title: "Error parsing report",
+            description: error.message || "Failed to analyze credit report. You can enter details manually.",
+          });
+        }
+      } else {
+        setStep("identify-item");
+      }
+    }
     else if (step === "identify-item" && formData.creditorName) setStep("reason");
     else if (step === "reason" && formData.disputeReason) setStep("review");
     else if (step === "review") {
@@ -113,15 +155,27 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const handleBack = () => {
     if (step === "personal-info") setStep("safety-check");
     else if (step === "select-bureau") setStep("personal-info");
-    else if (step === "identify-item") setStep("select-bureau");
+    else if (step === "upload-report") setStep("select-bureau");
+    else if (step === "identify-item") setStep("upload-report");
     else if (step === "reason") setStep("identify-item");
     else if (step === "review") setStep("reason");
+  };
+  
+  const selectParsedAccount = (index: number) => {
+    const account = parsedAccounts[index];
+    setSelectedAccountIndex(index);
+    setFormData(prev => ({
+      ...prev,
+      creditorName: account.creditorName,
+      accountNumber: account.accountNumber || "",
+    }));
   };
 
   const progress = {
     "safety-check": 5,
-    "personal-info": 20,
-    "select-bureau": 40,
+    "personal-info": 15,
+    "select-bureau": 30,
+    "upload-report": 45,
     "identify-item": 60,
     "reason": 80,
     "review": 95,
@@ -431,18 +485,158 @@ ${formData.firstName} ${formData.lastName}`;
           </div>
         )}
 
+        {step === "upload-report" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-primary mb-2">Upload Your Credit Report</h3>
+                <p className="text-muted-foreground">Paste your credit report text and our AI will find accounts to dispute.</p>
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] text-purple-600 bg-purple-50 px-2 py-1 rounded-full border border-purple-100 font-medium">
+                <Sparkles className="h-3 w-3" />
+                AI-Powered
+              </div>
+            </div>
+
+            {!useManualEntry ? (
+              <>
+                <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 bg-slate-50/50 hover:border-secondary/50 transition-colors">
+                  <div className="text-center mb-4">
+                    <div className="w-12 h-12 mx-auto bg-secondary/10 rounded-full flex items-center justify-center mb-3">
+                      <Upload className="h-6 w-6 text-secondary" />
+                    </div>
+                    <p className="font-semibold text-primary">Paste Credit Report Text</p>
+                    <p className="text-sm text-muted-foreground">Copy and paste the text from your {formData.bureau.toLowerCase()} PDF</p>
+                  </div>
+                  <Textarea
+                    placeholder="Paste the text content from your credit report PDF here...
+
+Example:
+CHASE BANK USA NA
+Account Number: XXXX-XXXX-XXXX-1234
+Account Type: Credit Card
+Balance: $2,450
+Status: Open
+Payment History: 30 days late (Mar 2024)"
+                    value={reportText}
+                    onChange={(e) => setReportText(e.target.value)}
+                    className="min-h-[200px] bg-white text-sm"
+                    data-testid="textarea-report"
+                  />
+                </div>
+
+                {reportText.trim() && (
+                  <div className="flex items-center gap-2 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <p className="text-sm text-emerald-700">Report text detected! Click Next to analyze with AI.</p>
+                  </div>
+                )}
+
+                <div className="text-center">
+                  <Button 
+                    variant="ghost" 
+                    className="text-sm text-muted-foreground hover:text-primary"
+                    onClick={() => setUseManualEntry(true)}
+                    data-testid="button-manual-entry"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Skip - I'll enter details manually
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="p-6 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                <FileText className="h-8 w-8 text-slate-400 mx-auto mb-3" />
+                <p className="font-medium text-primary mb-2">Manual Entry Mode</p>
+                <p className="text-sm text-muted-foreground mb-4">You'll enter the account details on the next screen.</p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setUseManualEntry(false)}
+                >
+                  Switch to AI Analysis
+                </Button>
+              </div>
+            )}
+
+            {getComplianceNotice()}
+          </div>
+        )}
+
         {step === "identify-item" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
              <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-bold text-primary mb-2">Identify the Item</h3>
-                <p className="text-muted-foreground">Enter details as they appear on your educational credit report.</p>
+                <h3 className="text-lg font-bold text-primary mb-2">
+                  {parsedAccounts.length > 0 ? "Select an Account to Dispute" : "Identify the Item"}
+                </h3>
+                <p className="text-muted-foreground">
+                  {parsedAccounts.length > 0 
+                    ? "Our AI found these accounts in your report. Select one or enter manually below."
+                    : "Enter details as they appear on your educational credit report."}
+                </p>
               </div>
               <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 font-medium">
                 <ShieldCheck className="h-3 w-3" />
                 AES-256 Encrypted
               </div>
             </div>
+
+            {parsedAccounts.length > 0 && (
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">AI-Detected Accounts</Label>
+                <div className="grid gap-3 max-h-[250px] overflow-y-auto pr-1">
+                  {parsedAccounts.map((account, index) => (
+                    <div
+                      key={index}
+                      onClick={() => selectParsedAccount(index)}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
+                        selectedAccountIndex === index 
+                          ? 'border-secondary bg-secondary/5' 
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                      data-testid={`card-account-${index}`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-bold text-primary">{account.creditorName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {account.accountType} {account.accountNumber ? `• #${account.accountNumber}` : ''}
+                          </p>
+                          {account.balance && (
+                            <p className="text-sm text-muted-foreground">Balance: {account.balance}</p>
+                          )}
+                        </div>
+                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          account.confidence === 'HIGH' ? 'bg-emerald-100 text-emerald-700' :
+                          account.confidence === 'MEDIUM' ? 'bg-amber-100 text-amber-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {account.confidence}
+                        </div>
+                      </div>
+                      {account.recommendedReasons.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {account.recommendedReasons.slice(0, 2).map((reason, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] rounded-full">
+                              {reason}
+                            </span>
+                          ))}
+                          {account.recommendedReasons.length > 2 && (
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded-full">
+                              +{account.recommendedReasons.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-sm text-muted-foreground mb-2">Or enter manually:</p>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div className="space-y-2">
@@ -451,7 +645,10 @@ ${formData.firstName} ${formData.lastName}`;
                   id="creditor" 
                   placeholder="e.g. Chase Bank, Midland Funding" 
                   value={formData.creditorName}
-                  onChange={(e) => setFormData({...formData, creditorName: e.target.value})}
+                  onChange={(e) => {
+                    setFormData({...formData, creditorName: e.target.value});
+                    setSelectedAccountIndex(null);
+                  }}
                   className="h-12 text-lg bg-white"
                 />
               </div>
@@ -476,6 +673,36 @@ ${formData.firstName} ${formData.lastName}`;
               <h3 className="text-lg font-bold text-primary mb-2">Educational Reason for Challenge</h3>
               <p className="text-muted-foreground">Why do you believe this item is inaccurate or unverifiable?</p>
             </div>
+
+            {selectedAccountIndex !== null && parsedAccounts[selectedAccountIndex]?.recommendedReasons?.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-600" />
+                  <Label className="text-sm font-medium text-purple-700">AI-Recommended Reasons</Label>
+                </div>
+                <div className="grid gap-2">
+                  {parsedAccounts[selectedAccountIndex].recommendedReasons.map((reason, i) => (
+                    <Button
+                      key={i}
+                      variant="outline"
+                      className={`justify-start h-auto py-3 px-4 text-left ${
+                        formData.disputeReason === reason 
+                          ? 'border-secondary bg-secondary/10 text-primary' 
+                          : 'hover:border-secondary/50'
+                      }`}
+                      onClick={() => setFormData({...formData, disputeReason: reason})}
+                      data-testid={`button-reason-${i}`}
+                    >
+                      <CheckCircle2 className={`h-4 w-4 mr-2 shrink-0 ${formData.disputeReason === reason ? 'text-secondary' : 'text-muted-foreground'}`} />
+                      {reason}
+                    </Button>
+                  ))}
+                </div>
+                <div className="border-t pt-4 mt-2">
+                  <p className="text-sm text-muted-foreground mb-2">Or choose from standard reasons:</p>
+                </div>
+              </div>
+            )}
 
             <Select value={formData.disputeReason} onValueChange={(v) => setFormData({...formData, disputeReason: v})}>
               <SelectTrigger className="h-12 text-lg bg-white">
@@ -564,14 +791,18 @@ ${formData.firstName} ${formData.lastName}`;
             disabled={
               (step === "personal-info" && (!formData.address || !formData.zip || !formData.ssnLast4)) ||
               (step === "select-bureau" && !formData.bureau) ||
+              (step === "upload-report" && isParsing) ||
               (step === "identify-item" && !formData.creditorName) ||
               (step === "reason" && !formData.disputeReason) ||
-              isLoading
+              isLoading ||
+              isParsing
             }
             className="bg-primary hover:bg-primary/90 min-w-[120px]"
           >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-              step === "review" ? "Generate Letter" : <span className="flex items-center gap-1">Next <ChevronRight className="h-4 w-4" /></span>
+            {isLoading || isParsing ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+              step === "review" ? "Generate Letter" : 
+              step === "upload-report" && reportText.trim() ? <span className="flex items-center gap-1"><Sparkles className="h-4 w-4 mr-1" /> Analyze with AI</span> :
+              <span className="flex items-center gap-1">Next <ChevronRight className="h-4 w-4" /></span>
             )}
           </Button>
         )}

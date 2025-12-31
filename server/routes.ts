@@ -5,6 +5,12 @@ import bcrypt from "bcryptjs";
 import { insertUserSchema, insertDisputeSchema, type User, TIER_FEATURES } from "@shared/schema";
 import { z } from "zod";
 import { encryptUserData, decryptUserData } from "./encryption";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
 
 // Extend Express session to include user
 declare module "express-session" {
@@ -328,6 +334,77 @@ export async function registerRoutes(
         res.status(500).json({ message: "Failed to delete dispute" });
       }
     } catch (error) {
+      next(error);
+    }
+  });
+  
+  // ========== AI CREDIT REPORT PARSING ROUTES ==========
+  
+  // POST /api/parse-credit-report - Parse credit report text and extract account info
+  app.post("/api/parse-credit-report", requireAuth, async (req, res, next) => {
+    try {
+      const { reportText, bureau } = req.body;
+      
+      if (!reportText || !bureau) {
+        return res.status(400).json({ message: "Report text and bureau are required" });
+      }
+      
+      const systemPrompt = `You are an expert credit report analyst specializing in FCRA compliance and Metro 2 data formats. 
+Your task is to analyze credit report text and extract account information that may contain errors or inaccuracies.
+
+For each account found, extract:
+- Creditor/Company Name
+- Account Number (partial is fine)
+- Account Type (credit card, auto loan, mortgage, collection, etc.)
+- Current Balance
+- Account Status (open, closed, collection, charged-off)
+- Payment History issues (late payments, missed payments)
+
+Also identify potential dispute reasons for each account based on common FCRA violations:
+- Inaccurate balance reporting
+- Incorrect account status
+- Duplicate accounts
+- Identity theft/Not my account
+- Outdated information (>7 years for most items)
+- Incorrect payment history
+- Account belongs to someone else
+- Wrong dates reported
+
+Respond in JSON format with this structure:
+{
+  "accounts": [
+    {
+      "creditorName": "string",
+      "accountNumber": "string or null",
+      "accountType": "string",
+      "balance": "string or null",
+      "status": "string",
+      "recommendedReasons": ["array of dispute reason strings"],
+      "confidence": "HIGH" | "MEDIUM" | "LOW"
+    }
+  ],
+  "summary": "Brief summary of what was found"
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Analyze this ${bureau} credit report excerpt and extract account information with potential dispute reasons:\n\n${reportText}` }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 2000,
+      });
+      
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        return res.status(500).json({ message: "Failed to parse credit report" });
+      }
+      
+      const parsed = JSON.parse(content);
+      res.json(parsed);
+    } catch (error) {
+      console.error("Error parsing credit report:", error);
       next(error);
     }
   });
