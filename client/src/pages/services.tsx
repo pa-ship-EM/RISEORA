@@ -31,15 +31,28 @@ export default function Services() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <PricingCard 
+              title="DIY Scholar (Free)"
+              price="$0"
+              description="Free educational access to learn the fundamentals of credit repair."
+              features={[
+                "RiseOra 'Credit Master' E-Book",
+                "Basic Credit Building Modules",
+                "Plain-Language Legal Explainers",
+                "Educational Calculators",
+                "Progress Tracking Profile"
+              ]}
+              icon={<BookOpen className="h-6 w-6 text-primary" />}
+            />
             <PricingCard 
               title="Self-Starter (Beta)"
               price="$49"
               description="Educational tools to manage your own credit audit and basic disputes."
               features={[
                 "Access to Dispute Wizard™ (Beta)",
-                "Basic Credit Education Modules",
-                "2 Bureau Audit Workflows / Month",
+                "Full E-Book & Guide Library",
+                "3 Bureau Audit Workflows / Month",
                 "Standard Template Library",
                 "Self-Guided Support"
               ]}
