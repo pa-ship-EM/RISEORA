@@ -81,20 +81,20 @@ export default function BusinessPartnerships() {
           </div>
         </section>
 
-        {/* Working Class / Employers */}
+        {/* Corporate Partnerships & Programs */}
         <section className="py-20 bg-slate-50">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <div className="inline-flex items-center gap-2 text-secondary font-bold uppercase tracking-wider text-sm mb-4">
-                <Briefcase className="h-5 w-5" /> Workforce Development
+                <Briefcase className="h-5 w-5" /> Corporate Partnerships
               </div>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">Financial Wellness as an Employee Benefit</h2>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">B2B Employee Credit Education Programs</h2>
               <p className="text-muted-foreground text-lg">
                 Financial stress is the leading cause of productivity loss in the workplace. We partner with employers to provide RiseOra as a high-impact wellness benefit for the working class.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-8 mb-16">
               <FeatureCard 
                 icon={<ShieldCheck className="h-8 w-8" />}
                 title="Employee Retention"
@@ -110,6 +110,37 @@ export default function BusinessPartnerships() {
                 title="Career Advancement"
                 description="Many high-clearance or financial roles require clean credit. We help workers qualify for their next promotion."
               />
+            </div>
+
+            <div className="max-w-4xl mx-auto">
+              <Card className="bg-primary text-white border-none shadow-xl overflow-hidden">
+                <div className="grid md:grid-cols-2">
+                  <div className="p-8 md:p-12 space-y-6">
+                    <h3 className="text-2xl font-serif font-bold">Custom Enterprise Pricing</h3>
+                    <p className="text-primary-foreground/80">
+                      We offer scalable B2B pricing models tailored to your organization's size and specific needs.
+                    </p>
+                    <ul className="space-y-3 text-sm">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-secondary" /> Per-Seat Licensing
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-secondary" /> Bulk Enrollment Discounts
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-secondary" /> Custom White-Label Portals
+                      </li>
+                    </ul>
+                    <Button className="bg-secondary text-primary font-bold w-full md:w-auto px-8">Contact Sales</Button>
+                  </div>
+                  <div className="bg-secondary/10 p-8 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-5xl font-serif font-bold text-secondary mb-2">Tiered</div>
+                      <div className="text-xl uppercase tracking-widest text-secondary/80 font-bold">Volume Pricing</div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
         </section>
