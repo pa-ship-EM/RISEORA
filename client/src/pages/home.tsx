@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, TrendingUp, Shield, ArrowRight, Users, Wand2 } from "lucide-react";
+import { CheckCircle2, TrendingUp, Shield, ArrowRight, Users, Wand2, BookOpen } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import heroImage from "@assets/generated_images/professional_financial_freedom_hero_background.png";
@@ -105,11 +105,18 @@ export default function Home() {
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Start with our basic plan at just $49/mo and unleash the power of the Dispute Wizard™.
           </p>
-          <Link href="/auth?tab=signup">
-            <Button size="lg" className="text-lg px-10 h-14 bg-secondary hover:bg-secondary/90 text-primary font-bold shadow-lg">
-              Get Early Access <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/auth?tab=signup">
+              <Button size="lg" className="text-lg px-10 h-14 bg-secondary hover:bg-secondary/90 text-primary font-bold shadow-lg w-full sm:w-auto">
+                Get Early Access <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/resources">
+              <Button variant="outline" size="lg" className="text-lg px-10 h-14 border-primary/20 hover:bg-primary/5 w-full sm:w-auto">
+                Browse Resources <BookOpen className="ml-2 h-5 w-5 text-secondary" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
