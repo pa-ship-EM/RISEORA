@@ -29,7 +29,7 @@ export default function BusinessPartnerships() {
           </div>
           
           <div className="container mx-auto px-4 relative z-10 text-center">
-            <Badge className="bg-secondary text-primary font-bold mb-6">RiseOra For Enterprise</Badge>
+            <Badge className="bg-secondary text-slate-900 font-bold mb-6">RiseOra For Enterprise</Badge>
             <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6">Bridging the Gap Between Education & Financial Success</h1>
             <p className="text-xl text-primary-foreground/80 max-w-3xl mx-auto leading-relaxed">
               Partnering with educational institutions and employers to provide essential financial literacy and credit mastery tools to the next generation of the American workforce.
@@ -137,7 +137,7 @@ export default function BusinessPartnerships() {
                         <CheckCircle className="h-4 w-4 text-secondary" /> Custom White-Label Portals
                       </li>
                     </ul>
-                    <Button className="bg-secondary text-primary font-bold w-full md:w-auto px-8">Contact Sales</Button>
+                    <Button className="bg-secondary text-slate-900 font-bold w-full md:w-auto px-8">Contact Sales</Button>
                   </div>
                   <div className="bg-secondary/10 p-8 flex items-center justify-center">
                     <div className="text-center">
@@ -163,7 +163,7 @@ export default function BusinessPartnerships() {
                 Whether you're a university dean or a HR director, let's discuss how we can build a financially literate future together.
               </p>
               <div className="flex flex-col md:flex-row gap-4 justify-center">
-                <Button className="bg-secondary text-primary font-bold h-14 px-10 text-lg">Schedule a Demo</Button>
+                <Button className="bg-secondary text-slate-900 font-bold h-14 px-10 text-lg">Schedule a Demo</Button>
                 <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 h-14 px-10 text-lg">Download B2B PDF</Button>
               </div>
             </Card>

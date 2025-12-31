@@ -201,7 +201,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link href="/auth?tab=signup">
-              <Button size="lg" className="text-lg px-10 h-14 bg-secondary hover:bg-secondary/90 text-primary font-bold shadow-lg w-full sm:w-auto">
+              <Button size="lg" className="text-lg px-10 h-14 bg-secondary hover:bg-secondary/90 text-slate-900 font-bold shadow-lg w-full sm:w-auto">
                 Get Early Access <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>

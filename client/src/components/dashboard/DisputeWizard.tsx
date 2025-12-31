@@ -214,7 +214,7 @@ ${formData.firstName} ${formData.lastName}`;
           </div>
 
           <div className="grid gap-4 w-full max-w-sm">
-            <Button size="lg" className="w-full bg-secondary text-primary font-bold hover:bg-secondary/90 h-12 text-lg" onClick={onComplete}>
+            <Button size="lg" className="w-full bg-secondary text-slate-900 font-bold hover:bg-secondary/90 h-12 text-lg" onClick={onComplete}>
               Return to Dashboard
             </Button>
             <Button variant="outline" className="w-full h-12 text-lg bg-white" onClick={() => {

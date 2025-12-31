@@ -302,7 +302,7 @@ export default function ClientDashboard() {
                   <CardDescription>Calculate your ideal usage targets.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full bg-secondary text-primary font-bold">Open Tool</Button>
+                  <Button className="w-full bg-secondary text-slate-900 font-bold">Open Tool</Button>
                 </CardContent>
               </Card>
               <Card className="bg-primary/5 border-primary/20">

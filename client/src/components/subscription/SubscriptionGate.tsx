@@ -123,7 +123,7 @@ export function SubscriptionGate({
           </CardContent>
           <CardFooter className="flex-col gap-3">
             <Button 
-              className="w-full h-12 text-lg font-bold bg-secondary hover:bg-secondary/90 text-primary"
+              className="w-full h-12 text-lg font-bold bg-secondary hover:bg-secondary/90 text-slate-900"
               onClick={handleUpgrade}
               disabled={isUpgrading}
               data-testid="button-upgrade"

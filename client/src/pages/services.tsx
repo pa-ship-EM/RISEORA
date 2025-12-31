@@ -104,13 +104,13 @@ function PricingCard({ title, price, originalPrice, features, description, isPop
   return (
     <div className={`relative rounded-2xl bg-white p-8 flex flex-col ${isPopular ? 'border-2 border-secondary shadow-2xl scale-105 z-10' : 'border border-slate-200 shadow-sm'}`}>
       {isPopular && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-secondary text-primary font-bold px-4 py-1 rounded-full text-sm flex items-center gap-1">
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-secondary text-slate-900 font-bold px-4 py-1 rounded-full text-sm flex items-center gap-1">
           <Wand2 className="h-3 w-3" /> Most Popular
         </div>
       )}
 
       {discountBadge && (
-        <div className={`absolute top-4 right-4 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${isPopular ? 'bg-primary text-white' : 'bg-secondary text-primary'}`}>
+        <div className={`absolute top-4 right-4 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${isPopular ? 'bg-primary text-white' : 'bg-secondary text-slate-900'}`}>
           {discountBadge}
         </div>
       )}
