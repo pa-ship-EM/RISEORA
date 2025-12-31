@@ -7,10 +7,12 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { FileText, Plus, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
+import { useLocation } from "wouter";
 
 export default function DisputesPage() {
   const { disputes, isLoading } = useDisputes();
   const { subscription } = useSubscription();
+  const [, setLocation] = useLocation();
 
   if (isLoading) {
     return (
@@ -69,7 +71,11 @@ export default function DisputesPage() {
                 You haven't created any dispute letters yet. Use the Dispute Wizard™ to generate your first dispute letter.
               </p>
               <SubscriptionGate requiredTier="GROWTH" featureName="Dispute Wizard">
-                <Button className="bg-primary text-white" data-testid="button-start-dispute">
+                <Button 
+                  className="bg-primary text-white" 
+                  data-testid="button-start-dispute"
+                  onClick={() => setLocation("/dashboard?wizard=open")}
+                >
                   <Plus className="h-4 w-4 mr-2" /> Start Dispute Wizard
                 </Button>
               </SubscriptionGate>

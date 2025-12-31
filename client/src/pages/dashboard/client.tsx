@@ -24,7 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { DisputeWizard } from "@/components/dashboard/DisputeWizard";
 import DashboardTools from "@/components/dashboard/DashboardTools";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useDisputes } from "@/hooks/use-disputes";
 import { formatDistanceToNow } from "date-fns";
 import { Dispute } from "@/lib/schema";
@@ -47,6 +48,17 @@ export default function ClientDashboard() {
   const { disputes, isLoading: disputesLoading } = useDisputes();
   const { subscription, isLoading: subscriptionLoading } = useSubscription();
   const [showWizard, setShowWizard] = useState(false);
+  const [location, setLocation] = useLocation();
+
+  // Check for wizard=open query param to auto-open wizard
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("wizard") === "open") {
+      setShowWizard(true);
+      // Clean up the URL
+      setLocation("/dashboard", { replace: true });
+    }
+  }, [location, setLocation]);
 
   if (authLoading || disputesLoading || subscriptionLoading) {
     return (
