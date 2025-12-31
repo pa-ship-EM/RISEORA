@@ -206,9 +206,27 @@ export default function ClientDashboard() {
           <TabsContent value="education" className="space-y-6 outline-none">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { title: "Credit Fundamentals", lessons: 4, status: "Completed", progress: 100 },
-                { title: "Building New Credit", lessons: 6, status: "In Progress", progress: 45 },
-                { title: "Advanced Scoring Tactics", lessons: 5, status: "Locked", progress: 0 },
+                { 
+                  title: "Credit Fundamentals", 
+                  lessons: 4, 
+                  status: "Completed", 
+                  progress: 100,
+                  tier: "Free"
+                },
+                { 
+                  title: "Building New Credit", 
+                  lessons: 6, 
+                  status: "In Progress", 
+                  progress: 45,
+                  tier: "Pro"
+                },
+                { 
+                  title: "Advanced Scoring Tactics", 
+                  lessons: 5, 
+                  status: "Locked", 
+                  progress: 0,
+                  tier: "Pro"
+                },
               ].map((mod, i) => (
                 <Card key={i} className={`hover:shadow-md transition-all border-2 ${mod.status === 'Locked' ? 'bg-slate-50/50 border-dashed' : 'border-transparent shadow-sm'}`}>
                   <CardHeader>
@@ -216,9 +234,14 @@ export default function ClientDashboard() {
                       <div className={`p-3 rounded-xl ${mod.status === 'Locked' ? 'bg-slate-200 text-slate-400' : 'bg-primary/10 text-primary'}`}>
                         <BookOpen className="h-6 w-6" />
                       </div>
-                      <Badge variant={mod.status === 'Completed' ? 'default' : mod.status === 'In Progress' ? 'secondary' : 'outline'} className="font-bold">
-                        {mod.status}
-                      </Badge>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge variant={mod.status === 'Completed' ? 'default' : mod.status === 'In Progress' ? 'secondary' : 'outline'} className="font-bold">
+                          {mod.status}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-primary/20 text-primary font-bold">
+                          {mod.tier} Access
+                        </Badge>
+                      </div>
                     </div>
                     <CardTitle className="mt-4 text-xl font-serif">{mod.title}</CardTitle>
                     <CardDescription>{mod.lessons} Lessons • Interactive Quizzes</CardDescription>
@@ -236,7 +259,7 @@ export default function ClientDashboard() {
                     <Button className="w-full h-11 font-bold" variant={mod.status === 'Locked' ? 'outline' : 'default'} disabled={mod.status === 'Locked'}>
                       {mod.status === 'Locked' ? (
                         <>
-                          <ShieldCheck className="mr-2 h-4 w-4" /> Upgrade to Unlock
+                          <ShieldCheck className="mr-2 h-4 w-4" /> Upgrade to Pro
                         </>
                       ) : 'Continue Learning'}
                     </Button>

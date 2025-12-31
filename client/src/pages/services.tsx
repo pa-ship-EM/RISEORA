@@ -41,7 +41,8 @@ export default function Services() {
                 "Basic Credit Building Modules",
                 "Plain-Language Legal Explainers",
                 "Educational Calculators",
-                "Progress Tracking Profile"
+                "Progress Tracking Profile",
+                "Access to Community Forums"
               ]}
               icon={<BookOpen className="h-6 w-6 text-primary" />}
             />
@@ -50,11 +51,12 @@ export default function Services() {
               price="$49"
               description="Educational tools to manage your own credit audit and basic disputes."
               features={[
+                "Everything in DIY Scholar",
                 "Access to Dispute Wizard™ (Beta)",
                 "Full E-Book & Guide Library",
                 "3 Bureau Audit Workflows / Month",
                 "Standard Template Library",
-                "Self-Guided Support"
+                "Email Support (48h Response)"
               ]}
               icon={<Zap className="h-6 w-6 text-primary" />}
             />
@@ -64,12 +66,13 @@ export default function Services() {
               isPopular
               description="Enhanced guided workflows with unlimited document generation."
               features={[
+                "Everything in Self-Starter",
                 "Full Dispute Wizard™ Workflow",
                 "Advanced Credit Analysis Tools",
                 "All 3 Bureaus Guided Paths",
                 "Unlimited Document Generation",
                 "Score Education Dashboard",
-                "Priority Support Access"
+                "Priority Support (24h Response)"
               ]}
               icon={<ShieldCheck className="h-6 w-6 text-primary" />}
             />
@@ -83,7 +86,8 @@ export default function Services() {
                 "Advanced Template Library",
                 "Identity Theft Educational Protocol",
                 "Personal Case Advisor Guidance",
-                "Strategic Support"
+                "Strategic Support Calls",
+                "Direct Advisor Messaging"
               ]}
               icon={<Scale className="h-6 w-6 text-primary" />}
             />
