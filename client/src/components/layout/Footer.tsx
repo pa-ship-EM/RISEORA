@@ -39,17 +39,21 @@ export function Footer() {
           <div>
             <h4 className="font-serif font-bold text-lg mb-4 text-secondary">Contact Us</h4>
             <ul className="space-y-3 text-sm text-primary-foreground/80">
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-secondary" />
-                <a href="mailto:support@riseora.org" className="hover:text-white transition-colors">support@riseora.org</a>
+              <li className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 text-secondary shrink-0 mt-1" />
+                <span>
+                  5820 E WT Harris Blvd<br />
+                  Ste 109 PMB 1100<br />
+                  Charlotte, NC 28215 United States
+                </span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-secondary" />
-                <span>(555) 123-4567</span>
+                <a href="tel:8283779388" className="hover:text-white transition-colors">(828) 377-9388</a>
               </li>
               <li className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-secondary" />
-                <span>123 Financial District, NY</span>
+                <Mail className="h-4 w-4 text-secondary" />
+                <a href="mailto:support@riseora.org" className="hover:text-white transition-colors">support@riseora.org</a>
               </li>
             </ul>
           </div>
