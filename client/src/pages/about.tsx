@@ -124,22 +124,22 @@ export default function About() {
             <h2 className="text-3xl font-serif font-bold mb-8 text-center text-secondary">Pricing Transparency</h2>
             <div className="grid md:grid-cols-4 gap-8">
               <div className="space-y-2">
-                <h4 className="font-bold text-xl">DIY Scholar</h4>
+                <h4 className="font-bold text-xl text-white">DIY Scholar</h4>
                 <p className="text-secondary font-bold">$0/month</p>
                 <p className="text-xs text-slate-400">Self-led education for those just starting their financial journey.</p>
               </div>
               <div className="space-y-2">
-                <h4 className="font-bold text-xl">Self-Starter</h4>
-                <p className="text-white font-bold">$49/month</p>
+                <h4 className="font-bold text-xl text-white">Self-Starter</h4>
+                <p className="text-secondary font-bold">$49/month</p>
                 <p className="text-xs text-slate-400">Access to Dispute Wizard™, 2-bureau audit, standard templates.</p>
               </div>
-              <div className="space-y-2 text-secondary">
-                <h4 className="font-bold text-xl">Growth Tier</h4>
+              <div className="space-y-2">
+                <h4 className="font-bold text-xl text-secondary">Growth Tier</h4>
                 <p className="text-white font-bold">$99/month</p>
                 <p className="text-xs text-slate-400">Full Dispute Wizard™ automation, all 3 bureaus, unlimited disputes.</p>
               </div>
               <div className="space-y-2">
-                <h4 className="font-bold text-xl">Compliance+</h4>
+                <h4 className="font-bold text-xl text-white">Compliance+</h4>
                 <p className="text-secondary font-bold">$149/month</p>
                 <p className="text-xs text-slate-400">Metro 2 compliance, cease & desist, ID theft protocol, advisor guidance.</p>
               </div>
