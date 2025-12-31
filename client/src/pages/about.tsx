@@ -150,18 +150,44 @@ export default function About() {
           </div>
 
           {/* Section 6 - Your Rights */}
-          <div className="bg-white p-8 md:p-12 rounded-3xl border border-slate-200 mb-16">
-            <h2 className="text-2xl font-serif font-bold text-primary mb-6">Your Rights & Disclosures</h2>
-            <div className="grid md:grid-cols-2 gap-8 text-sm text-slate-600">
-              <ul className="space-y-3">
-                <li className="flex gap-2"><strong>Educational Use Only:</strong> All tools are for educational purposes.</li>
-                <li className="flex gap-2"><strong>Client Responsibility:</strong> You are responsible for submitting disputes.</li>
-              </ul>
-              <ul className="space-y-3">
-                <li className="flex gap-2"><strong>No Legal Advice:</strong> RiseOra does not provide legal advice.</li>
-                <li className="flex gap-2"><strong>Data Privacy:</strong> Data is encrypted and never shared without consent.</li>
-                <li className="flex gap-2"><strong>Cancellation:</strong> 3-day full refund (CROA compliant).</li>
-              </ul>
+          <div className="mb-16">
+            <h2 className="text-3xl font-serif font-bold text-primary mb-10 text-center">Your Rights & Disclosures</h2>
+            <div className="grid md:grid-cols-5 gap-6">
+              <div className="text-center group">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <GraduationCap className="h-7 w-7 text-primary" />
+                </div>
+                <h4 className="font-semibold text-primary text-sm mb-2">Educational Use</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">All tools are for educational purposes only.</p>
+              </div>
+              <div className="text-center group">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Users className="h-7 w-7 text-primary" />
+                </div>
+                <h4 className="font-semibold text-primary text-sm mb-2">Your Responsibility</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">You submit all disputes yourself.</p>
+              </div>
+              <div className="text-center group">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Scale className="h-7 w-7 text-primary" />
+                </div>
+                <h4 className="font-semibold text-primary text-sm mb-2">No Legal Advice</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">We do not provide legal advice.</p>
+              </div>
+              <div className="text-center group">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Lock className="h-7 w-7 text-primary" />
+                </div>
+                <h4 className="font-semibold text-primary text-sm mb-2">Data Privacy</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">AES-256 encrypted. Never shared.</p>
+              </div>
+              <div className="text-center group">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-secondary/20 to-secondary/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <CheckCircle2 className="h-7 w-7 text-secondary" />
+                </div>
+                <h4 className="font-semibold text-primary text-sm mb-2">3-Day Refund</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">Full refund policy (CROA compliant).</p>
+              </div>
             </div>
           </div>
 
