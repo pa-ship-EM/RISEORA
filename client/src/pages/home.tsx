@@ -101,75 +101,94 @@ export default function Home() {
       {/* Resources Teaser Section */}
       <section className="py-24 bg-white relative overflow-hidden">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-12">
-            <div className="md:w-1/2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary-foreground text-sm font-semibold mb-6 border border-secondary/20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col md:flex-row items-center justify-between gap-12"
+          >
+            <div className="md:w-1/2 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary-foreground text-sm font-semibold border border-secondary/20">
                 <BookOpen className="h-4 w-4" />
                 Free Educational Hub
               </div>
-              <h2 className="text-3xl md:text-5xl font-serif font-bold text-primary mb-6 leading-tight">
+              <h2 className="text-3xl md:text-5xl font-serif font-bold text-primary leading-tight">
                 Master Your Credit with <br />
                 <span className="text-secondary">Expert Resources.</span>
               </h2>
-              <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
                 We believe in an education-first model. Access our library of guides, tools, and regulatory information from the FTC to understand your rights and build lasting financial health.
               </p>
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-secondary" />
-                  <span className="text-sm font-medium text-primary">FTC Verified Guides</span>
+              <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                <div className="flex items-center gap-2 group cursor-default">
+                  <div className="p-1 rounded bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-white">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-primary/80">FTC Verified Guides</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-secondary" />
-                  <span className="text-sm font-medium text-primary">Metro 2 Standards</span>
+                <div className="flex items-center gap-2 group cursor-default">
+                  <div className="p-1 rounded bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-white">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-primary/80">Metro 2 Standards</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-secondary" />
-                  <span className="text-sm font-medium text-primary">Identity Protection</span>
+                <div className="flex items-center gap-2 group cursor-default">
+                  <div className="p-1 rounded bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-white">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-primary/80">Identity Protection</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-secondary" />
-                  <span className="text-sm font-medium text-primary">Building History</span>
+                <div className="flex items-center gap-2 group cursor-default">
+                  <div className="p-1 rounded bg-secondary/10 text-secondary transition-colors group-hover:bg-secondary group-hover:text-white">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-primary/80">Building History</span>
                 </div>
               </div>
-              <Link href="/resources">
-                <Button size="lg" className="bg-primary text-white hover:bg-primary/90 px-8">
-                  Explore Learning Center <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-            <div className="md:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-4">
-                  <BookOpen className="h-6 w-6 text-secondary" />
-                </div>
-                <h4 className="font-bold text-primary mb-2">Understand Credit</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">Official FTC guidance on scores and rights.</p>
-              </div>
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm hover:shadow-md transition-shadow sm:mt-8">
-                <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-4">
-                  <TrendingUp className="h-6 w-6 text-secondary" />
-                </div>
-                <h4 className="font-bold text-primary mb-2">Score Building</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">Strategic methods to improve history.</p>
-              </div>
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-4">
-                  <Shield className="h-6 w-6 text-secondary" />
-                </div>
-                <h4 className="font-bold text-primary mb-2">Legal Compliance</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">FCRA and Metro 2 reporting standards.</p>
-              </div>
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm hover:shadow-md transition-shadow sm:mt-8">
-                <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-secondary" />
-                </div>
-                <h4 className="font-bold text-primary mb-2">Expert Guidance</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">Advisor-led education for long-term health.</p>
+              <div className="pt-4">
+                <Link href="/resources">
+                  <Button size="lg" className="bg-primary text-white hover:bg-primary/90 px-10 h-14 text-lg shadow-xl shadow-primary/10 transition-all hover:scale-105 group">
+                    Explore Learning Center <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
               </div>
             </div>
-          </div>
+            
+            <div className="md:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-6 relative">
+              <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 rounded-xl bg-white shadow-sm flex items-center justify-center mb-6 text-secondary">
+                  <BookOpen className="h-8 w-8" />
+                </div>
+                <h4 className="text-xl font-bold text-primary mb-3">Understand Credit</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Official FTC guidance on your scores and rights.</p>
+              </div>
+              <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 sm:mt-12">
+                <div className="w-14 h-14 rounded-xl bg-secondary/10 shadow-sm flex items-center justify-center mb-6 text-secondary">
+                  <TrendingUp className="h-8 w-8" />
+                </div>
+                <h4 className="text-xl font-bold text-primary mb-3">Score Building</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Strategic methods to improve your history.</p>
+              </div>
+              <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 rounded-xl bg-secondary/10 shadow-sm flex items-center justify-center mb-6 text-secondary">
+                  <Shield className="h-8 w-8" />
+                </div>
+                <h4 className="text-xl font-bold text-primary mb-3">Legal Compliance</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">FCRA and Metro 2 reporting standards.</p>
+              </div>
+              <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 sm:mt-12">
+                <div className="w-14 h-14 rounded-xl bg-white shadow-sm flex items-center justify-center mb-6 text-secondary">
+                  <Users className="h-8 w-8" />
+                </div>
+                <h4 className="text-xl font-bold text-primary mb-3">Expert Guidance</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Advisor-led education for long-term health.</p>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
