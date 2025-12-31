@@ -21,6 +21,7 @@ import ClientDashboard from "@/pages/dashboard/client";
 import AffiliateDashboard from "@/pages/dashboard/affiliate";
 import AdminDashboard from "@/pages/dashboard/admin";
 import DisputesPage from "@/pages/dashboard/disputes";
+import DocumentsPage from "@/pages/dashboard/documents";
 
 function Router() {
   return (
@@ -46,6 +47,12 @@ function Router() {
       <Route path="/dashboard/disputes">
         <ProtectedRoute allowedRoles={['CLIENT']}>
           <DisputesPage />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/dashboard/documents">
+        <ProtectedRoute allowedRoles={['CLIENT']}>
+          <DocumentsPage />
         </ProtectedRoute>
       </Route>
 
