@@ -81,15 +81,16 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     "safety-check": 10,
     "select-bureau": 25,
     "identify-item": 50,
-    "reason": 75,
+    "reason": 70,
+    "preview": 85,
     "review": 100,
     "success": 100
   };
 
   const getComplianceNotice = () => (
-    <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded text-[10px] text-slate-500 italic">
-      Notice: This tool provides educational document generation only. RiseOra does not submit disputes. 
-      Users must print and mail all communications themselves. No specific results are guaranteed.
+    <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded text-[10px] text-slate-500 italic space-y-2">
+      <p><strong>CROA Disclosure:</strong> You have a right to dispute inaccurate information in your credit report by contacting the credit bureau directly. You are not required to purchase credit repair services to do so.</p>
+      <p><strong>FCRA Notice:</strong> This letter is a request for investigation under the Fair Credit Reporting Act, 15 U.S.C. § 1681i.</p>
     </div>
   );
 

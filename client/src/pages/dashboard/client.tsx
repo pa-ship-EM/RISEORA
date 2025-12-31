@@ -206,26 +206,39 @@ export default function ClientDashboard() {
           <TabsContent value="education" className="space-y-6 outline-none">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { title: "Credit Fundamentals", lessons: 4, status: "Completed" },
-                { title: "Building New Credit", lessons: 6, status: "In Progress" },
-                { title: "Advanced Scoring Tactics", lessons: 5, status: "Locked" },
+                { title: "Credit Fundamentals", lessons: 4, status: "Completed", progress: 100 },
+                { title: "Building New Credit", lessons: 6, status: "In Progress", progress: 45 },
+                { title: "Advanced Scoring Tactics", lessons: 5, status: "Locked", progress: 0 },
               ].map((mod, i) => (
-                <Card key={i} className="hover:shadow-md transition-all">
+                <Card key={i} className={`hover:shadow-md transition-all border-2 ${mod.status === 'Locked' ? 'bg-slate-50/50 border-dashed' : 'border-transparent shadow-sm'}`}>
                   <CardHeader>
-                    <div className="flex justify-between">
-                      <div className="p-2 bg-primary/5 rounded-lg text-primary">
+                    <div className="flex justify-between items-start">
+                      <div className={`p-3 rounded-xl ${mod.status === 'Locked' ? 'bg-slate-200 text-slate-400' : 'bg-primary/10 text-primary'}`}>
                         <BookOpen className="h-6 w-6" />
                       </div>
-                      <Badge variant={mod.status === 'Completed' ? 'default' : mod.status === 'In Progress' ? 'secondary' : 'outline'}>
+                      <Badge variant={mod.status === 'Completed' ? 'default' : mod.status === 'In Progress' ? 'secondary' : 'outline'} className="font-bold">
                         {mod.status}
                       </Badge>
                     </div>
-                    <CardTitle className="mt-4">{mod.title}</CardTitle>
-                    <CardDescription>{mod.lessons} Lessons • Quizzes</CardDescription>
+                    <CardTitle className="mt-4 text-xl font-serif">{mod.title}</CardTitle>
+                    <CardDescription>{mod.lessons} Lessons • Interactive Quizzes</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <Button className="w-full" variant={mod.status === 'Locked' ? 'outline' : 'default'} disabled={mod.status === 'Locked'}>
-                      {mod.status === 'Locked' ? 'Unlock with Pro' : 'Continue'}
+                  <CardContent className="space-y-4">
+                    {mod.status !== 'Locked' && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs font-medium">
+                          <span>Progress</span>
+                          <span>{mod.progress}%</span>
+                        </div>
+                        <Progress value={mod.progress} className="h-1.5" />
+                      </div>
+                    )}
+                    <Button className="w-full h-11 font-bold" variant={mod.status === 'Locked' ? 'outline' : 'default'} disabled={mod.status === 'Locked'}>
+                      {mod.status === 'Locked' ? (
+                        <>
+                          <ShieldCheck className="mr-2 h-4 w-4" /> Upgrade to Unlock
+                        </>
+                      ) : 'Continue Learning'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -292,18 +305,43 @@ export default function ClientDashboard() {
           </TabsContent>
 
           <TabsContent value="profile" className="space-y-6 outline-none">
-             <Card>
-                <CardHeader>
-                  <CardTitle>Learning Progress Tracker</CardTitle>
-                  <CardDescription>Visualizing your journey.</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px] flex items-center justify-center border-2 border-dashed rounded-xl border-slate-100">
-                  <div className="text-center">
-                    <TrendingUp className="h-12 w-12 text-secondary/30 mx-auto mb-4" />
-                    <p className="text-slate-400">Progression Chart View</p>
-                  </div>
-                </CardContent>
-             </Card>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+               <Card className="md:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Learning Progress Tracker</CardTitle>
+                    <CardDescription>Visualizing your journey to credit mastery.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="h-[300px] flex items-center justify-center border-2 border-dashed rounded-xl border-slate-100">
+                    <div className="text-center">
+                      <TrendingUp className="h-12 w-12 text-secondary/30 mx-auto mb-4" />
+                      <p className="text-slate-400">Progression Chart View</p>
+                    </div>
+                  </CardContent>
+               </Card>
+               <Card className="bg-primary text-white border-none shadow-lg">
+                 <CardHeader>
+                   <div className="flex items-center gap-2">
+                     <ShieldCheck className="h-5 w-5 text-secondary" />
+                     <CardTitle className="text-white text-lg">Privacy & Security</CardTitle>
+                   </div>
+                 </CardHeader>
+                 <CardContent className="space-y-4">
+                   <div className="p-3 bg-white/10 rounded-lg">
+                     <p className="text-xs font-medium text-white/90">Your data is protected with 256-bit AES encryption. Sensitive fields like SSN and Address are only visible to you.</p>
+                   </div>
+                   <div className="space-y-2">
+                     <div className="flex justify-between text-xs">
+                       <span className="text-white/70">Audit Log Status</span>
+                       <Badge variant="outline" className="text-white border-white/20 text-[10px]">VERIFIED</Badge>
+                     </div>
+                     <div className="flex justify-between text-xs">
+                       <span className="text-white/70">CROA Compliance</span>
+                       <Badge variant="outline" className="text-white border-white/20 text-[10px]">ACTIVE</Badge>
+                     </div>
+                   </div>
+                 </CardContent>
+               </Card>
+             </div>
           </TabsContent>
         </Tabs>
       </main>

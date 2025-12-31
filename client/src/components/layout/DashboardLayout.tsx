@@ -41,10 +41,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     ],
     ADMIN: [
       { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/admin/clients", label: "Clients", icon: Users },
-      { href: "/admin/disputes", label: "Disputes", icon: ShieldCheck },
+      { href: "/admin/clients", label: "Client Manager", icon: Users },
+      { href: "/admin/disputes", label: "Dispute Queue", icon: ShieldCheck },
+      { href: "/admin/compliance", label: "Audit Logs", icon: FileText },
       { href: "/admin/affiliates", label: "Affiliates", icon: DollarSign },
-      { href: "/admin/content", label: "Content", icon: FileText },
     ]
   };
 
