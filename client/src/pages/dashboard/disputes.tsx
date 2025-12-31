@@ -68,7 +68,7 @@ export default function DisputesPage() {
               <p className="text-muted-foreground text-center max-w-md mb-6">
                 You haven't created any dispute letters yet. Use the Dispute Wizard™ to generate your first dispute letter.
               </p>
-              <SubscriptionGate requiredTier="SELF_STARTER" featureName="Dispute Wizard">
+              <SubscriptionGate requiredTier="GROWTH" featureName="Dispute Wizard">
                 <Button className="bg-primary text-white" data-testid="button-start-dispute">
                   <Plus className="h-4 w-4 mr-2" /> Start Dispute Wizard
                 </Button>

@@ -20,7 +20,7 @@ const TIER_PRICES = {
 export function SubscriptionGate({ 
   children, 
   featureName = "Premium Features",
-  requiredTier = "SELF_STARTER"
+  requiredTier = "GROWTH"
 }: SubscriptionGateProps) {
   const { subscription, isLoading, upgrade, isUpgrading } = useSubscription();
   const { toast } = useToast();
