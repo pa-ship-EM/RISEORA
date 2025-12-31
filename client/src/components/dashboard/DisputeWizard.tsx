@@ -19,7 +19,7 @@ interface DisputeWizardProps {
   onCancel?: () => void;
 }
 
-type WizardStep = "safety-check" | "select-bureau" | "identify-item" | "reason" | "review" | "success";
+type WizardStep = "safety-check" | "personal-info" | "select-bureau" | "identify-item" | "reason" | "review" | "success";
 
 export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const [step, setStep] = useState<WizardStep>("safety-check");
@@ -30,6 +30,14 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const [, setLocation] = useLocation();
 
   const [formData, setFormData] = useState({
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    dob: "",
+    ssnLast4: "",
     bureau: "",
     creditorName: "",
     accountNumber: "",
@@ -39,7 +47,8 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   });
 
   const handleNext = async () => {
-    if (step === "safety-check") setStep("select-bureau");
+    if (step === "safety-check") setStep("personal-info");
+    else if (step === "personal-info" && formData.address && formData.city && formData.state && formData.zip && formData.dob && formData.ssnLast4) setStep("select-bureau");
     else if (step === "select-bureau" && formData.bureau) setStep("identify-item");
     else if (step === "identify-item" && formData.creditorName) setStep("reason");
     else if (step === "reason" && formData.disputeReason) setStep("review");
@@ -71,19 +80,20 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   };
 
   const handleBack = () => {
-    if (step === "select-bureau") setStep("safety-check");
+    if (step === "personal-info") setStep("safety-check");
+    else if (step === "select-bureau") setStep("personal-info");
     else if (step === "identify-item") setStep("select-bureau");
     else if (step === "reason") setStep("identify-item");
     else if (step === "review") setStep("reason");
   };
 
   const progress = {
-    "safety-check": 10,
-    "select-bureau": 25,
-    "identify-item": 50,
-    "reason": 70,
-    "preview": 85,
-    "review": 100,
+    "safety-check": 5,
+    "personal-info": 20,
+    "select-bureau": 40,
+    "identify-item": 60,
+    "reason": 80,
+    "review": 95,
     "success": 100
   };
 
@@ -93,6 +103,45 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
       <p><strong>FCRA Notice:</strong> This letter is a request for investigation under the Fair Credit Reporting Act, 15 U.S.C. § 1681i.</p>
     </div>
   );
+
+  const generateLetter = () => {
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const reasonText = formData.disputeReason === "other" ? formData.customReason : formData.disputeReason;
+    
+    return `${formData.firstName} ${formData.lastName}
+${formData.address}
+${formData.city}, ${formData.state} ${formData.zip}
+DOB: ${formData.dob}
+SSN: ***-**-${formData.ssnLast4}
+
+${today}
+
+${formData.bureau}
+Dispute Department
+
+RE: Dispute of Inaccurate Information - Account # ${formData.accountNumber || "Unknown"}
+
+To Whom It May Concern:
+
+I am writing to dispute the following information in my file, which I have identified as inaccurate and/or unverifiable. I have circled the items on the attached copy of the report I received.
+
+Dispute Item:
+Creditor Name: ${formData.creditorName}
+Account Number: ${formData.accountNumber || "Not Provided"}
+
+Reason for Dispute:
+${reasonText}
+
+Under the Fair Credit Reporting Act (FCRA), specifically 15 U.S.C. § 1681i, you are required to conduct a reasonable investigation into this matter within 30 days. If you cannot verify this item with the furnisher using the Metro 2 standard for accuracy and completeness, it must be deleted from my file.
+
+Please provide me with a description of the procedures used to determine the accuracy and completeness of the information, including the name, business address, and telephone number of any furnisher of information contacted in connection with such information as required by 15 U.S.C. § 1681i(a)(6)(B)(iii).
+
+I request that you update my file to reflect accurate information or delete the unverified item entirely. Please send me an updated copy of my credit report upon completion of your investigation.
+
+Sincerely,
+
+${formData.firstName} ${formData.lastName}`;
+  };
 
   if (step === "success") {
     return (
@@ -111,25 +160,37 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
             <ul className="space-y-3 text-sm text-slate-600">
               <li className="flex gap-2">
                 <div className="h-5 w-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-[10px] font-bold shrink-0">1</div>
-                <span>Download the generated PDF from your documents.</span>
+                <span>Download or copy the generated letter below.</span>
               </li>
               <li className="flex gap-2">
                 <div className="h-5 w-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-[10px] font-bold shrink-0">2</div>
-                <span>Carefully review the letter for accuracy.</span>
+                <span>Attach a copy of your ID and proof of address.</span>
               </li>
               <li className="flex gap-2">
                 <div className="h-5 w-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-[10px] font-bold shrink-0">3</div>
-                <span>Print and mail the letter via Certified Mail to the bureau.</span>
+                <span>Mail via Certified Mail to the bureau.</span>
               </li>
             </ul>
+          </div>
+
+          <div className="w-full max-w-2xl mb-8">
+            <Label className="block text-left mb-2 font-bold text-primary">Preview Generated Letter</Label>
+            <Textarea 
+              readOnly 
+              value={generateLetter()} 
+              className="h-[300px] font-mono text-sm bg-white border-slate-200 p-4"
+            />
           </div>
 
           <div className="grid gap-4 w-full max-w-sm">
             <Button size="lg" className="w-full bg-secondary text-primary font-bold hover:bg-secondary/90 h-12 text-lg" onClick={onComplete}>
               Return to Dashboard
             </Button>
-            <Button variant="outline" className="w-full h-12 text-lg bg-white" onClick={() => setLocation("/dashboard/documents")}>
-              View Generated Letter
+            <Button variant="outline" className="w-full h-12 text-lg bg-white" onClick={() => {
+              navigator.clipboard.writeText(generateLetter());
+              toast({ title: "Copied to clipboard" });
+            }}>
+              Copy to Clipboard
             </Button>
           </div>
         </CardContent>
@@ -204,6 +265,112 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
                 I acknowledge the statements above
               </Label>
             </div>
+          </div>
+        )}
+
+        {step === "personal-info" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-primary mb-2">Confirm Personal Information</h3>
+                <p className="text-muted-foreground">Required for the bureau to verify your identity.</p>
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 font-medium">
+                <ShieldCheck className="h-3 w-3" />
+                AES-256 Encrypted
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input 
+                  id="firstName" 
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  className="bg-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input 
+                  id="lastName" 
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                  className="bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">Street Address</Label>
+              <Input 
+                id="address" 
+                placeholder="123 Main St, Apt 4B"
+                value={formData.address}
+                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                className="bg-white"
+              />
+            </div>
+
+            <div className="grid grid-cols-6 gap-4">
+              <div className="col-span-3 space-y-2">
+                <Label htmlFor="city">City</Label>
+                <Input 
+                  id="city" 
+                  value={formData.city}
+                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                  className="bg-white"
+                />
+              </div>
+              <div className="col-span-1 space-y-2">
+                <Label htmlFor="state">State</Label>
+                <Input 
+                  id="state" 
+                  maxLength={2}
+                  placeholder="NC"
+                  value={formData.state}
+                  onChange={(e) => setFormData({...formData, state: e.target.value.toUpperCase()})}
+                  className="bg-white"
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="zip">Zip Code</Label>
+                <Input 
+                  id="zip" 
+                  maxLength={5}
+                  value={formData.zip}
+                  onChange={(e) => setFormData({...formData, zip: e.target.value})}
+                  className="bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="dob">Date of Birth</Label>
+                <Input 
+                  id="dob" 
+                  type="date"
+                  value={formData.dob}
+                  onChange={(e) => setFormData({...formData, dob: e.target.value})}
+                  className="bg-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ssn">Last 4 SSN</Label>
+                <Input 
+                  id="ssn" 
+                  maxLength={4}
+                  placeholder="1234"
+                  type="password"
+                  value={formData.ssnLast4}
+                  onChange={(e) => setFormData({...formData, ssnLast4: e.target.value})}
+                  className="bg-white"
+                />
+              </div>
+            </div>
+            {getComplianceNotice()}
           </div>
         )}
 
@@ -321,6 +488,10 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
 
             <div className="bg-white rounded-xl p-6 space-y-4 border border-border shadow-sm">
               <div className="flex justify-between border-b border-border/50 pb-2">
+                <span className="text-muted-foreground">Full Name</span>
+                <span className="font-semibold">{formData.firstName} {formData.lastName}</span>
+              </div>
+              <div className="flex justify-between border-b border-border/50 pb-2">
                 <span className="text-muted-foreground">Bureau</span>
                 <span className="font-semibold">{formData.bureau}</span>
               </div>
@@ -360,6 +531,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
           <Button 
             onClick={handleNext} 
             disabled={
+              (step === "personal-info" && (!formData.address || !formData.zip || !formData.ssnLast4)) ||
               (step === "select-bureau" && !formData.bureau) ||
               (step === "identify-item" && !formData.creditorName) ||
               (step === "reason" && !formData.disputeReason) ||
