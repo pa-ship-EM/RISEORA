@@ -1,47 +1,37 @@
-import { AI_GUARDRAILS } from "./guardrails";
+import { AI_GUARDRAILS } from "./guardrails.js";
 
-/**
- * Validates a dispute narrative against the AI guardrails.
- * Enforces content policies, length limits, and professional tone.
- * 
- * @param {string} text - The narrative text to validate
- * @returns {object} Result object { isValid: boolean, errors: string[], warnings: string[] }
- */
 export function validateNarrative(text) {
-  const errors = [];
-  const warnings = [];
-  
-  if (!text || typeof text !== 'string') {
-    return { isValid: false, errors: ["Narrative cannot be empty"], warnings: [] };
+  if (!text || typeof text !== "string") {
+    return { valid: false, reason: "Narrative is empty" };
+  }
+
+  if (text.length > AI_GUARDRAILS.maxLength) {
+    return { valid: false, reason: "Narrative too long" };
   }
 
   const lowerText = text.toLowerCase();
 
-  // 1. Check Max Length
-  if (text.length > AI_GUARDRAILS.maxLength) {
-    errors.push(`Narrative is too long. Maximum ${AI_GUARDRAILS.maxLength} characters allowed.`);
+  // Check forbidden terms
+  for (const term of AI_GUARDRAILS.forbiddenTerms) {
+    if (lowerText.includes(term)) {
+      return {
+        valid: false,
+        reason: `Forbidden term detected: "${term}"`
+      };
+    }
   }
 
-  // 2. Check Forbidden Terms (Aggressive/Litigious Language)
-  const foundForbidden = AI_GUARDRAILS.forbiddenTerms.filter(term => 
-    lowerText.includes(term.toLowerCase())
+  // Require at least one compliance phrase
+  const hasRequiredPhrase = AI_GUARDRAILS.requiredPhrases.some(phrase =>
+    lowerText.includes(phrase)
   );
 
-  if (foundForbidden.length > 0) {
-    errors.push(
-      `Narrative contains forbidden language: "${foundForbidden.join('", "')}". Please maintain a neutral, professional tone (avoid threats, legal demands, or "guarantees").`
-    );
+  if (!hasRequiredPhrase) {
+    return {
+      valid: false,
+      reason: "Missing required FCRA verification language"
+    };
   }
 
-  // 3. Check Tone (Heuristic: excessive caps)
-  const upperCaseRatio = text.replace(/[^A-Z]/g, "").length / text.length;
-  if (text.length > 20 && upperCaseRatio > 0.4) {
-    warnings.push("Narrative appears to use excessive capitalization. Please use standard sentence case for a professional tone.");
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings
-  };
+  return { valid: true };
 }
