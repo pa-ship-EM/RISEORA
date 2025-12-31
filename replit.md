@@ -1,0 +1,91 @@
+# RiseOra - Credit Education & Dispute Management Platform
+
+## Overview
+
+RiseOra is a credit education and guided support platform that empowers consumers to understand, manage, and assert their credit rights. The platform provides tools for generating dispute letters, tracking dispute progress, and educating users about credit repair — all while maintaining strict compliance with CROA, FCRA, and FTC regulations.
+
+Key features include:
+- **Dispute Wizard™**: AI-assisted workflow for generating Metro 2-compliant dispute letters
+- **Multi-role Dashboard**: Separate interfaces for clients, affiliates, and administrators
+- **Secure Data Handling**: AES-256 encryption for sensitive user data (SSN, addresses, DOB)
+- **Subscription Management**: Tiered access model (DIY Scholar, Self-Starter, Professional, Premier)
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Routing**: Wouter (lightweight client-side routing)
+- **State Management**: TanStack React Query for server state, React Context for auth
+- **UI Components**: shadcn/ui component library built on Radix UI primitives
+- **Styling**: Tailwind CSS v4 with custom CSS variables for theming
+- **Build Tool**: Vite with custom plugins for meta images and Replit integration
+
+### Backend Architecture
+- **Runtime**: Node.js with Express
+- **API Design**: RESTful JSON API with session-based authentication
+- **Session Management**: express-session with MemoryStore (development) or connect-pg-simple (production)
+- **Password Security**: bcryptjs for password hashing
+
+### Data Storage
+- **Database**: PostgreSQL via Drizzle ORM
+- **Schema Location**: `shared/schema.ts` contains all table definitions
+- **Migrations**: Drizzle Kit for schema migrations (`drizzle-kit push`)
+- **Encryption**: Custom AES-256-GCM encryption for sensitive fields (SSN, address, DOB)
+
+### Authentication & Authorization
+- **Method**: Session-based authentication with HTTP-only cookies
+- **Role System**: Three roles - CLIENT, AFFILIATE, ADMIN
+- **Protected Routes**: Client-side route guards with role-based access control
+- **Session Duration**: 7-day cookie expiration
+
+### AI Integration & Safety
+- **Guardrails**: Client-side validation prevents forbidden terms (guarantees, legal threats)
+- **Narrative Validation**: Ensures FCRA-compliant language in dispute letters
+- **Data Minimization**: Sensitive data patterns detected and handled appropriately
+
+### Project Structure
+```
+├── client/src/          # React frontend
+│   ├── components/      # UI components (shadcn/ui + custom)
+│   ├── pages/           # Route pages
+│   ├── hooks/           # Custom React hooks (auth, disputes, toast)
+│   ├── lib/             # Utilities, query client, schema types
+│   └── ai/              # AI guardrails and validation
+├── server/              # Express backend
+│   ├── routes.ts        # API route handlers
+│   ├── storage.ts       # Database access layer
+│   ├── encryption.ts    # Data encryption utilities
+│   └── db.ts            # Database connection
+├── shared/              # Shared between client/server
+│   └── schema.ts        # Drizzle schema definitions
+└── migrations/          # Database migrations
+```
+
+## External Dependencies
+
+### Database
+- **PostgreSQL**: Primary database, connection via `DATABASE_URL` environment variable
+- **Drizzle ORM**: Type-safe database queries and schema management
+
+### Payment Processing
+- **Stripe**: Payment processing (configured but not fully implemented in visible code)
+
+### Environment Variables Required
+- `DATABASE_URL`: PostgreSQL connection string
+- `SESSION_SECRET`: Secret for session encryption
+- `ENCRYPTION_KEY`: Key for AES-256 data encryption
+
+### Third-Party UI Libraries
+- **Radix UI**: Accessible component primitives
+- **Lucide React**: Icon library
+- **Framer Motion**: Animation library
+- **React Hook Form + Zod**: Form handling and validation
+
+### Development Tools
+- **Vite**: Development server and build tool
+- **TSX**: TypeScript execution for server
+- **esbuild**: Production server bundling
