@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Briefcase, Users } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Briefcase, Users, Shield, Lock } from "lucide-react";
 import logoIcon from "@assets/Screenshot_2025-12-30_at_3.40.28_PM_1767131437717.png";
 
 export function Footer() {
@@ -61,10 +61,16 @@ export function Footer() {
 
           {/* Security */}
           <div>
-            <h4 className="font-serif font-bold text-lg mb-4 text-secondary">Secure & Safe</h4>
-            <p className="text-xs text-primary-foreground/70 mb-4">
-              Your data is protected with bank-level 256-bit encryption. We prioritize your privacy and security above all else.
-            </p>
+            <h4 className="font-serif font-bold text-lg mb-4 text-secondary">Bank-Level Security</h4>
+            <Link href="/security" className="group block mb-4">
+              <div className="flex items-center gap-2 mb-2 text-green-400">
+                <Shield className="h-5 w-5" />
+                <span className="font-semibold text-sm">AES-256 Encrypted</span>
+              </div>
+              <p className="text-xs text-primary-foreground/70 group-hover:text-white transition-colors">
+                Your data is protected with the same encryption standards used by banks. Click to learn more.
+              </p>
+            </Link>
             <div className="flex gap-4">
                {/* Social placeholders */}
                <Facebook className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
@@ -84,6 +90,7 @@ export function Footer() {
           </div>
           <div className="flex gap-6">
             <Link href="/legal" className="hover:text-white transition-colors">Legal & Terms</Link>
+            <Link href="/security" className="hover:text-white transition-colors">Security</Link>
             <Link href="/legal" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/legal" className="hover:text-white transition-colors">CROA Notice</Link>
           </div>

@@ -235,9 +235,15 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
 
         {step === "identify-item" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div>
-              <h3 className="text-lg font-bold text-primary mb-2">Identify the Item</h3>
-              <p className="text-muted-foreground">Enter details as they appear on your educational credit report.</p>
+             <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-primary mb-2">Identify the Item</h3>
+                <p className="text-muted-foreground">Enter details as they appear on your educational credit report.</p>
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 font-medium">
+                <ShieldCheck className="h-3 w-3" />
+                AES-256 Encrypted
+              </div>
             </div>
 
             <div className="space-y-4">
