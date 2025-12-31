@@ -142,7 +142,7 @@ function PricingCard({ title, price, originalPrice, features, description, isPop
       </div>
 
       <Link href="/auth?tab=signup">
-        <Button className={`w-full h-12 text-lg font-semibold ${isPopular ? 'bg-secondary hover:bg-secondary/90 text-primary' : 'bg-primary hover:bg-primary/90 text-white'}`}>
+        <Button className={`w-full h-12 text-lg font-semibold ${isPopular ? 'bg-secondary hover:bg-secondary/90 text-slate-900' : 'bg-primary hover:bg-primary/90 text-white'}`}>
           Request Access (Beta)
         </Button>
       </Link>
