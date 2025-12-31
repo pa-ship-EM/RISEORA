@@ -1,5 +1,5 @@
 import { users, disputes, subscriptions, type User, type InsertUser, type Dispute, type InsertDispute, type Subscription, type InsertSubscription } from "@shared/schema";
-import { db } from "./db";
+import { db, withRetry } from "./db";
 import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
@@ -25,21 +25,27 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return withRetry(async () => {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user || undefined;
+    });
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
+    return withRetry(async () => {
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      return user || undefined;
+    });
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(insertUser)
-      .returning();
-    return user;
+    return withRetry(async () => {
+      const [user] = await db
+        .insert(users)
+        .values(insertUser)
+        .returning();
+      return user;
+    });
   }
 
   async updateUserProfile(id: string, data: Partial<User>): Promise<User | undefined> {
