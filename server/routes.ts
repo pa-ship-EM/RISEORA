@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import { insertUserSchema, insertDisputeSchema, type User } from "@shared/schema";
 import { z } from "zod";
+import { encryptUserData, decryptUserData } from "./encryption";
 
 // Extend Express session to include user
 declare module "express-session" {
@@ -116,8 +117,11 @@ export async function registerRoutes(
         return res.status(404).json({ message: "User not found" });
       }
       
-      const { passwordHash: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      // Decrypt sensitive fields
+      const decryptedData = decryptUserData(user);
+      
+      const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, dobEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
+      res.json({ ...userWithoutSensitive, ...decryptedData });
     } catch (error) {
       next(error);
     }
@@ -131,31 +135,32 @@ export async function registerRoutes(
       const { 
         firstName, 
         lastName, 
-        addressEncrypted, 
-        cityEncrypted, 
-        stateEncrypted, 
-        zipEncrypted, 
-        dobEncrypted, 
-        ssnLast4Encrypted 
+        address,
+        city,
+        state,
+        zip,
+        dob,
+        ssnLast4
       } = req.body;
       
       const updateData: Partial<User> = {};
       if (firstName) updateData.firstName = firstName;
       if (lastName) updateData.lastName = lastName;
-      if (addressEncrypted) updateData.addressEncrypted = addressEncrypted;
-      if (cityEncrypted) updateData.cityEncrypted = cityEncrypted;
-      if (stateEncrypted) updateData.stateEncrypted = stateEncrypted;
-      if (zipEncrypted) updateData.zipEncrypted = zipEncrypted;
-      if (dobEncrypted) updateData.dobEncrypted = dobEncrypted;
-      if (ssnLast4Encrypted) updateData.ssnLast4Encrypted = ssnLast4Encrypted;
+      
+      // Encrypt sensitive fields if provided
+      const encryptedData = encryptUserData({ address, city, state, zip, dob, ssnLast4 });
+      Object.assign(updateData, encryptedData);
       
       const user = await storage.updateUserProfile(req.session.userId!, updateData);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const { passwordHash: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      // Decrypt sensitive fields for response
+      const decryptedData = decryptUserData(user);
+      
+      const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, dobEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
+      res.json({ ...userWithoutSensitive, ...decryptedData });
     } catch (error) {
       next(error);
     }
