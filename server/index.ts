@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import session from "express-session";
+import MemoryStore from "memorystore";
 
 const app = express();
 const httpServer = createServer(app);
@@ -11,6 +13,24 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+// Session configuration
+const MemStore = MemoryStore(session);
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "riseora-dev-secret-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    store: new MemStore({
+      checkPeriod: 86400000, // 24 hours
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    },
+  }),
+);
 
 app.use(
   express.json({
