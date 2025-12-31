@@ -63,6 +63,8 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const [selectedAccountIndex, setSelectedAccountIndex] = useState<number | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [useManualEntry, setUseManualEntry] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadMode, setUploadMode] = useState<"pdf" | "paste">("pdf");
 
   const handleNext = async () => {
     if (step === "safety-check") setStep("personal-info");
@@ -94,7 +96,39 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     else if (step === "upload-report") {
       if (useManualEntry) {
         setStep("identify-item");
+      } else if (selectedFile) {
+        // Handle PDF file upload
+        setIsParsing(true);
+        try {
+          const formDataUpload = new FormData();
+          formDataUpload.append('file', selectedFile);
+          formDataUpload.append('bureau', formData.bureau);
+          
+          const response = await fetch('/api/upload-credit-report', {
+            method: 'POST',
+            body: formDataUpload,
+            credentials: 'include',
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to upload file');
+          }
+          
+          const data = await response.json();
+          setParsedAccounts(data.accounts || []);
+          setIsParsing(false);
+          setStep("identify-item");
+        } catch (error: any) {
+          setIsParsing(false);
+          toast({
+            variant: "destructive",
+            title: "Error parsing PDF",
+            description: error.message || "Failed to analyze credit report. You can enter details manually.",
+          });
+        }
       } else if (reportText.trim()) {
+        // Handle text paste
         setIsParsing(true);
         try {
           const response = await apiRequest("POST", "/api/parse-credit-report", {
@@ -490,7 +524,7 @@ ${formData.firstName} ${formData.lastName}`;
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-bold text-primary mb-2">Upload Your Credit Report</h3>
-                <p className="text-muted-foreground">Paste your credit report text and our AI will find accounts to dispute.</p>
+                <p className="text-muted-foreground">Upload your PDF or paste report text for AI analysis.</p>
               </div>
               <div className="flex items-center gap-1.5 text-[10px] text-purple-600 bg-purple-50 px-2 py-1 rounded-full border border-purple-100 font-medium">
                 <Sparkles className="h-3 w-3" />
@@ -500,16 +534,119 @@ ${formData.firstName} ${formData.lastName}`;
 
             {!useManualEntry ? (
               <>
-                <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 bg-slate-50/50 hover:border-secondary/50 transition-colors">
-                  <div className="text-center mb-4">
-                    <div className="w-12 h-12 mx-auto bg-secondary/10 rounded-full flex items-center justify-center mb-3">
-                      <Upload className="h-6 w-6 text-secondary" />
+                {/* Upload mode toggle */}
+                <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
+                  <button
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                      uploadMode === "pdf" ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-primary"
+                    }`}
+                    onClick={() => {
+                      setUploadMode("pdf");
+                      setReportText(""); // Clear text when switching to PDF mode
+                    }}
+                    data-testid="button-upload-pdf-mode"
+                  >
+                    <Upload className="h-4 w-4 inline-block mr-2" />
+                    Upload PDF
+                  </button>
+                  <button
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                      uploadMode === "paste" ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-primary"
+                    }`}
+                    onClick={() => {
+                      setUploadMode("paste");
+                      setSelectedFile(null); // Clear file when switching to paste mode
+                    }}
+                    data-testid="button-paste-text-mode"
+                  >
+                    <FileText className="h-4 w-4 inline-block mr-2" />
+                    Paste Text
+                  </button>
+                </div>
+
+                {uploadMode === "pdf" ? (
+                  <div 
+                    className={`border-2 border-dashed rounded-xl p-8 bg-slate-50/50 transition-colors cursor-pointer ${
+                      selectedFile ? "border-emerald-400 bg-emerald-50/50" : "border-slate-200 hover:border-secondary/50"
+                    }`}
+                    onClick={() => document.getElementById('pdf-upload')?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files[0];
+                      if (file && file.type === 'application/pdf') {
+                        setSelectedFile(file);
+                      } else {
+                        toast({
+                          variant: "destructive",
+                          title: "Invalid file",
+                          description: "Please upload a PDF file.",
+                        });
+                      }
+                    }}
+                  >
+                    <input
+                      id="pdf-upload"
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setSelectedFile(file);
+                        }
+                      }}
+                      data-testid="input-pdf-upload"
+                    />
+                    <div className="text-center">
+                      {selectedFile ? (
+                        <>
+                          <div className="w-14 h-14 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                            <FileCheck className="h-7 w-7 text-emerald-600" />
+                          </div>
+                          <p className="font-semibold text-primary mb-1">{selectedFile.name}</p>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedFile(null);
+                            }}
+                          >
+                            Remove file
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-14 h-14 mx-auto bg-secondary/10 rounded-full flex items-center justify-center mb-4">
+                            <Upload className="h-7 w-7 text-secondary" />
+                          </div>
+                          <p className="font-semibold text-primary mb-1">Drop your PDF here or click to browse</p>
+                          <p className="text-sm text-muted-foreground">
+                            Upload your {formData.bureau.toLowerCase()} credit report (max 10MB)
+                          </p>
+                        </>
+                      )}
                     </div>
-                    <p className="font-semibold text-primary">Paste Credit Report Text</p>
-                    <p className="text-sm text-muted-foreground">Copy and paste the text from your {formData.bureau.toLowerCase()} PDF</p>
                   </div>
-                  <Textarea
-                    placeholder="Paste the text content from your credit report PDF here...
+                ) : (
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 bg-slate-50/50 hover:border-secondary/50 transition-colors">
+                    <div className="text-center mb-4">
+                      <div className="w-12 h-12 mx-auto bg-secondary/10 rounded-full flex items-center justify-center mb-3">
+                        <FileText className="h-6 w-6 text-secondary" />
+                      </div>
+                      <p className="font-semibold text-primary">Paste Credit Report Text</p>
+                      <p className="text-sm text-muted-foreground">Copy and paste the text from your {formData.bureau.toLowerCase()} PDF</p>
+                    </div>
+                    <Textarea
+                      placeholder="Paste the text content from your credit report PDF here...
 
 Example:
 CHASE BANK USA NA
@@ -518,17 +655,20 @@ Account Type: Credit Card
 Balance: $2,450
 Status: Open
 Payment History: 30 days late (Mar 2024)"
-                    value={reportText}
-                    onChange={(e) => setReportText(e.target.value)}
-                    className="min-h-[200px] bg-white text-sm"
-                    data-testid="textarea-report"
-                  />
-                </div>
+                      value={reportText}
+                      onChange={(e) => setReportText(e.target.value)}
+                      className="min-h-[200px] bg-white text-sm"
+                      data-testid="textarea-report"
+                    />
+                  </div>
+                )}
 
-                {reportText.trim() && (
+                {(selectedFile || reportText.trim()) && (
                   <div className="flex items-center gap-2 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <p className="text-sm text-emerald-700">Report text detected! Click Next to analyze with AI.</p>
+                    <p className="text-sm text-emerald-700">
+                      {selectedFile ? "PDF ready for upload!" : "Report text detected!"} Click Next to analyze with AI.
+                    </p>
                   </div>
                 )}
 

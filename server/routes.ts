@@ -6,6 +6,21 @@ import { insertUserSchema, insertDisputeSchema, type User, TIER_FEATURES } from 
 import { z } from "zod";
 import { encryptUserData, decryptUserData } from "./encryption";
 import OpenAI from "openai";
+import multer from "multer";
+import { PDFParse } from "pdf-parse";
+
+// Configure multer for PDF uploads (in memory)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  }
+});
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -339,6 +354,108 @@ export async function registerRoutes(
   });
   
   // ========== AI CREDIT REPORT PARSING ROUTES ==========
+  
+  // POST /api/upload-credit-report - Upload PDF credit report for AI parsing
+  app.post("/api/upload-credit-report", requireAuth, (req, res, next) => {
+    upload.single('file')(req, res, async (err: any) => {
+      try {
+        // Handle multer errors
+        if (err) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ message: "File size exceeds the 10MB limit. Please upload a smaller file." });
+          }
+          if (err.message === 'Only PDF files are allowed') {
+            return res.status(400).json({ message: err.message });
+          }
+          return res.status(400).json({ message: "File upload error: " + err.message });
+        }
+        
+        if (!req.file) {
+          return res.status(400).json({ message: "No PDF file uploaded" });
+        }
+        
+        // Verify PDF magic bytes (PDF files start with %PDF-)
+        const pdfMagic = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2D]); // %PDF-
+        if (!req.file.buffer.subarray(0, 5).equals(pdfMagic)) {
+          return res.status(400).json({ message: "Invalid PDF file. Please upload a valid PDF document." });
+        }
+        
+        const bureau = req.body.bureau;
+        if (!bureau) {
+          return res.status(400).json({ message: "Bureau is required" });
+        }
+        
+        // Parse PDF to extract text using pdf-parse v2
+        const parser = new PDFParse({ data: req.file.buffer });
+        const pdfData = await parser.getText();
+        const reportText = pdfData.text;
+        await parser.destroy();
+      
+      if (!reportText || reportText.trim().length < 50) {
+        return res.status(400).json({ message: "Could not extract text from PDF. Please ensure the file is not password-protected or image-based." });
+      }
+      
+      // Use OpenAI to analyze the extracted text
+      const systemPrompt = `You are an expert credit report analyst specializing in FCRA compliance and Metro 2 data formats. 
+Your task is to analyze credit report text and extract account information that may contain errors or inaccuracies.
+
+For each account found, extract:
+- Creditor/Company Name
+- Account Number (partial is fine)
+- Account Type (credit card, auto loan, mortgage, collection, etc.)
+- Current Balance
+- Account Status (open, closed, collection, charged-off)
+- Payment History issues (late payments, missed payments)
+
+Also identify potential dispute reasons for each account based on common FCRA violations:
+- Inaccurate balance reporting
+- Incorrect account status
+- Duplicate accounts
+- Identity theft/Not my account
+- Outdated information (>7 years for most items)
+- Incorrect payment history
+- Account belongs to someone else
+- Wrong dates reported
+
+Respond in JSON format with this structure:
+{
+  "accounts": [
+    {
+      "creditorName": "string",
+      "accountNumber": "string or null",
+      "accountType": "string",
+      "balance": "string or null",
+      "status": "string",
+      "recommendedReasons": ["array of dispute reason strings"],
+      "confidence": "HIGH" | "MEDIUM" | "LOW"
+    }
+  ],
+  "summary": "Brief summary of what was found"
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Analyze this ${bureau} credit report and extract account information with potential dispute reasons:\n\n${reportText.substring(0, 15000)}` }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 2000,
+      });
+      
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        return res.status(500).json({ message: "Failed to analyze credit report" });
+      }
+      
+      const parsed = JSON.parse(content);
+      res.json(parsed);
+    } catch (error: any) {
+        console.error("Error processing PDF:", error);
+        next(error);
+      }
+    });
+  });
   
   // POST /api/parse-credit-report - Parse credit report text and extract account info
   app.post("/api/parse-credit-report", requireAuth, async (req, res, next) => {
