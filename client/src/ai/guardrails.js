@@ -5,6 +5,43 @@
  * Ensures data minimization and prevents PII leakage before processing.
  */
 
+export const AI_GUARDRAILS = {
+  forbiddenTerms: [
+    "guarantee",
+    "guaranteed",
+    "fix my credit",
+    "fix",
+    "boost",
+    "improve my score",
+    "remove immediately",
+    "illegal",
+    "violation",
+    "lawsuit",
+    "sue",
+    "attorney",
+    "court",
+    "cease and desist",
+    "demand",
+    "penalty",
+    "damages"
+  ],
+
+  requiredPhrases: [
+    "please verify",
+    "as reported",
+    "if unverifiable",
+    "accurate and complete"
+  ],
+
+  maxLength: 1200,
+
+  allowedTone: [
+    "neutral",
+    "professional",
+    "factual"
+  ]
+};
+
 // Patterns for sensitive data that should generally be handled with care
 // Note: In a client-side context, we use these to warn users or redact before sending to non-secure endpoints
 const SENSITIVE_PATTERNS = {
@@ -43,16 +80,25 @@ export const Guardrails = {
   },
 
   /**
-   * Validates that the prompt does not violate usage policies
+   * Validates that the prompt does not violate usage policies or contain forbidden terms
    */
   validatePrompt(prompt) {
     if (!prompt || prompt.length < 5) return { valid: false, reason: "Prompt too short" };
-    if (prompt.length > 5000) return { valid: false, reason: "Prompt too long" };
+    if (prompt.length > AI_GUARDRAILS.maxLength) return { valid: false, reason: `Prompt exceeds maximum length of ${AI_GUARDRAILS.maxLength} characters` };
     
-    // Add specific keyword blocks if necessary
+    const lowerPrompt = prompt.toLowerCase();
+
+    // Check for forbidden terms
+    for (const term of AI_GUARDRAILS.forbiddenTerms) {
+      if (lowerPrompt.includes(term.toLowerCase())) {
+        return { valid: false, reason: `Policy violation: Use of forbidden term "${term}"` };
+      }
+    }
+    
+    // Add specific keyword blocks if necessary (system level overrides)
     const blockedKeywords = ["jailbreak", "ignore previous instructions", "system prompt"];
     for (const keyword of blockedKeywords) {
-      if (prompt.toLowerCase().includes(keyword)) {
+      if (lowerPrompt.includes(keyword)) {
         return { valid: false, reason: "Content policy violation: Blocked keyword detected" };
       }
     }
