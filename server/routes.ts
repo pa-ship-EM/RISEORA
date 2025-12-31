@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
-import { insertUserSchema, insertDisputeSchema, type User } from "@shared/schema";
+import { insertUserSchema, insertDisputeSchema, type User, TIER_FEATURES } from "@shared/schema";
 import { z } from "zod";
 import { encryptUserData, decryptUserData } from "./encryption";
 
@@ -171,6 +171,66 @@ export async function registerRoutes(
       
       const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, dobEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
       res.json({ ...userWithoutSensitive, ...decryptedData });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // ========== SUBSCRIPTION ROUTES ==========
+  
+  // GET /api/subscription
+  app.get("/api/subscription", requireAuth, async (req, res, next) => {
+    try {
+      let subscription = await storage.getSubscriptionForUser(req.session.userId!);
+      
+      // Create a free subscription if none exists
+      if (!subscription) {
+        subscription = await storage.createSubscription({
+          userId: req.session.userId!,
+          tier: "FREE",
+          status: "ACTIVE",
+        });
+      }
+      
+      // Add tier features to response
+      const tier = subscription.tier as keyof typeof TIER_FEATURES;
+      const features = TIER_FEATURES[tier] || TIER_FEATURES.FREE;
+      
+      res.json({ ...subscription, features });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // POST /api/subscription/upgrade - Upgrade subscription tier (for testing)
+  app.post("/api/subscription/upgrade", requireAuth, async (req, res, next) => {
+    try {
+      const { tier } = req.body;
+      
+      // Validate tier
+      if (!["FREE", "SELF_STARTER", "GROWTH", "COMPLIANCE_PLUS"].includes(tier)) {
+        return res.status(400).json({ message: "Invalid subscription tier" });
+      }
+      
+      let subscription = await storage.getSubscriptionForUser(req.session.userId!);
+      
+      if (subscription) {
+        subscription = await storage.updateSubscription(req.session.userId!, { 
+          tier,
+          status: "ACTIVE",
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        });
+      } else {
+        subscription = await storage.createSubscription({
+          userId: req.session.userId!,
+          tier,
+          status: "ACTIVE",
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        });
+      }
+      
+      const features = TIER_FEATURES[tier as keyof typeof TIER_FEATURES];
+      res.json({ ...subscription, features });
     } catch (error) {
       next(error);
     }

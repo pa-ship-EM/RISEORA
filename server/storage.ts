@@ -1,4 +1,4 @@
-import { users, disputes, type User, type InsertUser, type Dispute, type InsertDispute } from "@shared/schema";
+import { users, disputes, subscriptions, type User, type InsertUser, type Dispute, type InsertDispute, type Subscription, type InsertSubscription } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
@@ -8,6 +8,11 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserProfile(id: string, data: Partial<User>): Promise<User | undefined>;
+  
+  // Subscription methods
+  getSubscriptionForUser(userId: string): Promise<Subscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  updateSubscription(userId: string, data: Partial<Subscription>): Promise<Subscription | undefined>;
   
   // Dispute methods
   getDisputesForUser(userId: string): Promise<Dispute[]>;
@@ -44,6 +49,29 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  // Subscription methods
+  async getSubscriptionForUser(userId: string): Promise<Subscription | undefined> {
+    const [subscription] = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
+    return subscription || undefined;
+  }
+
+  async createSubscription(insertSubscription: InsertSubscription): Promise<Subscription> {
+    const [subscription] = await db
+      .insert(subscriptions)
+      .values(insertSubscription)
+      .returning();
+    return subscription;
+  }
+
+  async updateSubscription(userId: string, data: Partial<Subscription>): Promise<Subscription | undefined> {
+    const [subscription] = await db
+      .update(subscriptions)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(subscriptions.userId, userId))
+      .returning();
+    return subscription || undefined;
   }
 
   // Dispute methods

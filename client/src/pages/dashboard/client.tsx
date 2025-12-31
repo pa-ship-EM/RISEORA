@@ -30,6 +30,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Dispute } from "@/lib/schema";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
+import { useSubscription } from "@/hooks/use-subscription";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const creditData = [
@@ -44,9 +45,10 @@ const creditData = [
 export default function ClientDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const { disputes, isLoading: disputesLoading } = useDisputes();
+  const { subscription, isLoading: subscriptionLoading } = useSubscription();
   const [showWizard, setShowWizard] = useState(false);
 
-  if (authLoading || disputesLoading) {
+  if (authLoading || disputesLoading || subscriptionLoading) {
     return (
       <DashboardLayout>
         <DashboardSkeleton />
