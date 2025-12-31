@@ -1,65 +1,94 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useLocation } from "wouter";
-import { mockDb } from "@/lib/mock-db";
-import { User, Role } from "@/lib/schema";
+import { User } from "@/lib/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [, setLocation] = useLocation();
 
-  const login = async (email: string) => {
-    setIsLoading(true);
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    
-    // Use Mock DB to find user
-    const dbUser = mockDb.getUserByEmail(email);
-    
-    if (dbUser) {
-      setUser(dbUser);
+  // Check auth status on mount
+  useEffect(() => {
+    refreshUser();
+  }, []);
+
+  const refreshUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+      
+      if (res.ok) {
+        const userData = await res.json();
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      setUser(null);
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/auth/login", { email, password });
+      const userData = await res.json();
+      setUser(userData);
       
       // Redirect based on role
-      if (dbUser.role === "ADMIN") setLocation("/admin");
-      else if (dbUser.role === "AFFILIATE") setLocation("/affiliate");
+      if (userData.role === "ADMIN") setLocation("/admin");
+      else if (userData.role === "AFFILIATE") setLocation("/affiliate");
       else setLocation("/dashboard");
-    } else {
-      // Fallback for demo if email doesn't match predefined users
-      const mockUser: User = { 
-        id: "temp-user", 
-        email, 
-        firstName: "New", 
-        lastName: "User", 
-        role: "CLIENT",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      setUser(mockUser);
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const signup = async (email: string, password: string, firstName: string, lastName: string) => {
+    setIsLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/auth/signup", { 
+        email, 
+        password, 
+        firstName, 
+        lastName 
+      });
+      const userData = await res.json();
+      setUser(userData);
       setLocation("/dashboard");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setUser(null);
-    setIsLoading(false);
-    setLocation("/auth");
+    try {
+      await apiRequest("POST", "/api/auth/logout", {});
+      setUser(null);
+      setLocation("/auth");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -24,8 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { DisputeWizard } from "@/components/dashboard/DisputeWizard";
 import DashboardTools from "@/components/dashboard/DashboardTools";
-import { useState, useEffect } from "react";
-import { mockDb } from "@/lib/mock-db";
+import { useState } from "react";
+import { useDisputes } from "@/hooks/use-disputes";
 import { formatDistanceToNow } from "date-fns";
 import { Dispute } from "@/lib/schema";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -42,20 +42,11 @@ const creditData = [
 ];
 
 export default function ClientDashboard() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const { disputes, isLoading: disputesLoading } = useDisputes();
   const [showWizard, setShowWizard] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
-  const disputes = user ? mockDb.getDisputesForUser(user.id) : [];
-
-  if (isLoading) {
+  if (authLoading || disputesLoading) {
     return (
       <DashboardLayout>
         <DashboardSkeleton />

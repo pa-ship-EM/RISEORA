@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, ChevronRight, Wand2, ArrowLeft, Loader2, FileCheck, Mail, AlertTriangle, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { mockDb } from "@/lib/mock-db";
+import { useDisputes } from "@/hooks/use-disputes";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 import wizardLogo from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_14_PM_1767131297375.png";
 
@@ -25,7 +26,8 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const [step, setStep] = useState<WizardStep>("safety-check");
   const [isLoading, setIsLoading] = useState(false);
   const [safetyAgreed, setSafetyAgreed] = useState(false);
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const { createDispute } = useDisputes();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -48,34 +50,63 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
 
   const handleNext = async () => {
     if (step === "safety-check") setStep("personal-info");
-    else if (step === "personal-info" && formData.address && formData.city && formData.state && formData.zip && formData.dob && formData.ssnLast4) setStep("select-bureau");
+    else if (step === "personal-info" && formData.address && formData.city && formData.state && formData.zip && formData.dob && formData.ssnLast4) {
+      // Save personal info to user profile
+      setIsLoading(true);
+      try {
+        await apiRequest("PATCH", "/api/user/profile", {
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zip: formData.zip,
+          dob: formData.dob,
+          ssnLast4: formData.ssnLast4,
+        });
+        await refreshUser();
+        setIsLoading(false);
+        setStep("select-bureau");
+      } catch (error: any) {
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to save personal information",
+        });
+      }
+    }
     else if (step === "select-bureau" && formData.bureau) setStep("identify-item");
     else if (step === "identify-item" && formData.creditorName) setStep("reason");
     else if (step === "reason" && formData.disputeReason) setStep("review");
     else if (step === "review") {
       setIsLoading(true);
-      // Simulate processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Save to mock DB
-      if (user) {
-        mockDb.createDispute({
-          userId: user.id,
+      try {
+        const letterContent = generateLetter();
+        
+        await createDispute({
           creditorName: formData.creditorName,
-          accountNumber: formData.accountNumber,
-          bureau: formData.bureau as any,
+          accountNumber: formData.accountNumber || undefined,
+          bureau: formData.bureau as "EXPERIAN" | "TRANSUNION" | "EQUIFAX",
           status: "GENERATED",
-          disputeReason: formData.disputeReason === "other" ? formData.customReason : formData.disputeReason,
-          metro2Compliant: true // Premium feature enabled by wizard
+          disputeReason: formData.disputeReason,
+          customReason: formData.disputeReason === "other" ? formData.customReason : undefined,
+          metro2Compliant: true,
+          letterContent,
+        });
+        
+        setIsLoading(false);
+        setStep("success");
+        toast({
+          title: "Dispute Generated!",
+          description: `Your draft letter has been prepared for your review.`,
+        });
+      } catch (error: any) {
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to create dispute",
         });
       }
-      
-      setIsLoading(false);
-      setStep("success");
-      toast({
-        title: "Dispute Generated!",
-        description: `Your draft letter has been prepared for your review.`,
-      });
     }
   };
 

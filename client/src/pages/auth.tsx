@@ -12,14 +12,21 @@ import { ShieldCheck, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
-const authSchema = z.object({
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+const signupSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,30 +34,50 @@ export default function AuthPage() {
   const params = new URLSearchParams(window.location.search);
   const defaultTab = params.get("tab") === "signup" ? "signup" : "login";
 
-  const form = useForm<z.infer<typeof authSchema>>({
-    resolver: zodResolver(authSchema),
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  const onSubmit = async (values: z.infer<typeof authSchema>, isSignup: boolean) => {
+  const signupForm = useForm<z.infer<typeof signupSchema>>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: { firstName: "", lastName: "", email: "", password: "" },
+  });
+
+  const onLogin = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      // Simulate role detection based on email for demo purposes
-      let role: "client" | "admin" | "affiliate" = "client";
-      if (values.email.includes("admin")) role = "admin";
-      else if (values.email.includes("partner")) role = "affiliate";
-
-      await login(role);
+      await login(values.email, values.password);
       
       toast({
-        title: isSignup ? "Account created!" : "Welcome back!",
+        title: "Welcome back!",
         description: "Securely logging you in...",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: "Login failed",
+        description: error.message || "Invalid credentials. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSignup = async (values: z.infer<typeof signupSchema>) => {
+    setIsLoading(true);
+    try {
+      await signup(values.email, values.password, values.firstName, values.lastName);
+      
+      toast({
+        title: "Account created!",
+        description: "Welcome to RiseOra. Let's get started!",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Signup failed",
+        description: error.message || "Something went wrong. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -70,8 +97,8 @@ export default function AuthPage() {
       <Card className="w-full max-w-md shadow-xl border-primary/10">
         <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger>
+            <TabsTrigger value="signup" data-testid="tab-signup">Sign Up</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
@@ -79,21 +106,41 @@ export default function AuthPage() {
               <CardTitle>Welcome Back</CardTitle>
               <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
             </CardHeader>
-            <form onSubmit={form.handleSubmit((data) => onSubmit(data, false))}>
+            <form onSubmit={loginForm.handleSubmit(onLogin)}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" {...form.register("email")} />
-                  {form.formState.errors.email && <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>}
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="you@example.com" 
+                    data-testid="input-email-login"
+                    {...loginForm.register("email")} 
+                  />
+                  {loginForm.formState.errors.email && (
+                    <p className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" {...form.register("password")} />
-                  {form.formState.errors.password && <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>}
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    data-testid="input-password-login"
+                    {...loginForm.register("password")} 
+                  />
+                  {loginForm.formState.errors.password && (
+                    <p className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>
+                  )}
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-primary hover:bg-primary/90" 
+                  disabled={isLoading}
+                  data-testid="button-login"
+                >
                   {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign In"}
                 </Button>
               </CardFooter>
@@ -105,17 +152,58 @@ export default function AuthPage() {
               <CardTitle>Create Account</CardTitle>
               <CardDescription>Start your journey to financial freedom today.</CardDescription>
             </CardHeader>
-            <form onSubmit={form.handleSubmit((data) => onSubmit(data, true))}>
+            <form onSubmit={signupForm.handleSubmit(onSignup)}>
               <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input 
+                      id="firstName" 
+                      placeholder="John" 
+                      data-testid="input-firstname"
+                      {...signupForm.register("firstName")} 
+                    />
+                    {signupForm.formState.errors.firstName && (
+                      <p className="text-xs text-destructive">{signupForm.formState.errors.firstName.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input 
+                      id="lastName" 
+                      placeholder="Doe" 
+                      data-testid="input-lastname"
+                      {...signupForm.register("lastName")} 
+                    />
+                    {signupForm.formState.errors.lastName && (
+                      <p className="text-xs text-destructive">{signupForm.formState.errors.lastName.message}</p>
+                    )}
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
-                  <Input id="signup-email" type="email" placeholder="you@example.com" {...form.register("email")} />
-                  {form.formState.errors.email && <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>}
+                  <Input 
+                    id="signup-email" 
+                    type="email" 
+                    placeholder="you@example.com" 
+                    data-testid="input-email-signup"
+                    {...signupForm.register("email")} 
+                  />
+                  {signupForm.formState.errors.email && (
+                    <p className="text-xs text-destructive">{signupForm.formState.errors.email.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input id="signup-password" type="password" {...form.register("password")} />
-                  {form.formState.errors.password && <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>}
+                  <Input 
+                    id="signup-password" 
+                    type="password" 
+                    data-testid="input-password-signup"
+                    {...signupForm.register("password")} 
+                  />
+                  {signupForm.formState.errors.password && (
+                    <p className="text-xs text-destructive">{signupForm.formState.errors.password.message}</p>
+                  )}
                 </div>
                 <div className="mt-4 text-xs text-muted-foreground bg-secondary/10 p-3 rounded text-center space-y-1">
                   <div className="font-semibold text-secondary-foreground flex items-center justify-center gap-1">
@@ -125,7 +213,12 @@ export default function AuthPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-primary hover:bg-primary/90" 
+                  disabled={isLoading}
+                  data-testid="button-signup"
+                >
                   {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Account"}
                 </Button>
               </CardFooter>

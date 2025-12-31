@@ -24,13 +24,17 @@ export interface Dispute {
   id: string;
   userId: string;
   creditorName: string;
-  accountNumber?: string;
+  accountNumber?: string | null;
   bureau: 'EXPERIAN' | 'TRANSUNION' | 'EQUIFAX' | 'ALL';
   status: 'DRAFT' | 'GENERATED' | 'SENT' | 'IN_PROGRESS' | 'RESOLVED' | 'DELETED';
   disputeReason: string;
-  dateCreated: string;
-  lastUpdated: string;
-  metro2Compliant: boolean; // Field for Premium tier feature
+  customReason?: string | null;
+  letterContent?: string | null;
+  dateCreated?: string;
+  lastUpdated?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  metro2Compliant: boolean;
 }
 
 export interface EducationModule {
