@@ -196,8 +196,9 @@ export default function About() {
             <h2 className="text-3xl font-serif font-bold text-primary mb-6">Contact & Support</h2>
             <div className="space-y-2 text-slate-600">
               <p className="font-bold text-primary">Email: support@riseora.org</p>
-              <p>Phone: (555) 123-4567</p>
-              <p>Address: 123 Financial District, NY</p>
+              <p>Phone: (828) 377-9388</p>
+              <p>Address: 5820 E WT Harris Blvd, Ste 109 PMB 1100</p>
+              <p>Charlotte, NC 28215 United States</p>
             </div>
             <p className="mt-8 font-medium text-primary">
               We are committed to transparency, security, and empowering our clients to take control of their credit.
