@@ -1,0 +1,102 @@
+🔐 Security & Trust at Riseora
+
+Your personal information is sensitive. We treat it that way.
+
+Riseora is built with bank-level security standards to protect your data, your documents, and your privacy—at every step.
+
+⸻
+
+🏦 Bank-Level Data Protection
+
+We use the same security practices trusted by banks and financial institutions:
+	•	AES-256 encryption for data stored in our systems
+	•	TLS 1.3 encryption for all data sent between your device and our servers
+	•	Secure, encrypted storage for documents and PDFs
+	•	Enforced HTTPS and modern security headers
+
+Your information is protected at rest and in transit.
+
+⸻
+
+🔑 Secure Accounts & Access
+
+Your Riseora account is protected with multiple layers of defense:
+	•	Secure password hashing (industry-standard encryption)
+	•	Automatic session protection and token rotation
+	•	Optional Two-Factor Authentication (2FA) for Premium and Elite members
+	•	Strict access controls — you can only see your own data
+
+No one else can access your disputes, documents, or personal details.
+
+⸻
+
+💳 Payment Security (Stripe)
+
+Riseora never stores your card information.
+
+All payments are handled by Stripe, a global payment processor trusted by millions of businesses.
+	•	PCI-DSS compliant
+	•	Encrypted transactions
+	•	Card data never touches our servers
+
+⸻
+
+📄 Document & File Security
+
+When you upload documents to Riseora:
+	•	Files are encrypted and stored securely
+	•	Access is restricted to your account only
+	•	Download links are private and protected
+	•	Malicious file uploads are blocked automatically
+
+Your dispute documents stay private—always.
+
+⸻
+
+🤖 AI Use & Privacy
+
+Riseora uses AI to help generate educational and dispute documents, not to exploit your data.
+	•	Your data is never sold
+	•	AI is used only to generate content you request
+	•	We do not train AI models on your personal information
+	•	Sensitive identifiers are minimized wherever possible
+
+AI works for you — not against your privacy.
+
+⸻
+
+🛡️ Privacy by Design
+
+We built Riseora with privacy as a core principle:
+	•	We never sell your personal data
+	•	No data sharing with advertisers
+	•	Clear privacy controls and transparency
+	•	Users may request data access or deletion at any time
+
+Your trust matters more than monetizing your information.
+
+⸻
+
+⚖️ Compliance & Transparency
+
+Riseora is designed to operate responsibly and transparently:
+	•	CROA disclosures are presented before any paid service
+	•	FCRA disclaimers included in dispute letters
+	•	Educational, self-service platform — no legal promises
+	•	Audit logs maintained for system integrity
+
+We empower you with knowledge and tools — you stay in control.
+
+⸻
+
+✅ Our Promise
+
+We will never sell your data.
+We will never misuse your information.
+We will always protect your privacy.
+
+If you have questions about security or privacy, our support team is here to help.
+
+⸻
+
+🔒 Riseora — Built for Trust. Designed for Protection.

@@ -62,15 +62,26 @@ export function Footer() {
           {/* Security */}
           <div>
             <h4 className="font-serif font-bold text-lg mb-4 text-secondary">Bank-Level Security</h4>
-            <Link href="/security" className="group block mb-4">
-              <div className="flex items-center gap-2 mb-2 text-green-400">
-                <Shield className="h-5 w-5" />
-                <span className="font-semibold text-sm">AES-256 Encrypted</span>
-              </div>
-              <p className="text-xs text-primary-foreground/70 group-hover:text-white transition-colors">
-                Your data is protected with the same encryption standards used by banks. Click to learn more.
-              </p>
-            </Link>
+            <div className="space-y-3 mb-6">
+              <Link href="/security" className="group block">
+                <div className="flex items-center gap-2 mb-1 text-green-400">
+                  <Shield className="h-4 w-4" />
+                  <span className="font-semibold text-sm">AES-256 Encrypted</span>
+                </div>
+                <p className="text-xs text-primary-foreground/70 group-hover:text-white transition-colors">
+                  Data encrypted at rest & in transit.
+                </p>
+              </Link>
+              <Link href="/security" className="group block">
+                <div className="flex items-center gap-2 mb-1 text-green-400">
+                  <Lock className="h-4 w-4" />
+                  <span className="font-semibold text-sm">Secure Access</span>
+                </div>
+                <p className="text-xs text-primary-foreground/70 group-hover:text-white transition-colors">
+                  Strict access controls & isolation.
+                </p>
+              </Link>
+            </div>
             <div className="flex gap-4">
                {/* Social placeholders */}
                <Facebook className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
