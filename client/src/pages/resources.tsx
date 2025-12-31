@@ -21,10 +21,10 @@ export default function Resources() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             <ResourceCard 
               icon={<BookOpen className="h-8 w-8 text-secondary" />}
-              title="Understanding Your Score"
-              description="Your credit score is calculated based on 5 key factors: Payment History (35%), Amounts Owed (30%), Length of Credit History (15%), Credit Mix (10%), and New Credit (10%). Understanding these helps you prioritize your improvement efforts."
-              link="/resources/credit-score-guide"
-              linkText="View Full Guide"
+              title="Understand Your Credit"
+              description="Learn how credit scores are calculated and what factors impact your financial reputation. Source: Consumer Advice | Federal Trade Commission (.gov)"
+              link="https://consumer.ftc.gov/articles/understanding-your-credit"
+              linkText="View FTC Guide"
             />
             <ResourceCard 
               icon={<CreditCard className="h-8 w-8 text-secondary" />}
