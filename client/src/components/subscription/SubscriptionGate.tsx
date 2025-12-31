@@ -66,7 +66,7 @@ export function SubscriptionGate({ children, featureName = "Premium Features" }:
               </div>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex-col gap-3">
             <Button 
               className="w-full h-12 text-lg font-bold bg-secondary hover:bg-secondary/90 text-primary"
               onClick={handleSubscribe}
@@ -80,6 +80,11 @@ export function SubscriptionGate({ children, featureName = "Premium Features" }:
                 </span>
               )}
             </Button>
+            <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><Lock className="h-3 w-3" /> Bank-level encryption</span>
+              <span>•</span>
+              <span>We never sell your data</span>
+            </div>
           </CardFooter>
         </Card>
       </div>

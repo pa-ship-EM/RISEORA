@@ -75,10 +75,10 @@ export function Footer() {
               <Link href="/security" className="group block">
                 <div className="flex items-center gap-2 mb-1 text-green-400">
                   <Lock className="h-4 w-4" />
-                  <span className="font-semibold text-sm">Secure Access</span>
+                  <span className="font-semibold text-sm">Privacy First</span>
                 </div>
                 <p className="text-xs text-primary-foreground/70 group-hover:text-white transition-colors">
-                  Strict access controls & isolation.
+                  We never sell your personal data.
                 </p>
               </Link>
             </div>

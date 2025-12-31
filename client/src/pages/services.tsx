@@ -146,6 +146,13 @@ function PricingCard({ title, price, originalPrice, features, description, isPop
           Request Access (Beta)
         </Button>
       </Link>
+      
+      <div className="mt-4 flex flex-col items-center gap-1 text-[10px] text-muted-foreground opacity-80">
+        <div className="flex items-center gap-1 font-medium">
+          <ShieldCheck className="h-3 w-3" /> Bank-level encryption
+        </div>
+        <div>We never sell your data</div>
+      </div>
     </div>
   );
 }

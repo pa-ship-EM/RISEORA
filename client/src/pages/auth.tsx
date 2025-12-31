@@ -117,8 +117,11 @@ export default function AuthPage() {
                   <Input id="signup-password" type="password" {...form.register("password")} />
                   {form.formState.errors.password && <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>}
                 </div>
-                <div className="text-xs text-muted-foreground bg-secondary/10 p-3 rounded text-center">
-                  <span className="font-semibold text-secondary-foreground">Security Notice:</span> All data is encrypted with 256-bit SSL encryption.
+                <div className="mt-4 text-xs text-muted-foreground bg-secondary/10 p-3 rounded text-center space-y-1">
+                  <div className="font-semibold text-secondary-foreground flex items-center justify-center gap-1">
+                    <ShieldCheck className="h-3 w-3" /> Bank-level encryption
+                  </div>
+                  <div>We never sell your data.</div>
                 </div>
               </CardContent>
               <CardFooter>
