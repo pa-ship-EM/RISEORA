@@ -30,6 +30,14 @@ const mockClients = [
   { id: 3, name: "Michael Ross", email: "mike@example.com", status: "Active", disputes: 5, plan: "Pro" },
 ];
 
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+
 export default function AdminDashboard() {
   return (
     <DashboardLayout>
@@ -99,7 +107,18 @@ export default function AdminDashboard() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="font-bold text-primary">Manage</Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="font-bold text-primary">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>View Profile</DropdownMenuItem>
+                            <DropdownMenuItem>Audit History</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">Suspend Access</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}

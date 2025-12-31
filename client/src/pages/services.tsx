@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Check, ShieldCheck, Wand2, Zap, Scale } from "lucide-react";
+import { Check, ShieldCheck, Wand2, Zap, Scale, BookOpen } from "lucide-react";
 import { Link } from "wouter";
 
 import wizardLogo from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_14_PM_1767131297375.png";
