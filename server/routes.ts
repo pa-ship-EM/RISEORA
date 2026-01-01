@@ -796,5 +796,135 @@ Respond in JSON format with this structure:
     }
   });
 
+  // ========== ADMIN ROUTES ==========
+  
+  // Middleware to check admin role
+  async function requireAdmin(req: any, res: any, next: any) {
+    if (!req.session?.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = await storage.getUser(req.session.userId);
+    if (!user || user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    next();
+  }
+  
+  // GET /api/admin/users - Get all users
+  app.get("/api/admin/users", requireAdmin, async (req, res, next) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      const usersWithoutPassword = allUsers.map(({ passwordHash, ...user }) => user);
+      res.json(usersWithoutPassword);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // GET /api/admin/clients - Get all clients
+  app.get("/api/admin/clients", requireAdmin, async (req, res, next) => {
+    try {
+      const clients = await storage.getAllUsersByRole("CLIENT");
+      const clientsWithoutPassword = clients.map(({ passwordHash, ...user }) => user);
+      res.json(clientsWithoutPassword);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // GET /api/admin/affiliates - Get all affiliates
+  app.get("/api/admin/affiliates", requireAdmin, async (req, res, next) => {
+    try {
+      const affiliates = await storage.getAllUsersByRole("AFFILIATE");
+      const affiliatesWithoutPassword = affiliates.map(({ passwordHash, ...user }) => user);
+      res.json(affiliatesWithoutPassword);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // POST /api/admin/affiliates - Create new affiliate
+  app.post("/api/admin/affiliates", requireAdmin, async (req, res, next) => {
+    try {
+      const { email, password, firstName, lastName } = req.body;
+      
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+      
+      const passwordHash = await bcrypt.hash(password, 10);
+      const affiliate = await storage.createUser({
+        email,
+        passwordHash,
+        firstName,
+        lastName,
+        role: "AFFILIATE",
+      });
+      
+      const { passwordHash: _, ...affiliateWithoutPassword } = affiliate;
+      res.json(affiliateWithoutPassword);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // DELETE /api/admin/users/:id - Delete a user
+  app.delete("/api/admin/users/:id", requireAdmin, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      
+      if (id === req.session.userId) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      const deleted = await storage.deleteUser(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // GET /api/admin/disputes - Get all disputes
+  app.get("/api/admin/disputes", requireAdmin, async (req, res, next) => {
+    try {
+      const allDisputes = await storage.getAllDisputes();
+      res.json(allDisputes);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // GET /api/admin/stats - Get admin statistics
+  app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      const allDisputes = await storage.getAllDisputes();
+      
+      const clients = allUsers.filter(u => u.role === "CLIENT");
+      const affiliates = allUsers.filter(u => u.role === "AFFILIATE");
+      const pendingDisputes = allDisputes.filter(d => d.status === "GENERATED");
+      const resolvedDisputes = allDisputes.filter(d => d.status === "RESOLVED");
+      
+      res.json({
+        totalClients: clients.length,
+        totalAffiliates: affiliates.length,
+        totalDisputes: allDisputes.length,
+        pendingDisputes: pendingDisputes.length,
+        resolvedDisputes: resolvedDisputes.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   return httpServer;
 }

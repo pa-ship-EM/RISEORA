@@ -47,6 +47,12 @@ export interface IStorage {
   
   // Get disputes needing deadline reminders
   getDisputesNeedingReminders(): Promise<Dispute[]>;
+  
+  // Admin methods
+  getAllUsers(): Promise<User[]>;
+  getAllUsersByRole(role: string): Promise<User[]>;
+  getAllDisputes(): Promise<Dispute[]>;
+  deleteUser(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -257,6 +263,26 @@ export class DatabaseStorage implements IStorage {
         lt(disputes.responseDeadline, fiveDaysFromNow),
         isNull(disputes.responseReceivedAt)
       ));
+  }
+
+  // Admin methods
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async getAllUsersByRole(role: string): Promise<User[]> {
+    return await db.select().from(users)
+      .where(eq(users.role, role))
+      .orderBy(desc(users.createdAt));
+  }
+
+  async getAllDisputes(): Promise<Dispute[]> {
+    return await db.select().from(disputes).orderBy(desc(disputes.createdAt));
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id)).returning();
+    return result.length > 0;
   }
 }
 
