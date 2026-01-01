@@ -309,6 +309,57 @@ export async function registerRoutes(
     }
   });
   
+  // POST /api/disputes/bulk - Create multiple disputes at once
+  app.post("/api/disputes/bulk", requireAuth, async (req, res, next) => {
+    try {
+      const { disputes: disputesArray } = req.body;
+      
+      if (!Array.isArray(disputesArray) || disputesArray.length === 0) {
+        return res.status(400).json({ message: "Disputes array is required" });
+      }
+      
+      if (disputesArray.length > 20) {
+        return res.status(400).json({ message: "Maximum 20 disputes allowed per request" });
+      }
+      
+      // Validate each dispute has required fields
+      for (const d of disputesArray) {
+        if (!d.creditorName || !d.bureau || !d.disputeReason) {
+          return res.status(400).json({ 
+            message: "Each dispute must have creditorName, bureau, and disputeReason" 
+          });
+        }
+        if (d.disputeReason === "other" && !d.customReason) {
+          return res.status(400).json({ 
+            message: "Custom reason required when dispute reason is 'other'" 
+          });
+        }
+        if (!d.letterContent) {
+          return res.status(400).json({ 
+            message: "Letter content is required for each dispute" 
+          });
+        }
+      }
+      
+      // Validate and add userId to each dispute
+      const validatedDisputes = disputesArray.map((d: any) => {
+        const disputeData = {
+          ...d,
+          userId: req.session.userId!,
+        };
+        return insertDisputeSchema.parse(disputeData);
+      });
+      
+      const createdDisputes = await storage.createDisputesBulk(validatedDisputes);
+      res.json({ disputes: createdDisputes, count: createdDisputes.length });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid dispute data", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+  
   // PATCH /api/disputes/:id
   app.patch("/api/disputes/:id", requireAuth, async (req, res, next) => {
     try {

@@ -18,6 +18,7 @@ export interface IStorage {
   getDisputesForUser(userId: string): Promise<Dispute[]>;
   getDispute(id: string): Promise<Dispute | undefined>;
   createDispute(dispute: InsertDispute): Promise<Dispute>;
+  createDisputesBulk(disputesData: InsertDispute[]): Promise<Dispute[]>;
   updateDispute(id: string, data: Partial<Dispute>): Promise<Dispute | undefined>;
   deleteDispute(id: string): Promise<boolean>;
 }
@@ -96,6 +97,15 @@ export class DatabaseStorage implements IStorage {
       .values(insertDispute)
       .returning();
     return dispute;
+  }
+
+  async createDisputesBulk(disputesData: InsertDispute[]): Promise<Dispute[]> {
+    if (disputesData.length === 0) return [];
+    const result = await db
+      .insert(disputes)
+      .values(disputesData)
+      .returning();
+    return result;
   }
 
   async updateDispute(id: string, data: Partial<Dispute>): Promise<Dispute | undefined> {

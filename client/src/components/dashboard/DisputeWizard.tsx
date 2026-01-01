@@ -32,6 +32,14 @@ interface ParsedAccount {
   confidence: "HIGH" | "MEDIUM" | "LOW";
 }
 
+interface SelectedAccount {
+  index: number;
+  creditorName: string;
+  accountNumber: string | null;
+  disputeReason: string;
+  customReason: string;
+}
+
 export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const [step, setStep] = useState<WizardStep>("safety-check");
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +73,9 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const [useManualEntry, setUseManualEntry] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadMode, setUploadMode] = useState<"pdf" | "paste">("pdf");
+  const [selectedAccounts, setSelectedAccounts] = useState<SelectedAccount[]>([]);
+  const [currentReasonIndex, setCurrentReasonIndex] = useState(0);
+  const [generatedLetters, setGeneratedLetters] = useState<{creditorName: string; letterContent: string}[]>([]);
 
   const handleNext = async () => {
     if (step === "safety-check") setStep("personal-info");
@@ -151,36 +162,92 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
         setStep("identify-item");
       }
     }
-    else if (step === "identify-item" && formData.creditorName) setStep("reason");
-    else if (step === "reason" && formData.disputeReason) setStep("review");
+    else if (step === "identify-item") {
+      // Check if we have multi-select accounts or single manual entry
+      const hasAISelections = selectedAccounts.length > 0 && selectedAccounts.some(a => a.index >= 0);
+      
+      if (hasAISelections) {
+        // Rebuild selectedAccounts from current state to ensure freshness
+        // Keep only the currently selected AI accounts
+        const freshAccounts = selectedAccounts.filter(a => a.index >= 0).map(acc => {
+          const sourceAccount = parsedAccounts[acc.index];
+          return {
+            ...acc,
+            creditorName: sourceAccount?.creditorName || acc.creditorName,
+            accountNumber: sourceAccount?.accountNumber || acc.accountNumber,
+          };
+        });
+        setSelectedAccounts(freshAccounts);
+        setCurrentReasonIndex(0);
+        setStep("reason");
+      } else if (formData.creditorName) {
+        // Single manual entry - update or create in selectedAccounts
+        const existingManual = selectedAccounts.find(a => a.index === -1);
+        if (existingManual) {
+          // Update existing manual entry with latest form data
+          setSelectedAccounts([{
+            ...existingManual,
+            creditorName: formData.creditorName,
+            accountNumber: formData.accountNumber || null,
+          }]);
+        } else {
+          // Create new manual entry
+          setSelectedAccounts([{
+            index: -1,
+            creditorName: formData.creditorName,
+            accountNumber: formData.accountNumber || null,
+            disputeReason: "",
+            customReason: "",
+          }]);
+        }
+        setCurrentReasonIndex(0);
+        setStep("reason");
+      }
+    }
+    else if (step === "reason") {
+      // Check if all selected accounts have reasons
+      const allHaveReasons = selectedAccounts.every(acc => acc.disputeReason);
+      if (allHaveReasons) {
+        setStep("review");
+      }
+    }
     else if (step === "review") {
       setIsLoading(true);
       try {
-        const letterContent = generateLetter();
+        // Generate letters for all selected accounts
+        const letters = selectedAccounts.map(acc => ({
+          creditorName: acc.creditorName,
+          letterContent: generateLetterForAccount(acc),
+        }));
         
-        await createDispute({
-          creditorName: formData.creditorName,
-          accountNumber: formData.accountNumber || undefined,
+        // Create disputes in bulk
+        const disputes = selectedAccounts.map(acc => ({
+          creditorName: acc.creditorName,
+          accountNumber: acc.accountNumber || undefined,
           bureau: formData.bureau as "EXPERIAN" | "TRANSUNION" | "EQUIFAX",
-          status: "GENERATED",
-          disputeReason: formData.disputeReason,
-          customReason: formData.disputeReason === "other" ? formData.customReason : undefined,
+          status: "GENERATED" as const,
+          disputeReason: acc.disputeReason,
+          customReason: acc.disputeReason === "other" ? acc.customReason : undefined,
           metro2Compliant: true,
-          letterContent,
-        });
+          letterContent: generateLetterForAccount(acc),
+        }));
         
+        const response = await apiRequest("POST", "/api/disputes/bulk", { disputes });
+        await response.json();
+        
+        setGeneratedLetters(letters);
         setIsLoading(false);
         setStep("success");
         toast({
-          title: "Dispute Generated!",
-          description: `Your draft letter has been prepared for your review.`,
+          title: "Disputes Generated!",
+          description: `${selectedAccounts.length} dispute letter(s) have been prepared for your review.`,
         });
       } catch (error: any) {
         setIsLoading(false);
         toast({
           variant: "destructive",
           title: "Error",
-          description: error.message || "Failed to create dispute",
+          description: error.message || "Failed to create disputes",
         });
       }
     }
@@ -191,18 +258,65 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     else if (step === "select-bureau") setStep("personal-info");
     else if (step === "upload-report") setStep("select-bureau");
     else if (step === "identify-item") setStep("upload-report");
-    else if (step === "reason") setStep("identify-item");
+    else if (step === "reason") {
+      // When going back to identify-item, preserve selectedAccounts but allow re-selection
+      setStep("identify-item");
+    }
     else if (step === "review") setStep("reason");
   };
   
-  const selectParsedAccount = (index: number) => {
+  const toggleAccountSelection = (index: number) => {
     const account = parsedAccounts[index];
-    setSelectedAccountIndex(index);
-    setFormData(prev => ({
-      ...prev,
-      creditorName: account.creditorName,
-      accountNumber: account.accountNumber || "",
-    }));
+    setSelectedAccounts(prev => {
+      const exists = prev.find(a => a.index === index);
+      if (exists) {
+        return prev.filter(a => a.index !== index);
+      } else {
+        // When adding AI-detected account, remove any manual entries
+        const filtered = prev.filter(a => a.index >= 0);
+        return [...filtered, {
+          index,
+          creditorName: account.creditorName,
+          accountNumber: account.accountNumber,
+          disputeReason: account.recommendedReasons[0] || "",
+          customReason: "",
+        }];
+      }
+    });
+    // Clear manual entry fields when selecting AI accounts
+    setFormData(prev => ({ ...prev, creditorName: "", accountNumber: "" }));
+  };
+  
+  const selectAllAccounts = () => {
+    const aiSelections = selectedAccounts.filter(a => a.index >= 0);
+    if (aiSelections.length === parsedAccounts.length) {
+      setSelectedAccounts([]);
+    } else {
+      setSelectedAccounts(parsedAccounts.map((account, index) => ({
+        index,
+        creditorName: account.creditorName,
+        accountNumber: account.accountNumber,
+        disputeReason: account.recommendedReasons[0] || "",
+        customReason: "",
+      })));
+      // Clear manual entry fields when selecting all AI accounts
+      setFormData(prev => ({ ...prev, creditorName: "", accountNumber: "" }));
+    }
+  };
+  
+  const updateAccountReason = (index: number, reason: string, customReason?: string) => {
+    setSelectedAccounts(prev => prev.map(acc => 
+      acc.index === index 
+        ? { ...acc, disputeReason: reason, customReason: customReason || acc.customReason }
+        : acc
+    ));
+  };
+  
+  const applyReasonToAll = (reason: string) => {
+    setSelectedAccounts(prev => prev.map(acc => ({
+      ...acc,
+      disputeReason: reason,
+    })));
   };
 
   const progress = {
@@ -223,9 +337,9 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     </div>
   );
 
-  const generateLetter = () => {
+  const generateLetterForAccount = (account: SelectedAccount) => {
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const reasonText = formData.disputeReason === "other" ? formData.customReason : formData.disputeReason;
+    const reasonText = account.disputeReason === "other" ? account.customReason : account.disputeReason;
     
     return `${formData.firstName} ${formData.lastName}
 ${formData.address}
@@ -238,15 +352,15 @@ ${today}
 ${formData.bureau}
 Dispute Department
 
-RE: Dispute of Inaccurate Information - Account # ${formData.accountNumber || "Unknown"}
+RE: Dispute of Inaccurate Information - Account # ${account.accountNumber || "Unknown"}
 
 To Whom It May Concern:
 
 I am writing to dispute the following information in my file, which I have identified as inaccurate and/or unverifiable. I have circled the items on the attached copy of the report I received.
 
 Dispute Item:
-Creditor Name: ${formData.creditorName}
-Account Number: ${formData.accountNumber || "Not Provided"}
+Creditor Name: ${account.creditorName}
+Account Number: ${account.accountNumber || "Not Provided"}
 
 Reason for Dispute:
 ${reasonText}
@@ -269,7 +383,11 @@ ${formData.firstName} ${formData.lastName}`;
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 animate-in zoom-in duration-500">
             <CheckCircle2 className="h-10 w-10 text-emerald-600" />
           </div>
-          <h2 className="text-3xl font-serif font-bold text-primary mb-4">Your dispute letter is ready</h2>
+          <h2 className="text-3xl font-serif font-bold text-primary mb-4">
+            {generatedLetters.length > 1 
+              ? `${generatedLetters.length} Dispute Letters Ready!` 
+              : "Your dispute letter is ready"}
+          </h2>
           
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 text-left w-full max-w-md">
             <h3 className="font-bold text-primary mb-4 flex items-center gap-2">
@@ -279,7 +397,7 @@ ${formData.firstName} ${formData.lastName}`;
             <ul className="space-y-3 text-sm text-slate-600">
               <li className="flex gap-2">
                 <div className="h-5 w-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-[10px] font-bold shrink-0">1</div>
-                <span>Download or copy the generated letter below.</span>
+                <span>Download or copy the generated letter{generatedLetters.length > 1 ? "s" : ""} below.</span>
               </li>
               <li className="flex gap-2">
                 <div className="h-5 w-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-[10px] font-bold shrink-0">2</div>
@@ -292,25 +410,50 @@ ${formData.firstName} ${formData.lastName}`;
             </ul>
           </div>
 
-          <div className="w-full max-w-2xl mb-8">
-            <Label className="block text-left mb-2 font-bold text-primary">Preview Generated Letter</Label>
-            <Textarea 
-              readOnly 
-              value={generateLetter()} 
-              className="h-[300px] font-mono text-sm bg-white border-slate-200 p-4"
-            />
+          <div className="w-full max-w-2xl mb-8 space-y-4">
+            {generatedLetters.map((letter, i) => (
+              <div key={i} className="border rounded-xl overflow-hidden bg-white shadow-sm">
+                <div className="flex items-center justify-between p-3 bg-slate-50 border-b">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded">
+                      Letter {i + 1}
+                    </span>
+                    <Label className="font-bold text-primary">{letter.creditorName}</Label>
+                    <span className="text-xs text-muted-foreground">• {formData.bureau}</span>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(letter.letterContent);
+                      toast({ title: `Letter for ${letter.creditorName} copied!` });
+                    }}
+                  >
+                    Copy Letter
+                  </Button>
+                </div>
+                <Textarea 
+                  readOnly 
+                  value={letter.letterContent} 
+                  className="h-[200px] font-mono text-sm border-0 rounded-none p-4"
+                  data-testid={`textarea-letter-${i}`}
+                />
+              </div>
+            ))}
           </div>
 
           <div className="grid gap-4 w-full max-w-sm">
             <Button size="lg" className="w-full bg-secondary text-slate-900 font-bold hover:bg-secondary/90 h-12 text-lg" onClick={onComplete}>
               Return to Dashboard
             </Button>
-            <Button variant="outline" className="w-full h-12 text-lg bg-white" onClick={() => {
-              navigator.clipboard.writeText(generateLetter());
-              toast({ title: "Copied to clipboard" });
-            }}>
-              Copy to Clipboard
-            </Button>
+            {generatedLetters.length === 1 && (
+              <Button variant="outline" className="w-full h-12 text-lg bg-white" onClick={() => {
+                navigator.clipboard.writeText(generatedLetters[0].letterContent);
+                toast({ title: "Copied to clipboard" });
+              }}>
+                Copy to Clipboard
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -708,11 +851,11 @@ Payment History: 30 days late (Mar 2024)"
              <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-bold text-primary mb-2">
-                  {parsedAccounts.length > 0 ? "Select an Account to Dispute" : "Identify the Item"}
+                  {parsedAccounts.length > 0 ? "Select Accounts to Dispute" : "Identify the Item"}
                 </h3>
                 <p className="text-muted-foreground">
                   {parsedAccounts.length > 0 
-                    ? "Our AI found these accounts in your report. Select one or enter manually below."
+                    ? "Select one or more accounts to dispute. You can generate multiple letters at once."
                     : "Enter details as they appear on your educational credit report."}
                 </p>
               </div>
@@ -724,53 +867,84 @@ Payment History: 30 days late (Mar 2024)"
 
             {parsedAccounts.length > 0 && (
               <div className="space-y-3">
-                <Label className="text-sm font-medium">AI-Detected Accounts</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">AI-Detected Accounts</Label>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={selectAllAccounts}
+                    className="text-xs"
+                    data-testid="button-select-all"
+                  >
+                    {selectedAccounts.filter(a => a.index >= 0).length === parsedAccounts.length ? "Deselect All" : "Select All"}
+                  </Button>
+                </div>
+                {selectedAccounts.filter(a => a.index >= 0).length > 0 && (
+                  <div className="flex items-center gap-2 p-2 bg-secondary/10 rounded-lg">
+                    <CheckCircle2 className="h-4 w-4 text-secondary" />
+                    <span className="text-sm font-medium text-primary">
+                      {selectedAccounts.filter(a => a.index >= 0).length} account{selectedAccounts.filter(a => a.index >= 0).length > 1 ? "s" : ""} selected
+                    </span>
+                  </div>
+                )}
                 <div className="grid gap-3 max-h-[250px] overflow-y-auto pr-1">
-                  {parsedAccounts.map((account, index) => (
-                    <div
-                      key={index}
-                      onClick={() => selectParsedAccount(index)}
-                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
-                        selectedAccountIndex === index 
-                          ? 'border-secondary bg-secondary/5' 
-                          : 'border-slate-200 bg-white hover:border-slate-300'
-                      }`}
-                      data-testid={`card-account-${index}`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-bold text-primary">{account.creditorName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {account.accountType} {account.accountNumber ? `• #${account.accountNumber}` : ''}
-                          </p>
-                          {account.balance && (
-                            <p className="text-sm text-muted-foreground">Balance: {account.balance}</p>
-                          )}
-                        </div>
-                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          account.confidence === 'HIGH' ? 'bg-emerald-100 text-emerald-700' :
-                          account.confidence === 'MEDIUM' ? 'bg-amber-100 text-amber-700' :
-                          'bg-slate-100 text-slate-600'
-                        }`}>
-                          {account.confidence}
+                  {parsedAccounts.map((account, index) => {
+                    const isSelected = selectedAccounts.some(a => a.index === index);
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => toggleAccountSelection(index)}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
+                          isSelected 
+                            ? 'border-secondary bg-secondary/5' 
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                        data-testid={`card-account-${index}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                            isSelected ? 'bg-secondary border-secondary' : 'border-slate-300'
+                          }`}>
+                            {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="font-bold text-primary">{account.creditorName}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {account.accountType} {account.accountNumber ? `• #${account.accountNumber}` : ''}
+                                </p>
+                                {account.balance && (
+                                  <p className="text-sm text-muted-foreground">Balance: {account.balance}</p>
+                                )}
+                              </div>
+                              <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                account.confidence === 'HIGH' ? 'bg-emerald-100 text-emerald-700' :
+                                account.confidence === 'MEDIUM' ? 'bg-amber-100 text-amber-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>
+                                {account.confidence}
+                              </div>
+                            </div>
+                            {account.recommendedReasons.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {account.recommendedReasons.slice(0, 2).map((reason, i) => (
+                                  <span key={i} className="px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] rounded-full">
+                                    {reason}
+                                  </span>
+                                ))}
+                                {account.recommendedReasons.length > 2 && (
+                                  <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded-full">
+                                    +{account.recommendedReasons.length - 2} more
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      {account.recommendedReasons.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {account.recommendedReasons.slice(0, 2).map((reason, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] rounded-full">
-                              {reason}
-                            </span>
-                          ))}
-                          {account.recommendedReasons.length > 2 && (
-                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded-full">
-                              +{account.recommendedReasons.length - 2} more
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <div className="border-t pt-4 mt-4">
                   <p className="text-sm text-muted-foreground mb-2">Or enter manually:</p>
@@ -787,7 +961,8 @@ Payment History: 30 days late (Mar 2024)"
                   value={formData.creditorName}
                   onChange={(e) => {
                     setFormData({...formData, creditorName: e.target.value});
-                    setSelectedAccountIndex(null);
+                    // Clear AI-detected selections when typing manual entry
+                    setSelectedAccounts(prev => prev.filter(a => a.index === -1));
                   }}
                   className="h-12 text-lg bg-white"
                 />
@@ -810,61 +985,147 @@ Payment History: 30 days late (Mar 2024)"
         {step === "reason" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
              <div>
-              <h3 className="text-lg font-bold text-primary mb-2">Educational Reason for Challenge</h3>
-              <p className="text-muted-foreground">Why do you believe this item is inaccurate or unverifiable?</p>
+              <h3 className="text-lg font-bold text-primary mb-2">
+                {selectedAccounts.length > 1 
+                  ? `Set Dispute Reasons (${selectedAccounts.filter(a => a.disputeReason).length}/${selectedAccounts.length} complete)`
+                  : "Educational Reason for Challenge"}
+              </h3>
+              <p className="text-muted-foreground">
+                {selectedAccounts.length > 1 
+                  ? "Set a reason for each account, or apply one reason to all."
+                  : "Why do you believe this item is inaccurate or unverifiable?"}
+              </p>
             </div>
 
-            {selectedAccountIndex !== null && parsedAccounts[selectedAccountIndex]?.recommendedReasons?.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-purple-600" />
-                  <Label className="text-sm font-medium text-purple-700">AI-Recommended Reasons</Label>
+            {selectedAccounts.length > 1 && (
+              <div className="space-y-4">
+                <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="h-4 w-4 text-purple-600" />
+                    <Label className="text-sm font-medium text-purple-700">Apply to All Accounts</Label>
+                  </div>
+                  <Select onValueChange={(v) => applyReasonToAll(v)}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select a reason for all..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Not mine">Not my account / Identity Theft</SelectItem>
+                      <SelectItem value="Late payment incorrect">Never late / Late payment incorrect</SelectItem>
+                      <SelectItem value="Balance incorrect">Balance is incorrect</SelectItem>
+                      <SelectItem value="Account closed">Account is closed</SelectItem>
+                      <SelectItem value="Duplicate">Duplicate account</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="grid gap-2">
-                  {parsedAccounts[selectedAccountIndex].recommendedReasons.map((reason, i) => (
-                    <Button
-                      key={i}
-                      variant="outline"
-                      className={`justify-start h-auto py-3 px-4 text-left ${
-                        formData.disputeReason === reason 
-                          ? 'border-secondary bg-secondary/10 text-primary' 
-                          : 'hover:border-secondary/50'
-                      }`}
-                      onClick={() => setFormData({...formData, disputeReason: reason})}
-                      data-testid={`button-reason-${i}`}
-                    >
-                      <CheckCircle2 className={`h-4 w-4 mr-2 shrink-0 ${formData.disputeReason === reason ? 'text-secondary' : 'text-muted-foreground'}`} />
-                      {reason}
-                    </Button>
+                
+                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                  {selectedAccounts.map((acc, i) => (
+                    <div key={acc.index} className="p-4 bg-white rounded-xl border border-slate-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-bold text-primary text-sm">{acc.creditorName}</p>
+                        {acc.disputeReason && acc.disputeReason !== "other" && (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        )}
+                        {acc.disputeReason === "other" && acc.customReason && (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        )}
+                      </div>
+                      <Select 
+                        value={acc.disputeReason} 
+                        onValueChange={(v) => updateAccountReason(acc.index, v)}
+                      >
+                        <SelectTrigger className="h-10 bg-slate-50">
+                          <SelectValue placeholder="Select reason..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {parsedAccounts[acc.index]?.recommendedReasons?.map((reason, ri) => (
+                            <SelectItem key={`ai-${ri}`} value={reason}>
+                              <span className="flex items-center gap-1">
+                                <Sparkles className="h-3 w-3 text-purple-500" />
+                                {reason}
+                              </span>
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="Not mine">Not my account / Identity Theft</SelectItem>
+                          <SelectItem value="Late payment incorrect">Never late / Late payment incorrect</SelectItem>
+                          <SelectItem value="Balance incorrect">Balance is incorrect</SelectItem>
+                          <SelectItem value="Account closed">Account is closed</SelectItem>
+                          <SelectItem value="Duplicate">Duplicate account</SelectItem>
+                          <SelectItem value="other">Other (Provide Detail)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {acc.disputeReason === "other" && (
+                        <Textarea
+                          placeholder="Describe the inaccuracy..."
+                          value={acc.customReason}
+                          onChange={(e) => updateAccountReason(acc.index, "other", e.target.value)}
+                          className="mt-2 h-20 text-sm bg-slate-50"
+                        />
+                      )}
+                    </div>
                   ))}
-                </div>
-                <div className="border-t pt-4 mt-2">
-                  <p className="text-sm text-muted-foreground mb-2">Or choose from standard reasons:</p>
                 </div>
               </div>
             )}
 
-            <Select value={formData.disputeReason} onValueChange={(v) => setFormData({...formData, disputeReason: v})}>
-              <SelectTrigger className="h-12 text-lg bg-white">
-                <SelectValue placeholder="Select a reason..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Not mine">Not my account / Identity Theft</SelectItem>
-                <SelectItem value="Late payment incorrect">Never late / Late payment incorrect</SelectItem>
-                <SelectItem value="Balance incorrect">Balance is incorrect</SelectItem>
-                <SelectItem value="Account closed">Account is closed</SelectItem>
-                <SelectItem value="Duplicate">Duplicate account</SelectItem>
-                <SelectItem value="other">Other (Provide Detail)</SelectItem>
-              </SelectContent>
-            </Select>
+            {selectedAccounts.length === 1 && (
+              <>
+                {selectedAccounts[0].index >= 0 && parsedAccounts[selectedAccounts[0].index]?.recommendedReasons?.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-purple-600" />
+                      <Label className="text-sm font-medium text-purple-700">AI-Recommended Reasons</Label>
+                    </div>
+                    <div className="grid gap-2">
+                      {parsedAccounts[selectedAccounts[0].index].recommendedReasons.map((reason, i) => (
+                        <Button
+                          key={i}
+                          variant="outline"
+                          className={`justify-start h-auto py-3 px-4 text-left ${
+                            selectedAccounts[0].disputeReason === reason 
+                              ? 'border-secondary bg-secondary/10 text-primary' 
+                              : 'hover:border-secondary/50'
+                          }`}
+                          onClick={() => updateAccountReason(selectedAccounts[0].index, reason)}
+                          data-testid={`button-reason-${i}`}
+                        >
+                          <CheckCircle2 className={`h-4 w-4 mr-2 shrink-0 ${selectedAccounts[0].disputeReason === reason ? 'text-secondary' : 'text-muted-foreground'}`} />
+                          {reason}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="border-t pt-4 mt-2">
+                      <p className="text-sm text-muted-foreground mb-2">Or choose from standard reasons:</p>
+                    </div>
+                  </div>
+                )}
 
-            {formData.disputeReason === "other" && (
-              <Textarea 
-                placeholder="Describe the inaccuracy in your own words..."
-                value={formData.customReason}
-                onChange={(e) => setFormData({...formData, customReason: e.target.value})}
-                className="h-32 text-base bg-white"
-              />
+                <Select 
+                  value={selectedAccounts[0]?.disputeReason || ""} 
+                  onValueChange={(v) => updateAccountReason(selectedAccounts[0].index, v)}
+                >
+                  <SelectTrigger className="h-12 text-lg bg-white">
+                    <SelectValue placeholder="Select a reason..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Not mine">Not my account / Identity Theft</SelectItem>
+                    <SelectItem value="Late payment incorrect">Never late / Late payment incorrect</SelectItem>
+                    <SelectItem value="Balance incorrect">Balance is incorrect</SelectItem>
+                    <SelectItem value="Account closed">Account is closed</SelectItem>
+                    <SelectItem value="Duplicate">Duplicate account</SelectItem>
+                    <SelectItem value="other">Other (Provide Detail)</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {selectedAccounts[0]?.disputeReason === "other" && (
+                  <Textarea 
+                    placeholder="Describe the inaccuracy in your own words..."
+                    value={selectedAccounts[0]?.customReason || ""}
+                    onChange={(e) => updateAccountReason(selectedAccounts[0].index, "other", e.target.value)}
+                    className="h-32 text-base bg-white"
+                  />
+                )}
+              </>
             )}
             
             <div className="bg-secondary/10 p-4 rounded-lg flex gap-3 items-start">
@@ -880,8 +1141,12 @@ Payment History: 30 days late (Mar 2024)"
         {step === "review" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div>
-              <h3 className="text-lg font-bold text-primary mb-2">Review Your Draft</h3>
-              <p className="text-muted-foreground">Please confirm the educational details before generating your draft letter.</p>
+              <h3 className="text-lg font-bold text-primary mb-2">
+                {selectedAccounts.length > 1 
+                  ? `Review ${selectedAccounts.length} Dispute Letters`
+                  : "Review Your Draft"}
+              </h3>
+              <p className="text-muted-foreground">Please confirm the educational details before generating your draft letter{selectedAccounts.length > 1 ? "s" : ""}.</p>
             </div>
 
             <div className="bg-white rounded-xl p-6 space-y-4 border border-border shadow-sm">
@@ -893,22 +1158,42 @@ Payment History: 30 days late (Mar 2024)"
                 <span className="text-muted-foreground">Bureau</span>
                 <span className="font-semibold">{formData.bureau}</span>
               </div>
-              <div className="flex justify-between border-b border-border/50 pb-2">
-                <span className="text-muted-foreground">Creditor</span>
-                <span className="font-semibold">{formData.creditorName}</span>
-              </div>
-              <div className="flex justify-between border-b border-border/50 pb-2">
-                <span className="text-muted-foreground">Account #</span>
-                <span className="font-semibold">{formData.accountNumber || "N/A"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Reason</span>
-                <span className="font-semibold">{formData.disputeReason}</span>
-              </div>
+              
+              {selectedAccounts.length === 1 ? (
+                <>
+                  <div className="flex justify-between border-b border-border/50 pb-2">
+                    <span className="text-muted-foreground">Creditor</span>
+                    <span className="font-semibold">{selectedAccounts[0].creditorName}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-border/50 pb-2">
+                    <span className="text-muted-foreground">Account #</span>
+                    <span className="font-semibold">{selectedAccounts[0].accountNumber || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Reason</span>
+                    <span className="font-semibold">{selectedAccounts[0].disputeReason}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-muted-foreground text-sm font-medium">Accounts to Dispute:</div>
+                  {selectedAccounts.map((acc, i) => (
+                    <div key={i} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
+                      <div>
+                        <span className="font-semibold">{acc.creditorName}</span>
+                        <span className="text-sm text-muted-foreground ml-2">
+                          {acc.accountNumber ? `#${acc.accountNumber}` : ""}
+                        </span>
+                      </div>
+                      <span className="text-sm bg-secondary/10 px-2 py-1 rounded">{acc.disputeReason}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             
             <div className="text-center text-sm text-muted-foreground bg-amber-50 p-3 rounded border border-amber-100 italic">
-              By clicking "Generate Draft", you acknowledge this is a tool for your personal review and submission.
+              By clicking "Generate {selectedAccounts.length > 1 ? "Letters" : "Draft"}", you acknowledge this is a tool for your personal review and submission.
             </div>
             {getComplianceNotice()}
           </div>
@@ -932,15 +1217,15 @@ Payment History: 30 days late (Mar 2024)"
               (step === "personal-info" && (!formData.address || !formData.zip || !formData.ssnLast4)) ||
               (step === "select-bureau" && !formData.bureau) ||
               (step === "upload-report" && isParsing) ||
-              (step === "identify-item" && !formData.creditorName) ||
-              (step === "reason" && !formData.disputeReason) ||
+              (step === "identify-item" && selectedAccounts.length === 0 && !formData.creditorName) ||
+              (step === "reason" && !selectedAccounts.every(acc => acc.disputeReason && (acc.disputeReason !== "other" || acc.customReason))) ||
               isLoading ||
               isParsing
             }
             className="bg-primary hover:bg-primary/90 min-w-[120px]"
           >
             {isLoading || isParsing ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-              step === "review" ? "Generate Letter" : 
+              step === "review" ? (selectedAccounts.length > 1 ? `Generate ${selectedAccounts.length} Letters` : "Generate Letter") : 
               step === "upload-report" && reportText.trim() ? <span className="flex items-center gap-1"><Sparkles className="h-4 w-4 mr-1" /> Analyze with AI</span> :
               <span className="flex items-center gap-1">Next <ChevronRight className="h-4 w-4" /></span>
             )}
