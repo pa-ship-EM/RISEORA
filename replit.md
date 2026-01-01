@@ -5,10 +5,13 @@
 RiseOra is a credit education and guided support platform that empowers consumers to understand, manage, and assert their credit rights. The platform provides tools for generating dispute letters, tracking dispute progress, and educating users about credit repair — all while maintaining strict compliance with CROA, FCRA, and FTC regulations.
 
 Key features include:
-- **Dispute Wizard™**: AI-assisted workflow for generating Metro 2-compliant dispute letters
+- **Dispute Wizard™**: AI-assisted workflow for generating Metro 2-compliant dispute letters with multi-account selection
+- **Dispute Progress Tracking**: Per-letter progress bars, user-updatable checklists, and stage management
+- **AI Notifications**: Intelligent reminders for 30-day deadlines and follow-up actions
+- **Best Practices Guidance**: Educational panel with FCRA-compliant dispute submission guidelines
 - **Multi-role Dashboard**: Separate interfaces for clients, affiliates, and administrators
 - **Secure Data Handling**: AES-256 encryption for sensitive user data (SSN, addresses, DOB)
-- **Subscription Management**: Tiered access model (DIY Scholar, Self-Starter, Professional, Premier)
+- **Subscription Management**: Tiered access model (DIY Scholar, Self-Starter, Growth, Compliance+)
 
 ## User Preferences
 
@@ -46,6 +49,13 @@ Preferred communication style: Simple, everyday language.
 - **Guardrails**: Client-side validation prevents forbidden terms (guarantees, legal threats)
 - **Narrative Validation**: Ensures FCRA-compliant language in dispute letters
 - **Data Minimization**: Sensitive data patterns detected and handled appropriately
+- **AI Notifications**: OpenAI-powered reminder generation for dispute deadlines
+
+### Dispute Progress Tracking
+- **Database Tables**: `dispute_checklists`, `notifications`, `user_notification_settings`
+- **Progress Stages**: GENERATED → MAILED → DELIVERED → INVESTIGATION → RESPONSE → RESOLVED
+- **Default Checklist**: 7-step submission checklist auto-created for each dispute
+- **Notification Scheduler**: Background job checks for approaching deadlines and creates AI-generated reminders
 
 ### Project Structure
 ```
