@@ -184,15 +184,13 @@ export default function SettingsPage() {
                       {tierInfo.price === 0 ? "Free forever" : `$${tierInfo.price}/month`}
                     </p>
                   </div>
-                  {subscription?.tier !== "COMPLIANCE_PLUS" && (
-                    <Button 
-                      className="bg-secondary text-slate-900 font-bold"
-                      onClick={() => setUpgradeOpen(true)}
-                      data-testid="button-upgrade-plan"
-                    >
-                      Upgrade Plan
-                    </Button>
-                  )}
+                  <Button 
+                    className="bg-secondary text-slate-900 font-bold"
+                    onClick={() => setUpgradeOpen(true)}
+                    data-testid="button-manage-plan"
+                  >
+                    Manage Plan
+                  </Button>
                 </div>
                 <Separator className="my-4" />
                 <div className="grid md:grid-cols-2 gap-3 text-sm">
@@ -433,64 +431,91 @@ export default function SettingsPage() {
       </Dialog>
 
       <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Upgrade Your Plan</DialogTitle>
-            <DialogDescription>Choose a plan that fits your needs.</DialogDescription>
+            <DialogTitle>Manage Your Plan</DialogTitle>
+            <DialogDescription>Choose a plan that fits your needs. You can upgrade or downgrade at any time.</DialogDescription>
           </DialogHeader>
-          <div className="grid md:grid-cols-3 gap-4">
-            {(["SELF_STARTER", "GROWTH", "COMPLIANCE_PLUS"] as const).map((tier) => {
+          <div className="grid md:grid-cols-4 gap-4">
+            {(["FREE", "SELF_STARTER", "GROWTH", "COMPLIANCE_PLUS"] as const).map((tier) => {
               const info = TIER_FEATURES[tier];
               const isCurrentTier = subscription?.tier === tier;
               const isRecommended = tier === "GROWTH";
+              const tierOrder = { FREE: 0, SELF_STARTER: 1, GROWTH: 2, COMPLIANCE_PLUS: 3 };
+              const currentTierOrder = tierOrder[subscription?.tier as keyof typeof tierOrder] ?? 0;
+              const thisTierOrder = tierOrder[tier];
+              const isUpgrade = thisTierOrder > currentTierOrder;
+              const isDowngrade = thisTierOrder < currentTierOrder;
+              
               return (
                 <div 
                   key={tier} 
-                  className={`p-4 rounded-lg border-2 ${isRecommended ? 'border-secondary' : 'border-slate-200'} ${isCurrentTier ? 'bg-slate-50' : ''}`}
+                  className={`p-4 rounded-lg border-2 relative ${isRecommended ? 'border-secondary' : isCurrentTier ? 'border-primary' : 'border-slate-200'} ${isCurrentTier ? 'bg-primary/5' : ''}`}
                 >
-                  {isRecommended && (
+                  {isRecommended && !isCurrentTier && (
                     <Badge className="bg-secondary text-slate-900 mb-2">Recommended</Badge>
                   )}
+                  {isCurrentTier && (
+                    <Badge className="bg-primary text-white mb-2">Current</Badge>
+                  )}
                   <h3 className="font-semibold text-lg">{info.name}</h3>
-                  <p className="text-2xl font-bold mt-1">${info.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                  <p className="text-2xl font-bold mt-1">
+                    {info.price === 0 ? "Free" : `$${info.price}`}
+                    {info.price > 0 && <span className="text-sm font-normal text-muted-foreground">/mo</span>}
+                  </p>
                   <ul className="mt-4 space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-500" />
-                      Dispute Wizard™
-                    </li>
-                    {info.hasAdvancedAnalysis && (
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-500" />
-                        Advanced Analysis
-                      </li>
-                    )}
-                    {info.hasUnlimitedDocs && (
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-500" />
-                        Unlimited Documents
-                      </li>
-                    )}
-                    {info.hasPrioritySupport && (
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-500" />
-                        Priority Support
-                      </li>
-                    )}
-                    {info.hasMetro2Education && (
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-500" />
-                        Metro 2 Education
-                      </li>
+                    {tier === "FREE" ? (
+                      <>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Credit Education
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Basic Resources
+                        </li>
+                      </>
+                    ) : (
+                      <>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Dispute Wizard™
+                        </li>
+                        {info.hasAdvancedAnalysis && (
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                            Advanced Analysis
+                          </li>
+                        )}
+                        {info.hasUnlimitedDocs && (
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                            Unlimited Documents
+                          </li>
+                        )}
+                        {info.hasPrioritySupport && (
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                            Priority Support
+                          </li>
+                        )}
+                        {info.hasMetro2Education && (
+                          <li className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                            Metro 2 Education
+                          </li>
+                        )}
+                      </>
                     )}
                   </ul>
                   <Button 
-                    className={`w-full mt-4 ${isRecommended ? 'bg-secondary text-slate-900' : ''}`}
-                    variant={isRecommended ? "default" : "outline"}
+                    className={`w-full mt-4 ${isRecommended && !isCurrentTier ? 'bg-secondary text-slate-900' : ''}`}
+                    variant={isCurrentTier ? "outline" : isDowngrade ? "outline" : isRecommended ? "default" : "default"}
                     disabled={isCurrentTier}
                     onClick={() => handleUpgrade(tier)}
                     data-testid={`button-select-${tier.toLowerCase()}`}
                   >
-                    {isCurrentTier ? "Current Plan" : "Select Plan"}
+                    {isCurrentTier ? "Current Plan" : isUpgrade ? "Upgrade" : "Downgrade"}
                   </Button>
                 </div>
               );
