@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
-import { insertUserSchema, insertDisputeSchema, type User, TIER_FEATURES } from "@shared/schema";
+import { insertUserSchema, insertDisputeSchema, type User, TIER_FEATURES, DISPUTE_STAGES } from "@shared/schema";
 import { z } from "zod";
 import { encryptUserData, decryptUserData } from "./encryption";
 import OpenAI from "openai";
@@ -402,6 +402,193 @@ export async function registerRoutes(
     } catch (error) {
       next(error);
     }
+  });
+  
+  // ========== DISPUTE PROGRESS TRACKING ROUTES ==========
+  
+  // GET /api/disputes/:id/checklist - Get checklist for a dispute
+  app.get("/api/disputes/:id/checklist", requireAuth, async (req, res, next) => {
+    try {
+      const dispute = await storage.getDispute(req.params.id);
+      if (!dispute) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      if (dispute.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      let checklist = await storage.getChecklistForDispute(req.params.id);
+      
+      // Create default checklist if none exists
+      if (checklist.length === 0) {
+        checklist = await storage.createDefaultChecklistForDispute(req.params.id);
+      }
+      
+      res.json(checklist);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // PATCH /api/checklist/:id - Update a checklist item
+  app.patch("/api/checklist/:id", requireAuth, async (req, res, next) => {
+    try {
+      const { completed } = req.body;
+      const item = await storage.updateChecklistItem(req.params.id, { completed });
+      if (!item) {
+        return res.status(404).json({ message: "Checklist item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // PATCH /api/disputes/:id/progress - Update dispute progress (mailed, tracking, etc.)
+  app.patch("/api/disputes/:id/progress", requireAuth, async (req, res, next) => {
+    try {
+      const dispute = await storage.getDispute(req.params.id);
+      if (!dispute) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      if (dispute.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const { action, trackingNumber } = req.body;
+      const updateData: any = {};
+      
+      switch (action) {
+        case "mark_mailed":
+          updateData.mailedAt = new Date();
+          updateData.status = "MAILED";
+          // Set 30-day response deadline
+          const deadline = new Date();
+          deadline.setDate(deadline.getDate() + 30);
+          updateData.responseDeadline = deadline;
+          break;
+        case "add_tracking":
+          if (!trackingNumber) {
+            return res.status(400).json({ message: "Tracking number is required" });
+          }
+          updateData.trackingNumber = trackingNumber;
+          break;
+        case "mark_delivered":
+          updateData.deliveredAt = new Date();
+          updateData.status = "IN_PROGRESS";
+          break;
+        case "mark_response_received":
+          updateData.responseReceivedAt = new Date();
+          updateData.status = "RESPONSE_RECEIVED";
+          break;
+        case "mark_resolved":
+          updateData.status = "RESOLVED";
+          break;
+        case "mark_escalated":
+          updateData.status = "ESCALATED";
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid action" });
+      }
+      
+      const updatedDispute = await storage.updateDispute(req.params.id, updateData);
+      
+      // Create notification for status update
+      await storage.createNotification({
+        userId: req.session.userId!,
+        disputeId: req.params.id,
+        type: "STATUS_UPDATE",
+        title: "Dispute Status Updated",
+        message: `Your dispute with ${dispute.creditorName} has been updated to "${updateData.status || action}".`,
+      });
+      
+      res.json(updatedDispute);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // ========== NOTIFICATION ROUTES ==========
+  
+  // GET /api/notifications - Get all notifications for user
+  app.get("/api/notifications", requireAuth, async (req, res, next) => {
+    try {
+      const notifications = await storage.getNotificationsForUser(req.session.userId!);
+      res.json(notifications);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // GET /api/notifications/unread - Get unread notifications count
+  app.get("/api/notifications/unread", requireAuth, async (req, res, next) => {
+    try {
+      const notifications = await storage.getUnreadNotificationsForUser(req.session.userId!);
+      res.json({ count: notifications.length, notifications });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // PATCH /api/notifications/:id/read - Mark notification as read
+  app.patch("/api/notifications/:id/read", requireAuth, async (req, res, next) => {
+    try {
+      const notification = await storage.markNotificationRead(req.params.id);
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      res.json(notification);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // POST /api/notifications/read-all - Mark all notifications as read
+  app.post("/api/notifications/read-all", requireAuth, async (req, res, next) => {
+    try {
+      await storage.markAllNotificationsRead(req.session.userId!);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // GET /api/notification-settings - Get user notification settings
+  app.get("/api/notification-settings", requireAuth, async (req, res, next) => {
+    try {
+      let settings = await storage.getNotificationSettings(req.session.userId!);
+      if (!settings) {
+        // Create default settings
+        settings = await storage.upsertNotificationSettings(req.session.userId!, {
+          emailEnabled: true,
+          inAppEnabled: true,
+          reminderLeadDays: 5,
+        });
+      }
+      res.json(settings);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // PATCH /api/notification-settings - Update notification settings
+  app.patch("/api/notification-settings", requireAuth, async (req, res, next) => {
+    try {
+      const { emailEnabled, inAppEnabled, reminderLeadDays } = req.body;
+      const settings = await storage.upsertNotificationSettings(req.session.userId!, {
+        emailEnabled,
+        inAppEnabled,
+        reminderLeadDays,
+      });
+      res.json(settings);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // GET /api/dispute-stages - Get dispute stage definitions
+  app.get("/api/dispute-stages", requireAuth, (req, res) => {
+    res.json(DISPUTE_STAGES);
   });
   
   // ========== AI CREDIT REPORT PARSING ROUTES ==========

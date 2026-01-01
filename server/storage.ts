@@ -1,6 +1,12 @@
-import { users, disputes, subscriptions, type User, type InsertUser, type Dispute, type InsertDispute, type Subscription, type InsertSubscription } from "@shared/schema";
+import { 
+  users, disputes, subscriptions, disputeChecklists, notifications, userNotificationSettings,
+  type User, type InsertUser, type Dispute, type InsertDispute, type Subscription, type InsertSubscription,
+  type DisputeChecklist, type InsertDisputeChecklist, type Notification, type InsertNotification,
+  type UserNotificationSettings, type InsertUserNotificationSettings,
+  DEFAULT_DISPUTE_CHECKLIST
+} from "@shared/schema";
 import { db, withRetry } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, lt, isNull, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -21,6 +27,26 @@ export interface IStorage {
   createDisputesBulk(disputesData: InsertDispute[]): Promise<Dispute[]>;
   updateDispute(id: string, data: Partial<Dispute>): Promise<Dispute | undefined>;
   deleteDispute(id: string): Promise<boolean>;
+  
+  // Dispute checklist methods
+  getChecklistForDispute(disputeId: string): Promise<DisputeChecklist[]>;
+  createChecklistItems(items: InsertDisputeChecklist[]): Promise<DisputeChecklist[]>;
+  updateChecklistItem(id: string, data: Partial<DisputeChecklist>): Promise<DisputeChecklist | undefined>;
+  createDefaultChecklistForDispute(disputeId: string): Promise<DisputeChecklist[]>;
+  
+  // Notification methods
+  getNotificationsForUser(userId: string): Promise<Notification[]>;
+  getUnreadNotificationsForUser(userId: string): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationRead(id: string): Promise<Notification | undefined>;
+  markAllNotificationsRead(userId: string): Promise<void>;
+  
+  // Notification settings methods
+  getNotificationSettings(userId: string): Promise<UserNotificationSettings | undefined>;
+  upsertNotificationSettings(userId: string, data: Partial<InsertUserNotificationSettings>): Promise<UserNotificationSettings>;
+  
+  // Get disputes needing deadline reminders
+  getDisputesNeedingReminders(): Promise<Dispute[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -120,6 +146,117 @@ export class DatabaseStorage implements IStorage {
   async deleteDispute(id: string): Promise<boolean> {
     const result = await db.delete(disputes).where(eq(disputes.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Dispute checklist methods
+  async getChecklistForDispute(disputeId: string): Promise<DisputeChecklist[]> {
+    return await db.select().from(disputeChecklists)
+      .where(eq(disputeChecklists.disputeId, disputeId))
+      .orderBy(disputeChecklists.orderIndex);
+  }
+
+  async createChecklistItems(items: InsertDisputeChecklist[]): Promise<DisputeChecklist[]> {
+    if (items.length === 0) return [];
+    const result = await db.insert(disputeChecklists).values(items).returning();
+    return result;
+  }
+
+  async updateChecklistItem(id: string, data: Partial<DisputeChecklist>): Promise<DisputeChecklist | undefined> {
+    const updateData = { ...data };
+    if (data.completed === true && !data.completedAt) {
+      updateData.completedAt = new Date();
+    }
+    if (data.completed === false) {
+      updateData.completedAt = null;
+    }
+    const [item] = await db.update(disputeChecklists)
+      .set(updateData)
+      .where(eq(disputeChecklists.id, id))
+      .returning();
+    return item || undefined;
+  }
+
+  async createDefaultChecklistForDispute(disputeId: string): Promise<DisputeChecklist[]> {
+    const items = DEFAULT_DISPUTE_CHECKLIST.map((item, index) => ({
+      disputeId,
+      label: item.label,
+      description: item.description,
+      orderIndex: index,
+      completed: false,
+    }));
+    return await this.createChecklistItems(items);
+  }
+
+  // Notification methods
+  async getNotificationsForUser(userId: string): Promise<Notification[]> {
+    return await db.select().from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async getUnreadNotificationsForUser(userId: string): Promise<Notification[]> {
+    return await db.select().from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.read, false)
+      ))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [notif] = await db.insert(notifications).values(notification).returning();
+    return notif;
+  }
+
+  async markNotificationRead(id: string): Promise<Notification | undefined> {
+    const [notif] = await db.update(notifications)
+      .set({ read: true, readAt: new Date() })
+      .where(eq(notifications.id, id))
+      .returning();
+    return notif || undefined;
+  }
+
+  async markAllNotificationsRead(userId: string): Promise<void> {
+    await db.update(notifications)
+      .set({ read: true, readAt: new Date() })
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.read, false)
+      ));
+  }
+
+  // Notification settings methods
+  async getNotificationSettings(userId: string): Promise<UserNotificationSettings | undefined> {
+    const [settings] = await db.select().from(userNotificationSettings)
+      .where(eq(userNotificationSettings.userId, userId));
+    return settings || undefined;
+  }
+
+  async upsertNotificationSettings(userId: string, data: Partial<InsertUserNotificationSettings>): Promise<UserNotificationSettings> {
+    const existing = await this.getNotificationSettings(userId);
+    if (existing) {
+      const [updated] = await db.update(userNotificationSettings)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(userNotificationSettings.userId, userId))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(userNotificationSettings)
+      .values({ userId, ...data })
+      .returning();
+    return created;
+  }
+
+  // Get disputes needing deadline reminders (30-day response deadline approaching)
+  async getDisputesNeedingReminders(): Promise<Dispute[]> {
+    const fiveDaysFromNow = new Date();
+    fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
+    
+    return await db.select().from(disputes)
+      .where(and(
+        lt(disputes.responseDeadline, fiveDaysFromNow),
+        isNull(disputes.responseReceivedAt)
+      ));
   }
 }
 
