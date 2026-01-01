@@ -798,16 +798,22 @@ Respond in JSON format with this structure:
 
   // ========== ADMIN ROUTES ==========
   
-  // Middleware to check admin role
-  async function requireAdmin(req: any, res: any, next: any) {
+  // Middleware to check admin role with proper async error handling
+  function requireAdmin(req: any, res: any, next: any) {
     if (!req.session?.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const user = await storage.getUser(req.session.userId);
-    if (!user || user.role !== "ADMIN") {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    next();
+    
+    storage.getUser(req.session.userId)
+      .then(user => {
+        if (!user || user.role !== "ADMIN") {
+          return res.status(403).json({ message: "Admin access required" });
+        }
+        next();
+      })
+      .catch(err => {
+        next(err);
+      });
   }
   
   // GET /api/admin/users - Get all users
