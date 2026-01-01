@@ -23,6 +23,10 @@ import AdminDashboard from "@/pages/dashboard/admin";
 import DisputesPage from "@/pages/dashboard/disputes";
 import DocumentsPage from "@/pages/dashboard/documents";
 import SettingsPage from "@/pages/dashboard/settings";
+import AdminClientsPage from "@/pages/admin/clients";
+import AdminAffiliatesPage from "@/pages/admin/affiliates";
+import AdminDisputesPage from "@/pages/admin/disputes";
+import AdminCompliancePage from "@/pages/admin/compliance";
 
 function Router() {
   return (
@@ -72,6 +76,30 @@ function Router() {
       <Route path="/admin">
         <ProtectedRoute allowedRoles={['ADMIN']}>
           <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/admin/clients">
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <AdminClientsPage />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/admin/affiliates">
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <AdminAffiliatesPage />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/admin/disputes">
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <AdminDisputesPage />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/admin/compliance">
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <AdminCompliancePage />
         </ProtectedRoute>
       </Route>
 
