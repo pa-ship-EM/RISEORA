@@ -481,6 +481,10 @@ export default function SettingsPage() {
                           <CheckCircle className="h-4 w-4 text-emerald-500" />
                           Dispute Wizard™
                         </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          {info.disputesPerMonth === -1 ? "Unlimited Disputes" : `${info.disputesPerMonth} Disputes/mo`}
+                        </li>
                         {info.hasAdvancedAnalysis && (
                           <li className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-emerald-500" />
