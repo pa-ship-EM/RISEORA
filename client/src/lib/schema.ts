@@ -26,7 +26,7 @@ export interface Dispute {
   creditorName: string;
   accountNumber?: string | null;
   bureau: 'EXPERIAN' | 'TRANSUNION' | 'EQUIFAX' | 'ALL';
-  status: 'DRAFT' | 'GENERATED' | 'SENT' | 'IN_PROGRESS' | 'RESOLVED' | 'DELETED';
+  status: 'DRAFT' | 'GENERATED' | 'MAILED' | 'SENT' | 'IN_PROGRESS' | 'RESPONSE_RECEIVED' | 'RESOLVED' | 'ESCALATED' | 'DELETED';
   disputeReason: string;
   customReason?: string | null;
   letterContent?: string | null;
@@ -35,6 +35,11 @@ export interface Dispute {
   createdAt?: string;
   updatedAt?: string;
   metro2Compliant: boolean;
+  mailedAt?: string | null;
+  trackingNumber?: string | null;
+  deliveredAt?: string | null;
+  responseDeadline?: string | null;
+  responseReceivedAt?: string | null;
 }
 
 export interface EducationModule {

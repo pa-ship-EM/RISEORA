@@ -257,6 +257,7 @@ function DisputeActions({ dispute }: { dispute: Dispute }) {
 
 function DisputeCard({ dispute }: { dispute: Dispute }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [viewLetterOpen, setViewLetterOpen] = useState(false);
   
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -361,12 +362,71 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
             
             <DisputeActions dispute={dispute} />
             
-            <div className="text-xs text-muted-foreground">
-              Created {dispute.createdAt ? formatDistanceToNow(new Date(dispute.createdAt), { addSuffix: true }) : 'recently'}
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                Created {dispute.createdAt ? formatDistanceToNow(new Date(dispute.createdAt), { addSuffix: true }) : 'recently'}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setViewLetterOpen(true)}
+                data-testid={`button-view-letter-${dispute.id}`}
+              >
+                <FileText className="h-3 w-3 mr-1" />
+                View Letter
+              </Button>
             </div>
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+      
+      <Dialog open={viewLetterOpen} onOpenChange={setViewLetterOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Dispute Letter - {dispute.creditorName}
+            </DialogTitle>
+            <DialogDescription>
+              {dispute.bureau} • {dispute.disputeReason}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-slate-50 border rounded-lg p-6 font-mono text-sm whitespace-pre-wrap leading-relaxed">
+            {dispute.letterContent || "Letter content not available."}
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (dispute.letterContent) {
+                  navigator.clipboard.writeText(dispute.letterContent);
+                }
+              }}
+              data-testid="button-copy-letter"
+            >
+              Copy to Clipboard
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                if (dispute.letterContent) {
+                  const blob = new Blob([dispute.letterContent], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `dispute-letter-${dispute.creditorName.replace(/\s+/g, '-').toLowerCase()}.txt`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }
+              }}
+              data-testid="button-download-letter"
+            >
+              Download
+            </Button>
+            <Button onClick={() => setViewLetterOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
