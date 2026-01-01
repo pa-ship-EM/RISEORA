@@ -52,7 +52,7 @@ export const disputes = pgTable("disputes", {
   creditorName: text("creditor_name").notNull(),
   accountNumber: text("account_number"),
   bureau: text("bureau").notNull(), // EXPERIAN, TRANSUNION, EQUIFAX
-  status: text("status").notNull().default("DRAFT"), // DRAFT, GENERATED, SENT, IN_PROGRESS, RESOLVED
+  status: text("status").notNull().default("DRAFT"), // DRAFT, GENERATED, MAILED, IN_PROGRESS, RESPONSE_RECEIVED, RESOLVED, ESCALATED
   disputeReason: text("dispute_reason").notNull(),
   customReason: text("custom_reason"),
   
@@ -62,8 +62,61 @@ export const disputes = pgTable("disputes", {
   // Generated letter content
   letterContent: text("letter_content"),
   
+  // Progress tracking
+  mailedAt: timestamp("mailed_at"),
+  trackingNumber: text("tracking_number"),
+  deliveredAt: timestamp("delivered_at"),
+  responseDeadline: timestamp("response_deadline"), // 30 days from mailed date
+  responseReceivedAt: timestamp("response_received_at"),
+  
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Dispute checklist items - user-maintained next steps
+export const disputeChecklists = pgTable("dispute_checklists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  disputeId: varchar("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
+  
+  label: text("label").notNull(),
+  description: text("description"),
+  orderIndex: integer("order_index").notNull().default(0),
+  completed: boolean("completed").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// User notification preferences
+export const userNotificationSettings = pgTable("user_notification_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  
+  emailEnabled: boolean("email_enabled").notNull().default(true),
+  inAppEnabled: boolean("in_app_enabled").notNull().default(true),
+  reminderLeadDays: integer("reminder_lead_days").notNull().default(5), // Days before deadline to remind
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Notifications table for AI-generated reminders
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  disputeId: varchar("dispute_id").references(() => disputes.id, { onDelete: "cascade" }),
+  
+  type: text("type").notNull(), // DEADLINE_APPROACHING, NO_RESPONSE, FOLLOW_UP, STATUS_UPDATE
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  
+  read: boolean("read").notNull().default(false),
+  readAt: timestamp("read_at"),
+  
+  scheduledFor: timestamp("scheduled_for"),
+  deliveredAt: timestamp("delivered_at"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 // Insert schemas with validation
@@ -92,12 +145,58 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions, {
   updatedAt: true,
 });
 
+// Insert schemas for new tables
+export const insertDisputeChecklistSchema = createInsertSchema(disputeChecklists).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserNotificationSettingsSchema = createInsertSchema(userNotificationSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertDispute = z.infer<typeof insertDisputeSchema>;
 export type Dispute = typeof disputes.$inferSelect;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertDisputeChecklist = z.infer<typeof insertDisputeChecklistSchema>;
+export type DisputeChecklist = typeof disputeChecklists.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertUserNotificationSettings = z.infer<typeof insertUserNotificationSettingsSchema>;
+export type UserNotificationSettings = typeof userNotificationSettings.$inferSelect;
+
+// Default checklist items for new disputes
+export const DEFAULT_DISPUTE_CHECKLIST = [
+  { label: "Print the dispute letter", description: "Print your generated letter on plain white paper" },
+  { label: "Gather ID documents", description: "Make copies of your driver's license or state ID" },
+  { label: "Include proof of address", description: "Utility bill, bank statement, or lease agreement" },
+  { label: "Include partial SSN proof", description: "Copy of SSN card with first 5 digits redacted" },
+  { label: "Send via Certified Mail", description: "Use USPS Certified Mail with Return Receipt Requested" },
+  { label: "Save tracking number", description: "Record your certified mail tracking number" },
+  { label: "Set calendar reminder", description: "Mark 30 days from mail date for follow-up" },
+];
+
+// Dispute progress stages for UI
+export const DISPUTE_STAGES = [
+  { id: "generated", label: "Letter Generated", description: "Your dispute letter has been created" },
+  { id: "printed", label: "Printed & Ready", description: "Letter printed with required documents" },
+  { id: "mailed", label: "Mailed", description: "Sent via Certified Mail" },
+  { id: "delivered", label: "Delivered", description: "Confirmed delivery to bureau" },
+  { id: "investigation", label: "30-Day Investigation", description: "Bureau is investigating your dispute" },
+  { id: "response", label: "Response Received", description: "Bureau has responded to your dispute" },
+  { id: "resolved", label: "Resolved", description: "Dispute has been resolved" },
+] as const;
 
 // Tier feature definitions
 export const TIER_FEATURES = {
