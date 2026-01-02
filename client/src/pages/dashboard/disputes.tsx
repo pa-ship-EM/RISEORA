@@ -20,7 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow, format, addDays, differenceInDays } from "date-fns";
-import type { Dispute } from "@shared/schema";
+import type { Dispute } from "@/lib/schema";
 
 const BEST_PRACTICES = [
   {
@@ -273,6 +273,40 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Check if dispute is resolved - no guidance needed
+  const isResolved = !dispute.inaccuracyPersists || 
+    dispute.craResponseResult === 'deleted' || 
+    dispute.craResponseResult === 'corrected';
+  
+  // Check if dispute state allows AI guidance generation
+  // Requirements: status=ESCALATED, dvSent=true, dvResponseReceived=true, not resolved
+  const canGenerateGuidance = dispute.status === 'ESCALATED' && 
+    dispute.dvSent && 
+    dispute.dvResponseReceived &&
+    !isResolved;
+  
+  // Determine what's missing for guidance - mirrors backend validation exactly
+  const getMissingStateMessage = () => {
+    // Resolved disputes don't need guidance
+    if (isResolved) return "This dispute has been resolved. No further guidance is needed.";
+    
+    // Basic requirements
+    if (!dispute.dvSent) return "Please update this dispute to indicate that a debt validation request was sent.";
+    if (!dispute.dvResponseReceived) return "Please update this dispute to indicate that a response was received.";
+    
+    // DV response quality check for inaccurate_reporting disputes
+    if (dispute.dvResponseQuality === 'unknown' && dispute.disputeType === 'inaccurate_reporting') {
+      return "Please update the quality of the validation response (deficient or sufficient).";
+    }
+    
+    // CRA dispute sent but awaiting response
+    if (dispute.craDisputeSent && !dispute.craResponseReceived) {
+      return "Your CRA dispute has been sent but no response has been recorded yet. Please update once you receive a response.";
+    }
+    
+    return null;
+  };
+  
   const { data: guidance, isLoading: loadingGuidance } = useQuery<GuidanceData | null>({
     queryKey: ['/api/disputes', dispute.id, 'guidance'],
     queryFn: async () => {
@@ -319,6 +353,7 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
     }
   };
 
+  // Don't show anything if not escalated
   if (dispute.status !== 'ESCALATED') return null;
 
   if (loadingGuidance) {
@@ -331,6 +366,23 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
   }
 
   if (!guidance) {
+    const missingMessage = getMissingStateMessage();
+    
+    // If state is incomplete, show info message (not the Generate button)
+    if (!canGenerateGuidance || missingMessage) {
+      return (
+        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-slate-500" />
+            <span className="font-medium text-slate-700">Additional Information Needed</span>
+          </div>
+          <p className="text-sm text-slate-600">
+            {missingMessage || "We need more information about your dispute status to provide appropriate guidance."}
+          </p>
+        </div>
+      );
+    }
+    
     return (
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
         <div className="flex items-center gap-2">

@@ -69,6 +69,18 @@ export const disputes = pgTable("disputes", {
   responseDeadline: timestamp("response_deadline"), // 30 days from mailed date
   responseReceivedAt: timestamp("response_received_at"),
   
+  // Dispute workflow state fields (required for AI guidance)
+  disputeType: text("dispute_type").notNull().default("inaccurate_reporting"), // inaccurate_reporting, identity_theft, mixed_file, etc.
+  dvSent: boolean("dv_sent").notNull().default(false),
+  dvResponseReceived: boolean("dv_response_received").notNull().default(false),
+  dvResponseQuality: text("dv_response_quality").notNull().default("unknown"), // unknown, deficient, sufficient
+  craDisputeSent: boolean("cra_dispute_sent").notNull().default(false),
+  craResponseReceived: boolean("cra_response_received").notNull().default(false),
+  craResponseResult: text("cra_response_result"), // deleted, corrected, verified, no_response
+  movSent: boolean("mov_sent").notNull().default(false),
+  directDisputeSent: boolean("direct_dispute_sent").notNull().default(false),
+  inaccuracyPersists: boolean("inaccuracy_persists").notNull().default(true),
+  
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -40,6 +40,18 @@ export interface Dispute {
   deliveredAt?: string | null;
   responseDeadline?: string | null;
   responseReceivedAt?: string | null;
+  
+  // Dispute workflow state fields (for AI guidance)
+  disputeType?: string;
+  dvSent?: boolean;
+  dvResponseReceived?: boolean;
+  dvResponseQuality?: string; // unknown, deficient, sufficient
+  craDisputeSent?: boolean;
+  craResponseReceived?: boolean;
+  craResponseResult?: string | null; // deleted, corrected, verified, no_response
+  movSent?: boolean;
+  directDisputeSent?: boolean;
+  inaccuracyPersists?: boolean;
 }
 
 export interface EducationModule {

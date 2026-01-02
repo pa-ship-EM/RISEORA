@@ -674,6 +674,83 @@ export async function registerRoutes(
         });
       }
       
+      // === STATE VALIDATION (CRITICAL FAILSAFE) ===
+      // AI guidance is ONLY available when ALL conditions are met:
+      // 1. Tier is GROWTH or COMPLIANCE_PLUS (checked above)
+      // 2. Status is ESCALATED
+      // 3. DV sent = true
+      // 4. DV response received = true
+      
+      if (dispute.status !== "ESCALATED") {
+        return res.status(400).json({ 
+          message: "AI guidance is only available for escalated disputes"
+        });
+      }
+      
+      if (!dispute.dvSent || !dispute.dvResponseReceived) {
+        return res.status(400).json({ 
+          message: "We need more information to determine the appropriate next step. Please update your dispute status to indicate that a debt validation request was sent and a response was received."
+        });
+      }
+      
+      // Check for missing required state data
+      if (dispute.dvResponseQuality === "unknown" && dispute.disputeType === "inaccurate_reporting") {
+        return res.status(400).json({ 
+          message: "Please update the quality of the validation response received (deficient or sufficient) before generating guidance."
+        });
+      }
+      
+      // Determine which letter is allowed based on state
+      // Following the canonical state logic map exactly
+      let allowedLetterType = "";
+      let letterContext = "";
+      
+      // First check if dispute is resolved
+      if (!dispute.inaccuracyPersists || dispute.craResponseResult === "deleted" || dispute.craResponseResult === "corrected") {
+        return res.status(400).json({ 
+          message: "This dispute has been resolved. No further guidance is needed."
+        });
+      }
+      
+      // Case A: DV sent, response received, CRA not yet disputed
+      // This is the ONLY letter allowed at this stage
+      if (dispute.dvSent && dispute.dvResponseReceived && !dispute.craDisputeSent) {
+        allowedLetterType = "FCRA_611_CRA_DISPUTE";
+        letterContext = "The consumer has completed debt validation. The next and ONLY allowed step is to file an FCRA §611 dispute with the credit bureaus.";
+      }
+      // CRA dispute sent but no response yet - need to wait
+      else if (dispute.craDisputeSent && !dispute.craResponseReceived) {
+        return res.status(400).json({ 
+          message: "Your CRA dispute has been sent but no response has been recorded yet. Please update the dispute once you receive a response from the credit bureau."
+        });
+      }
+      // Case: CRA disputed, no response received (30+ days passed)
+      else if (dispute.craDisputeSent && dispute.craResponseReceived && dispute.craResponseResult === "no_response" && !dispute.directDisputeSent) {
+        allowedLetterType = "DIRECT_DISPUTE_FURNISHER";
+        letterContext = "The CRA failed to respond within the required timeframe. This is a procedural violation. The next step is a Direct Dispute to the Furnisher under FCRA §623(a)(8), citing the CRA's failure to investigate.";
+      }
+      // Case B: CRA disputed, response = verified, MOV not yet sent
+      else if (dispute.craDisputeSent && dispute.craResponseReceived && dispute.craResponseResult === "verified" && !dispute.movSent) {
+        allowedLetterType = "MOV_REQUEST";
+        letterContext = "The CRA has verified the account. The next step is to request the Method of Verification (MOV) under FCRA §611(a)(7).";
+      }
+      // Case C: MOV already sent, direct dispute not yet sent
+      else if (dispute.movSent && !dispute.directDisputeSent && dispute.inaccuracyPersists) {
+        allowedLetterType = "DIRECT_DISPUTE_FURNISHER";
+        letterContext = "MOV has been requested. The next step is a Direct Dispute to the Furnisher under FCRA §623(a)(8).";
+      }
+      // Case D: All prior steps completed (direct dispute sent), still inaccurate
+      else if (dispute.directDisputeSent && dispute.inaccuracyPersists) {
+        allowedLetterType = "NO_LETTER_REGULATORY_ONLY";
+        letterContext = "All dispute steps have been exhausted. Guidance will focus on regulatory escalation options (CFPB, State AG, FTC) and legal consultation. No additional dispute letter is appropriate at this stage.";
+      }
+      // Fallback - should not happen if state is properly tracked
+      else {
+        return res.status(400).json({ 
+          message: "Unable to determine the appropriate next step. Please review your dispute status and ensure all fields are updated correctly."
+        });
+      }
+      
       // Generate AI guidance based on dispute context
       const systemPrompt = `You are an educational credit rights advisor. Your role is to provide EDUCATIONAL INFORMATION ONLY about credit dispute processes.
 
@@ -809,36 +886,57 @@ DISPUTE DETAILS:
 - Creditor: ${dispute.creditorName}
 - Account Number: ${dispute.accountNumber || "Not provided"}
 - Bureau: ${dispute.bureau}
+- Dispute Type: ${dispute.disputeType || "inaccurate_reporting"}
 - Dispute Reason: ${dispute.disputeReason}
 - Custom Reason: ${dispute.customReason || "None provided"}
 - Original Letter Content: ${dispute.letterContent || "Not available"}
 
-IMPORTANT CONTEXT:
-- This dispute was ESCALATED, meaning the initial response was unsatisfactory
-- Analyze what type of letter was originally sent based on the letter content
-- DO NOT recommend sending the same type of letter again
-- If the original was a debt validation letter, the next step should be a FCRA §611 dispute through CRAs
-- Guide the consumer on how to evaluate whether the validation received (if any) was FCRA-compliant
+=== CURRENT DISPUTE STATE (CRITICAL - READ CAREFULLY) ===
+- Debt Validation Sent: ${dispute.dvSent ? "YES" : "NO"}
+- DV Response Received: ${dispute.dvResponseReceived ? "YES" : "NO"}
+- DV Response Quality: ${dispute.dvResponseQuality || "unknown"}
+- CRA Dispute Sent: ${dispute.craDisputeSent ? "YES" : "NO"}
+- CRA Response Received: ${dispute.craResponseReceived ? "YES" : "NO"}
+- CRA Response Result: ${dispute.craResponseResult || "N/A"}
+- MOV Sent: ${dispute.movSent ? "YES" : "NO"}
+- Direct Dispute Sent: ${dispute.directDisputeSent ? "YES" : "NO"}
+- Inaccuracy Persists: ${dispute.inaccuracyPersists ? "YES" : "NO"}
 
-Please provide:
-1. A brief summary analyzing the situation and what type of dispute was originally filed
-2. 3-5 specific NEXT STEPS in the dispute process (NOT the same letter again):
-   - First, explain how to evaluate any response received for FCRA deficiencies
-   - Then provide the correct next action based on the workflow
-3. Relevant FCRA rights that apply to this escalation stage
-4. THE ACTUAL NEXT LETTER in the dispute process - this is critical:
-   - If original was Debt Validation → provide a FCRA §611 CRA Dispute Letter template
-   - If original was CRA Dispute → provide a Method of Verification (MOV) Request template
-   - If MOV was already sent → provide a Direct Dispute to Furnisher template (FCRA §623(a)(8))
-   - NEVER provide the same letter type again
-5. Estimated timeline for next actions
+=== ALLOWED LETTER TYPE (STATE-LOCKED - MUST FOLLOW) ===
+Based on the dispute state above, the ONLY letter type you may generate is:
+LETTER TYPE: ${allowedLetterType}
+CONTEXT: ${letterContext}
 
-Format your response as a JSON object with these exact fields:
+=== AI OUTPUT CONSTRAINTS (CRITICAL - HARD RULES) ===
+You are FORBIDDEN from:
+- Recommending a Debt Validation letter if dvSent = true (already done)
+- Recommending a CRA dispute if craDisputeSent = true (already done)
+- Recommending MOV unless craResponseResult = verified
+- Recommending legal action unless all prior steps exist
+- Using directive language like "you should send" or "you must"
+
+REQUIRED language patterns (use these):
+- "Based on your dispute status..."
+- "One option available at this stage..."
+- "If you choose to proceed..."
+- "You may consider..."
+
+${allowedLetterType === "NO_LETTER_REGULATORY_ONLY" ? `
+SPECIAL CASE: All dispute steps exhausted. DO NOT provide a letter template.
+Instead, focus your guidance on:
+- CFPB complaint process
+- State Attorney General consumer protection
+- FTC reporting for pattern behavior
+- When to consult a consumer rights attorney
+Set followUpTemplate to: "All formal dispute letters have been sent. At this stage, regulatory complaints and legal consultation are the appropriate next steps. No additional dispute letter is recommended."
+` : ""}
+
+Please provide educational guidance in this JSON format:
 {
-  "summary": "Analysis of the situation and what was originally filed",
-  "nextSteps": ["Step 1: Evaluate the response for deficiencies...", "Step 2: File FCRA §611 dispute with CRAs...", ...],
+  "summary": "Analysis using phrases like 'Based on your dispute status...' - explain what step they completed and why the next step is appropriate",
+  "nextSteps": ["Step 1: ...", "Step 2: ...", ...] - use phrases like "If you choose to proceed..." or "One option at this stage...",
   "fcraRights": ["Right 1 with FCRA section", ...],
-  "followUpTemplate": "THE COMPLETE NEXT LETTER in the dispute process. If after DV, this should be a full FCRA §611 CRA dispute letter. If after CRA dispute, this should be MOV request. Include all required elements: consumer info placeholder, date, recipient address, account details, legal citations, and signature line.",
+  "followUpTemplate": "${allowedLetterType === "FCRA_611_CRA_DISPUTE" ? "Complete FCRA §611 CRA Dispute Letter with: Date, Consumer info placeholders, Bureau address, Account details, Specific inaccuracies, Legal citations, Signature line" : allowedLetterType === "MOV_REQUEST" ? "Complete Method of Verification Request with: Date, Consumer info, Bureau address, Account reference, Request for verification method details under §611(a)(7), Signature line" : allowedLetterType === "DIRECT_DISPUTE_FURNISHER" ? "Complete Direct Dispute to Furnisher letter under FCRA §623(a)(8) with: Date, Consumer info, Furnisher address, Account details, Specific inaccuracies, Legal citations, Signature line" : "Regulatory guidance only - no letter template"}",
   "timeline": "Suggested timeline for actions"
 }`;
 

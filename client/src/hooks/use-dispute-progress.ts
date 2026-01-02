@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { DisputeChecklist, Dispute } from "@shared/schema";
+import type { DisputeChecklist } from "@shared/schema";
+import type { Dispute } from "@/lib/schema";
 import { useToast } from "@/hooks/use-toast";
 
 export function useDisputeChecklist(disputeId: string) {
