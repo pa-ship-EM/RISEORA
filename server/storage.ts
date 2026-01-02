@@ -1,8 +1,9 @@
 import { 
-  users, disputes, subscriptions, disputeChecklists, notifications, userNotificationSettings,
+  users, disputes, subscriptions, disputeChecklists, notifications, userNotificationSettings, disputeAiGuidance,
   type User, type InsertUser, type Dispute, type InsertDispute, type Subscription, type InsertSubscription,
   type DisputeChecklist, type InsertDisputeChecklist, type Notification, type InsertNotification,
   type UserNotificationSettings, type InsertUserNotificationSettings,
+  type DisputeAiGuidance, type InsertDisputeAiGuidance,
   DEFAULT_DISPUTE_CHECKLIST
 } from "@shared/schema";
 import { db, withRetry } from "./db";
@@ -53,6 +54,10 @@ export interface IStorage {
   getAllUsersByRole(role: string): Promise<User[]>;
   getAllDisputes(): Promise<Dispute[]>;
   deleteUser(id: string): Promise<boolean>;
+  
+  // AI Guidance methods
+  getGuidanceForDispute(disputeId: string): Promise<DisputeAiGuidance | undefined>;
+  createGuidance(guidance: InsertDisputeAiGuidance): Promise<DisputeAiGuidance>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -283,6 +288,22 @@ export class DatabaseStorage implements IStorage {
   async deleteUser(id: string): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id)).returning();
     return result.length > 0;
+  }
+
+  // AI Guidance methods
+  async getGuidanceForDispute(disputeId: string): Promise<DisputeAiGuidance | undefined> {
+    const [guidance] = await db.select().from(disputeAiGuidance)
+      .where(eq(disputeAiGuidance.disputeId, disputeId))
+      .orderBy(desc(disputeAiGuidance.createdAt))
+      .limit(1);
+    return guidance || undefined;
+  }
+
+  async createGuidance(guidance: InsertDisputeAiGuidance): Promise<DisputeAiGuidance> {
+    const [created] = await db.insert(disputeAiGuidance)
+      .values(guidance)
+      .returning();
+    return created;
   }
 }
 
