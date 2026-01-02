@@ -824,9 +824,13 @@ Please provide:
 1. A brief summary analyzing the situation and what type of dispute was originally filed
 2. 3-5 specific NEXT STEPS in the dispute process (NOT the same letter again):
    - First, explain how to evaluate any response received for FCRA deficiencies
-   - Then provide the correct next action (usually a FCRA §611 CRA dispute after debt validation)
+   - Then provide the correct next action based on the workflow
 3. Relevant FCRA rights that apply to this escalation stage
-4. Template language for the CORRECT next-step communication (e.g., CRA dispute letter, not another DV letter)
+4. THE ACTUAL NEXT LETTER in the dispute process - this is critical:
+   - If original was Debt Validation → provide a FCRA §611 CRA Dispute Letter template
+   - If original was CRA Dispute → provide a Method of Verification (MOV) Request template
+   - If MOV was already sent → provide a Direct Dispute to Furnisher template (FCRA §623(a)(8))
+   - NEVER provide the same letter type again
 5. Estimated timeline for next actions
 
 Format your response as a JSON object with these exact fields:
@@ -834,7 +838,7 @@ Format your response as a JSON object with these exact fields:
   "summary": "Analysis of the situation and what was originally filed",
   "nextSteps": ["Step 1: Evaluate the response for deficiencies...", "Step 2: File FCRA §611 dispute with CRAs...", ...],
   "fcraRights": ["Right 1 with FCRA section", ...],
-  "followUpTemplate": "Template for the NEXT step in the process (NOT another DV letter)",
+  "followUpTemplate": "THE COMPLETE NEXT LETTER in the dispute process. If after DV, this should be a full FCRA §611 CRA dispute letter. If after CRA dispute, this should be MOV request. Include all required elements: consumer info placeholder, date, recipient address, account details, legal citations, and signature line.",
   "timeline": "Suggested timeline for actions"
 }`;
 

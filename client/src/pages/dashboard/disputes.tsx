@@ -406,13 +406,14 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
         
         <div>
           <div className="flex items-center justify-between mb-1">
-            <h4 className="text-sm font-medium text-slate-700">Follow-Up Template</h4>
+            <h4 className="text-sm font-medium text-slate-700">Next Step Letter Template</h4>
             <Button variant="ghost" size="sm" onClick={copyTemplate} data-testid={`button-copy-template-${dispute.id}`}>
               <Copy className="h-3 w-3 mr-1" />
               Copy
             </Button>
           </div>
-          <div className="bg-white border rounded-md p-3 text-xs font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
+          <p className="text-xs text-slate-500 mb-2">This is the next letter in the dispute process based on where you are in the workflow.</p>
+          <div className="bg-white border rounded-md p-3 text-xs font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
             {guidance.followUpTemplate}
           </div>
         </div>
