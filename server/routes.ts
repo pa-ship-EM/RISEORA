@@ -687,6 +687,29 @@ CRITICAL LEGAL COMPLIANCE (CROA & FCRA):
 7. Always recommend consulting with a consumer rights attorney for complex situations
 8. Emphasize that consumers must pursue their own rights through proper legal channels
 
+CRITICAL DISPUTE WORKFLOW KNOWLEDGE:
+Each letter type has a specific next step in the dispute process. NEVER recommend the same letter type again.
+
+For INACCURATE REPORTING cases where debt validation was already sent:
+- DO NOT recommend sending another debt validation letter
+- The next step is to REVIEW the validation response for FCRA deficiencies:
+  * Generic computer printouts (not sufficient)
+  * Balance only, no account-level detail
+  * No original creditor proof
+  * No contract or charge-off breakdown  
+  * No itemization of interest/fees
+  * No evidence of authority to collect (if third-party collector)
+- Key FCRA Standard: Furnishers must report information that is complete, accurate, and verifiable
+- If validation lacks material proof, it may still be legally deficient
+- CORRECT NEXT STEP: File a formal FCRA §611 dispute through the Credit Reporting Agencies (CRAs)
+- This triggers: a §611 investigation, a Metro 2 verification requirement, a mandatory furnisher response via e-OSCAR
+
+For cases where a CRA dispute was already filed:
+- Review the investigation results
+- If verified but still inaccurate: consider Method of Verification (MOV) request
+- Consider CFPB complaint if the CRA failed to properly investigate
+- Consider direct dispute to furnisher under FCRA §623
+
 DISCLAIMER REQUIREMENTS:
 - Include language that this is educational information only
 - Remind users they have the right to dispute inaccurate information themselves for free
@@ -704,19 +727,28 @@ DISPUTE DETAILS:
 - Custom Reason: ${dispute.customReason || "None provided"}
 - Original Letter Content: ${dispute.letterContent || "Not available"}
 
+IMPORTANT CONTEXT:
+- This dispute was ESCALATED, meaning the initial response was unsatisfactory
+- Analyze what type of letter was originally sent based on the letter content
+- DO NOT recommend sending the same type of letter again
+- If the original was a debt validation letter, the next step should be a FCRA §611 dispute through CRAs
+- Guide the consumer on how to evaluate whether the validation received (if any) was FCRA-compliant
+
 Please provide:
-1. A brief summary of why the dispute may have been escalated
-2. 3-5 specific next steps the consumer can take (educational guidance)
-3. Relevant FCRA rights that apply to this situation
-4. Template language they might use in follow-up communications
+1. A brief summary analyzing the situation and what type of dispute was originally filed
+2. 3-5 specific NEXT STEPS in the dispute process (NOT the same letter again):
+   - First, explain how to evaluate any response received for FCRA deficiencies
+   - Then provide the correct next action (usually a FCRA §611 CRA dispute after debt validation)
+3. Relevant FCRA rights that apply to this escalation stage
+4. Template language for the CORRECT next-step communication (e.g., CRA dispute letter, not another DV letter)
 5. Estimated timeline for next actions
 
 Format your response as a JSON object with these exact fields:
 {
-  "summary": "Brief analysis of the situation",
-  "nextSteps": ["Step 1", "Step 2", ...],
+  "summary": "Analysis of the situation and what was originally filed",
+  "nextSteps": ["Step 1: Evaluate the response for deficiencies...", "Step 2: File FCRA §611 dispute with CRAs...", ...],
   "fcraRights": ["Right 1 with FCRA section", ...],
-  "followUpTemplate": "Template language for follow-up letter",
+  "followUpTemplate": "Template for the NEXT step in the process (NOT another DV letter)",
   "timeline": "Suggested timeline for actions"
 }`;
 
