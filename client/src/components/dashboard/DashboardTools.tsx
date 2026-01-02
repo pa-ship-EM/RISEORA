@@ -1,14 +1,15 @@
 import React from "react";
-import { ExternalLink, Info, BookOpen } from "lucide-react";
+import { ExternalLink, Info, BookOpen, Lock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useSubscription } from "@/hooks/use-subscription";
 
-const learningModules = [
-  { title: "Credit Fundamentals", lessons: 4, status: "Completed", progress: 100, tier: "Free" },
-  { title: "Building New Credit", lessons: 6, status: "In Progress", progress: 45, tier: "Pro" },
-  { title: "Advanced Scoring Tactics", lessons: 5, status: "Locked", progress: 0, tier: "Pro" },
+const baseLearningModules = [
+  { title: "Credit Fundamentals", lessons: 4, status: "Completed", progress: 100, tier: "Free", requiresCompliance: false },
+  { title: "Building New Credit", lessons: 6, status: "In Progress", progress: 45, tier: "Pro", requiresCompliance: false },
+  { title: "Metro 2 Education", lessons: 8, status: "Locked", progress: 0, tier: "Compliance+", requiresCompliance: true },
 ];
 
 const dashboardResources = [
@@ -35,6 +36,20 @@ const dashboardResources = [
 ];
 
 export default function DashboardTools() {
+  const { subscription } = useSubscription();
+  const hasCompliancePlus = subscription?.tier === "COMPLIANCE_PLUS";
+
+  const learningModules = baseLearningModules.map(mod => {
+    if (mod.requiresCompliance) {
+      return {
+        ...mod,
+        status: hasCompliancePlus ? "Available" : "Locked",
+        progress: hasCompliancePlus ? 0 : 0,
+      };
+    }
+    return mod;
+  });
+
   return (
     <div className="space-y-8">
       {/* Learning Modules Section */}
@@ -51,17 +66,22 @@ export default function DashboardTools() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div className={`p-3 rounded-xl ${mod.status === 'Locked' ? 'bg-slate-200 text-slate-400' : 'bg-primary/10 text-primary'}`}>
-                    <BookOpen className="h-6 w-6" />
+                    {mod.status === 'Locked' ? <Lock className="h-6 w-6" /> : <BookOpen className="h-6 w-6" />}
                   </div>
-                  <Badge variant={mod.status === 'Completed' ? 'default' : mod.status === 'In Progress' ? 'secondary' : 'outline'} className="font-bold">
+                  <Badge variant={mod.status === 'Completed' ? 'default' : mod.status === 'In Progress' ? 'secondary' : mod.status === 'Available' ? 'secondary' : 'outline'} className="font-bold">
                     {mod.status}
                   </Badge>
                 </div>
                 <CardTitle className="mt-4 text-xl font-serif">{mod.title}</CardTitle>
-                <CardDescription>{mod.lessons} Lessons</CardDescription>
+                <CardDescription>
+                  {mod.lessons} Lessons
+                  {mod.requiresCompliance && mod.status === 'Locked' && (
+                    <span className="block text-xs text-amber-600 mt-1">Requires Compliance+ plan</span>
+                  )}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {mod.status !== 'Locked' && (
+                {mod.status !== 'Locked' && mod.progress > 0 && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs font-medium">
                       <span>Progress</span>
@@ -71,7 +91,7 @@ export default function DashboardTools() {
                   </div>
                 )}
                 <Button className="w-full h-11 font-bold" variant={mod.status === 'Locked' ? 'outline' : 'default'} disabled={mod.status === 'Locked'}>
-                  {mod.status === 'Locked' ? 'Upgrade to Unlock' : 'Continue Learning'}
+                  {mod.status === 'Locked' ? 'Upgrade to Compliance+' : mod.status === 'Available' ? 'Start Learning' : 'Continue Learning'}
                 </Button>
               </CardContent>
             </Card>
