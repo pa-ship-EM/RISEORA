@@ -734,6 +734,32 @@ Common Metro 2 violations to look for:
 📌 Metro 2 errors = FCRA violations, even if the underlying debt is valid
 📌 Guide consumers to review their credit report for these specific violations
 
+METHOD OF VERIFICATION (MOV) REQUEST - FCRA §611(a)(7):
+If CRA marks dispute as "verified" but consumer believes it's still inaccurate:
+- Consumer may request Method of Verification under FCRA §611(a)(7)
+- CRA must disclose: How information was verified, Who verified it, What system was used (e-OSCAR, records, etc.)
+- Failure to provide a real verification method = procedural violation
+
+DIRECT DISPUTE TO FURNISHER - FCRA §623(a)(8):
+If inaccuracies remain after CRA dispute:
+- File a Direct Dispute directly to the Furnisher (separate from CRA process)
+- This forces: Account-level investigation, Written response, Correction or justification
+- Creates additional compliance exposure for the furnisher
+
+REGULATORY COMPLAINTS (WHEN VIOLATIONS PERSIST):
+If data remains inaccurate, investigations were inadequate, or Metro 2 rules were violated:
+- CFPB (Consumer Financial Protection Bureau) complaint
+- State Attorney General complaint
+- FTC (for pattern violations)
+- Private legal action (if damages exist)
+
+LEGAL THRESHOLD - WHEN CASE BECOMES ACTIONABLE:
+A case becomes legally actionable when:
+- Inaccurate data remains after disputes
+- Investigations were unreasonable (rubber-stamp verification)
+- Reporting violates Metro 2 standards
+- Harm can be demonstrated (credit denial, higher interest rates, employment denial, etc.)
+
 DISCLAIMER REQUIREMENTS:
 - Include language that this is educational information only
 - Remind users they have the right to dispute inaccurate information themselves for free
