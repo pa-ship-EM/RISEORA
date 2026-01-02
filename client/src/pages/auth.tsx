@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldCheck, Loader2 } from "lucide-react";
+import logoImage from "@/assets/logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -88,7 +89,7 @@ export default function AuthPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       <div className="mb-8 text-center cursor-pointer" onClick={() => setLocation("/")}>
         <div className="flex items-center justify-center gap-2 mb-2">
-          <ShieldCheck className="h-10 w-10 text-secondary" />
+          <img src={logoImage} alt="RiseOra" className="h-12 w-12 object-contain" />
           <span className="font-serif font-bold text-3xl text-primary">RiseOra</span>
         </div>
         <p className="text-muted-foreground">Secure Client Portal</p>

@@ -14,6 +14,7 @@ import {
   Bell,
   Check
 } from "lucide-react";
+import logoImage from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -138,7 +139,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-64 flex-col bg-white border-r border-slate-200 fixed h-full z-20">
         <div className="p-6 border-b border-slate-100 flex items-center gap-2">
-          <ShieldCheck className="h-8 w-8 text-secondary" />
+          <img src={logoImage} alt="RiseOra" className="h-10 w-10 object-contain" />
           <span className="font-serif font-bold text-xl text-primary">RiseOra</span>
         </div>
         
@@ -183,7 +184,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-30 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-6 w-6 text-secondary" />
+          <img src={logoImage} alt="RiseOra" className="h-8 w-8 object-contain" />
           <span className="font-serif font-bold text-lg text-primary">RiseOra</span>
         </div>
         <div className="flex items-center gap-2">
