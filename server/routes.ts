@@ -623,6 +623,131 @@ export async function registerRoutes(
     res.json(DISPUTE_STAGES);
   });
   
+  // ========== AI ESCALATION GUIDANCE ROUTES ==========
+  
+  // GET /api/disputes/:id/guidance - Get AI guidance for a dispute
+  app.get("/api/disputes/:id/guidance", requireAuth, async (req, res, next) => {
+    try {
+      const dispute = await storage.getDispute(req.params.id);
+      if (!dispute) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      if (dispute.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const guidance = await storage.getGuidanceForDispute(req.params.id);
+      res.json(guidance || null);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // POST /api/disputes/:id/generate-guidance - Generate AI guidance for escalated dispute
+  app.post("/api/disputes/:id/generate-guidance", requireAuth, async (req, res, next) => {
+    try {
+      const dispute = await storage.getDispute(req.params.id);
+      if (!dispute) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      if (dispute.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Check subscription tier - only GROWTH and COMPLIANCE_PLUS can use AI guidance
+      const subscription = await storage.getSubscriptionForUser(req.session.userId!);
+      const tier = subscription?.tier || "FREE";
+      if (!["GROWTH", "COMPLIANCE_PLUS"].includes(tier)) {
+        return res.status(403).json({ 
+          message: "AI escalation guidance requires Growth or Compliance+ subscription",
+          requiredTier: "GROWTH"
+        });
+      }
+      
+      // Generate AI guidance based on dispute context
+      const systemPrompt = `You are an expert credit dispute advisor focused on FCRA and CROA compliance. 
+Your role is to provide educational guidance on next steps when a credit dispute has not been resolved satisfactorily.
+
+IMPORTANT COMPLIANCE RULES:
+- You are providing educational information only, NOT legal advice
+- You must never guarantee specific outcomes or results
+- All suggestions must be framed as educational options for the consumer to consider
+- Reference relevant FCRA sections when applicable (e.g., Section 611, Section 623)
+- Emphasize that consumers have rights but must pursue them through proper channels
+
+Provide structured, actionable educational guidance that empowers the consumer to understand their options.`;
+
+      const userPrompt = `A consumer's credit dispute has been escalated and needs guidance on next steps.
+
+DISPUTE DETAILS:
+- Creditor: ${dispute.creditorName}
+- Account Number: ${dispute.accountNumber || "Not provided"}
+- Bureau: ${dispute.bureau}
+- Dispute Type: ${dispute.disputeType}
+- Reason: ${dispute.disputeReason}
+- Original Letter Content: ${dispute.letterContent || "Not available"}
+
+Please provide:
+1. A brief summary of why the dispute may have been escalated
+2. 3-5 specific next steps the consumer can take (educational guidance)
+3. Relevant FCRA rights that apply to this situation
+4. Template language they might use in follow-up communications
+5. Estimated timeline for next actions
+
+Format your response as a JSON object with these exact fields:
+{
+  "summary": "Brief analysis of the situation",
+  "nextSteps": ["Step 1", "Step 2", ...],
+  "fcraRights": ["Right 1 with FCRA section", ...],
+  "followUpTemplate": "Template language for follow-up letter",
+  "timeline": "Suggested timeline for actions"
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3,
+        max_tokens: 1500,
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        return res.status(500).json({ message: "Failed to generate guidance" });
+      }
+
+      const guidanceData = JSON.parse(content);
+      
+      // Save guidance to database
+      const guidance = await storage.createGuidance({
+        disputeId: dispute.id,
+        guidanceType: "ESCALATION",
+        summary: guidanceData.summary,
+        nextSteps: guidanceData.nextSteps,
+        fcraRights: guidanceData.fcraRights,
+        followUpTemplate: guidanceData.followUpTemplate,
+        timeline: guidanceData.timeline,
+      });
+
+      // Create notification about new guidance
+      await storage.createNotification({
+        userId: req.session.userId!,
+        disputeId: dispute.id,
+        type: "AI_GUIDANCE",
+        title: "Escalation Guidance Ready",
+        message: `AI-powered guidance is now available for your dispute with ${dispute.creditorName}.`,
+      });
+
+      res.json(guidance);
+    } catch (error) {
+      console.error("AI guidance generation error:", error);
+      next(error);
+    }
+  });
+  
   // ========== AI CREDIT REPORT PARSING ROUTES ==========
   
   // POST /api/upload-credit-report - Upload PDF credit report for AI parsing
