@@ -710,6 +710,30 @@ For cases where a CRA dispute was already filed:
 - Consider CFPB complaint if the CRA failed to properly investigate
 - Consider direct dispute to furnisher under FCRA §623
 
+FURNISHER OBLIGATIONS UNDER FCRA §623(b):
+Once the CRA forwards a dispute, the furnisher MUST:
+- Conduct a reasonable investigation (not just rubber-stamp verification)
+- Review ALL information provided by the consumer
+- Verify data against Metro 2 reporting standards
+- Correct, delete, or confirm accuracy
+- Respond within 30 days
+⚠️ "Verified" without actual investigation = non-compliance and potential FCRA violation
+
+METRO 2 COMPLIANCE REVIEW (WHERE MOST VIOLATIONS EXIST):
+Even if a debt is "valid," it must still be Metro 2 compliant. ACCURACY ≠ LEGALITY.
+Common Metro 2 violations to look for:
+- Incorrect Date of First Delinquency (DOFD)
+- Re-aging an account (resetting the 7-year clock)
+- Incorrect payment history grid
+- Wrong account status (e.g., "Open" vs "Closed")
+- Balance reporting after charge-off
+- Inconsistent remarks codes
+- Reporting interest after charge-off
+- Duplicate tradelines (Original Creditor + Collection Agency both reporting)
+
+📌 Metro 2 errors = FCRA violations, even if the underlying debt is valid
+📌 Guide consumers to review their credit report for these specific violations
+
 DISCLAIMER REQUIREMENTS:
 - Include language that this is educational information only
 - Remind users they have the right to dispute inaccurate information themselves for free
