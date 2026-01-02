@@ -188,15 +188,12 @@ export default function ClientDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="bg-white border p-1 h-auto grid grid-cols-2 md:grid-cols-5 gap-2">
+          <TabsList className="bg-white border p-1 h-auto grid grid-cols-2 md:grid-cols-4 gap-2">
             <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-white py-2.5">
               <LayoutDashboard className="h-4 w-4 mr-2" /> Overview
             </TabsTrigger>
             <TabsTrigger value="disputes" className="data-[state=active]:bg-primary data-[state=active]:text-white py-2.5">
               <FileText className="h-4 w-4 mr-2" /> My Disputes
-            </TabsTrigger>
-            <TabsTrigger value="education" className="data-[state=active]:bg-primary data-[state=active]:text-white py-2.5">
-              <GraduationCap className="h-4 w-4 mr-2" /> Learning
             </TabsTrigger>
             <TabsTrigger value="tools" className="data-[state=active]:bg-primary data-[state=active]:text-white py-2.5">
               <Calculator className="h-4 w-4 mr-2" /> Tools
@@ -357,45 +354,6 @@ export default function ClientDashboard() {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-
-          <TabsContent value="education" className="space-y-6 outline-none">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                { title: "Credit Fundamentals", lessons: 4, status: "Completed", progress: 100, tier: "Free" },
-                { title: "Building New Credit", lessons: 6, status: "In Progress", progress: 45, tier: "Pro" },
-                { title: "Advanced Scoring Tactics", lessons: 5, status: "Locked", progress: 0, tier: "Pro" },
-              ].map((mod, i) => (
-                <Card key={i} className={`hover:shadow-md transition-all border-2 ${mod.status === 'Locked' ? 'bg-slate-50/50 border-dashed' : 'border-transparent shadow-sm'}`}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className={`p-3 rounded-xl ${mod.status === 'Locked' ? 'bg-slate-200 text-slate-400' : 'bg-primary/10 text-primary'}`}>
-                        <BookOpen className="h-6 w-6" />
-                      </div>
-                      <Badge variant={mod.status === 'Completed' ? 'default' : mod.status === 'In Progress' ? 'secondary' : 'outline'} className="font-bold">
-                        {mod.status}
-                      </Badge>
-                    </div>
-                    <CardTitle className="mt-4 text-xl font-serif">{mod.title}</CardTitle>
-                    <CardDescription>{mod.lessons} Lessons</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {mod.status !== 'Locked' && (
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs font-medium">
-                          <span>Progress</span>
-                          <span>{mod.progress}%</span>
-                        </div>
-                        <Progress value={mod.progress} className="h-1.5" />
-                      </div>
-                    )}
-                    <Button className="w-full h-11 font-bold" variant={mod.status === 'Locked' ? 'outline' : 'default'} disabled={mod.status === 'Locked'}>
-                      {mod.status === 'Locked' ? 'Upgrade to Unlock' : 'Continue Learning'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </TabsContent>
 
           <TabsContent value="tools" className="space-y-6 outline-none">
