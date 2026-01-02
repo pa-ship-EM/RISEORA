@@ -427,6 +427,40 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
               <span><strong>Important:</strong> This letter is provided for educational purposes only. You are responsible for reviewing, editing, and deciding whether to send any correspondence.</span>
             </p>
           </div>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-3">
+            <h5 className="text-xs font-semibold text-blue-800 mb-2">Why this letter is recommended</h5>
+            <p className="text-xs text-blue-700 mb-2">
+              Based on your case status, the prior step in the dispute process has already occurred.
+            </p>
+            <ul className="text-xs text-blue-700 space-y-1 mb-2">
+              <li className="flex items-start gap-1">
+                <CheckCircle className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                <span>A <strong>debt validation request</strong> was previously sent</span>
+              </li>
+              <li className="flex items-start gap-1">
+                <CheckCircle className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                <span>The response received did <strong>not resolve the inaccuracy</strong></span>
+              </li>
+              <li className="flex items-start gap-1">
+                <CheckCircle className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                <span>Federal law requires the next step to move through the <strong>Credit Reporting Agencies</strong></span>
+              </li>
+            </ul>
+            <div className="flex items-start gap-1 text-xs text-blue-800 font-medium">
+              <ChevronRight className="h-3 w-3 mt-0.5 flex-shrink-0" />
+              <span>The correct next action is a formal FCRA §611 dispute — not another validation letter.</span>
+            </div>
+            <div className="mt-2 text-xs text-blue-600">
+              <p className="mb-1">This triggers:</p>
+              <ul className="list-disc list-inside space-y-0.5 ml-1">
+                <li>A mandatory CRA investigation</li>
+                <li>Metro 2 verification requirements</li>
+                <li>Furnisher accountability through e-OSCAR</li>
+              </ul>
+            </div>
+          </div>
+          
           <div className="bg-white border rounded-md p-3 text-xs font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
             {guidance.followUpTemplate}
           </div>
