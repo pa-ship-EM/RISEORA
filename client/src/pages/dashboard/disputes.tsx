@@ -405,14 +405,28 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
         </div>
         
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <h4 className="text-sm font-medium text-slate-700">Next Step Letter Template</h4>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-slate-700 flex items-center gap-1">
+              <FileText className="h-4 w-4" />
+              Next Step Letter Template
+            </h4>
             <Button variant="ghost" size="sm" onClick={copyTemplate} data-testid={`button-copy-template-${dispute.id}`}>
               <Copy className="h-3 w-3 mr-1" />
               Copy
             </Button>
           </div>
-          <p className="text-xs text-slate-500 mb-2">This is the next letter in the dispute process based on where you are in the workflow.</p>
+          <div className="bg-slate-50 border border-slate-200 rounded-md p-3 mb-2">
+            <p className="text-xs text-slate-600 mb-2">
+              <strong>This is the actual next letter in the credit dispute process</strong> based on where you are in the workflow — not a generic follow-up.
+            </p>
+            <p className="text-xs text-slate-500 mb-2">
+              The template below is generated using your dispute history, the most recent response received, and federal dispute sequence rules under the FCRA.
+            </p>
+            <p className="text-xs text-amber-600 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              <span><strong>Important:</strong> This letter is provided for educational purposes only. You are responsible for reviewing, editing, and deciding whether to send any correspondence.</span>
+            </p>
+          </div>
           <div className="bg-white border rounded-md p-3 text-xs font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
             {guidance.followUpTemplate}
           </div>
