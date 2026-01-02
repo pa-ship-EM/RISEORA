@@ -50,6 +50,7 @@ Preferred communication style: Simple, everyday language.
 - **Narrative Validation**: Ensures FCRA-compliant language in dispute letters
 - **Data Minimization**: Sensitive data patterns detected and handled appropriately
 - **AI Notifications**: OpenAI-powered reminder generation for dispute deadlines
+- **AI Escalation Guidance**: When disputes are escalated, GROWTH/COMPLIANCE_PLUS users can generate AI-powered educational guidance including FCRA rights, next steps, and follow-up templates (stored in `dispute_ai_guidance` table)
 
 ### Dispute Progress Tracking
 - **Database Tables**: `dispute_checklists`, `notifications`, `user_notification_settings`
