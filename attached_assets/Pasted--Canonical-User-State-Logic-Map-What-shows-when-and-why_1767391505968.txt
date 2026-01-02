@@ -1,0 +1,191 @@
+✅ Canonical User State Logic Map
+
+(What shows, when, and why)
+
+🔐 Core Principle (Anchor This First)
+
+The UI never teaches the framework.
+The AI knows the framework.
+The user only sees the output appropriate to their current dispute state.
+
+No static education. No visible step lists. No roadmap leakage.
+
+🧱 Required State Fields (Minimum)
+
+Each dispute must track (explicitly or derivable):
+
+dispute_type                (inaccurate_reporting | identity_theft | etc.)
+dv_sent                     (true/false)
+dv_response_received        (true/false)
+dv_response_quality         (unknown | deficient | sufficient)
+cra_dispute_sent            (true/false)
+cra_response_received       (true/false)
+cra_response_result         (deleted | corrected | verified | no_response)
+mov_sent                    (true/false)
+direct_dispute_sent         (true/false)
+escalation_status           (none | escalated)
+user_tier                   (free | growth | compliance_plus)
+
+
+⚠️ AI guidance is impossible without these.
+If any are missing → block generation.
+
+🧠 AI Guidance Availability Gate
+
+AI guidance (and Next Step Letter) is ONLY available when ALL are true:
+
+user_tier ∈ {growth, compliance_plus}
+AND escalation_status = escalated
+AND dv_sent = true
+AND dv_response_received = true
+
+
+If false → show nothing (not even a disabled button).
+
+📄 “Next Step Letter” Visibility Rules
+Rule 1 — Never show a letter prematurely
+
+❌ Do NOT show if:
+
+dv_sent = false
+
+dv_response_received = false
+
+dispute_type ≠ inaccurate_reporting
+
+Rule 2 — Determine the ONLY letter allowed
+🟦 Case A: DV sent, response received, CRA not yet disputed
+dv_sent = true
+dv_response_received = true
+cra_dispute_sent = false
+
+
+✅ Show:
+
+Next Step Letter = FCRA §611 CRA Dispute
+
+This is the only allowed template
+
+❌ Never show:
+
+Another DV
+
+MOV
+
+Direct Dispute
+
+🟩 Case B: CRA disputed, CRA marked “verified”
+cra_dispute_sent = true
+cra_response_received = true
+cra_response_result = verified
+mov_sent = false
+
+
+✅ Show:
+
+Next Step Letter = Method of Verification (MOV)
+
+❌ Never show:
+
+CRA dispute again
+
+Direct Dispute yet
+
+🟨 Case C: MOV sent or skipped, inaccuracies persist
+cra_response_result ∈ {verified, corrected}
+mov_sent = true OR cra_failed_to_provide_verification = true
+direct_dispute_sent = false
+
+
+✅ Show:
+
+Next Step Letter = Direct Dispute to Furnisher (§623(a)(8))
+
+🟥 Case D: Direct Dispute sent, still inaccurate
+direct_dispute_sent = true
+inaccuracy_persists = true
+
+
+✅ Show:
+
+No letter
+
+AI guidance switches to regulatory + legal education only
+
+No copy buttons
+
+🧠 AI Output Constraints (Critical)
+
+The AI must obey these hard rules:
+
+The AI is FORBIDDEN from:
+
+Recommending a DV if dv_sent = true
+
+Recommending CRA dispute if cra_dispute_sent = true
+
+Recommending MOV unless cra_response_result = verified
+
+Recommending legal action unless all prior steps exist
+
+Using directive language (“you should send”)
+
+Required AI language pattern:
+
+“Based on your dispute status…”
+
+“One option available at this stage…”
+
+“If you choose to proceed…”
+
+🚨 Missing Data Failsafe (Very Important)
+
+If ANY required state is missing or unknown:
+
+dv_response_quality = unknown
+OR cra_response_received = false
+OR dates missing
+
+
+Then:
+
+❌ Do NOT generate a letter
+❌ Do NOT show “Next Step Letter” section
+
+✅ Show:
+
+“We need more information to determine the appropriate next step.”
+
+This protects you legally and prevents wrong sequencing.
+
+🧩 Where This Logic Lives
+
+Backend / AI prompt → full 8-step framework (hidden)
+
+UI layer → only checks state + renders allowed output
+
+Database → stores generated guidance snapshot (already done 👍)
+
+🛡️ Why This Is Bulletproof
+
+✔ No static education = lower CROA risk
+
+✔ No duplicate disputes = procedural correctness
+
+✔ No premature escalation = defensible logic
+
+✔ No user “strategy teaching” = education framing preserved
+
+✔ AI can’t drift because it’s state-locked
+
+✅ Final Recommendation
+
+Treat this as your single source of truth for:
+
+AI prompt constraints
+
+UI rendering conditions
+
+Compliance review
+
+Future audits
