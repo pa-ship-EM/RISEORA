@@ -15,7 +15,7 @@ import { useLocation } from "wouter";
 import { 
   FileText, Plus, Clock, CheckCircle, AlertCircle, Loader2, 
   ChevronDown, ChevronRight, Mail, Package, CalendarDays,
-  Shield, FileCheck, Truck, Bell, ExternalLink, Sparkles, Scale, ListChecks, Copy
+  Shield, FileCheck, Truck, Bell, ExternalLink, Sparkles, Scale, ListChecks, Copy, XCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -458,6 +458,45 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
                 <li>Metro 2 verification requirements</li>
                 <li>Furnisher accountability through e-OSCAR</li>
               </ul>
+            </div>
+          </div>
+          
+          <div className="bg-orange-50 border border-orange-200 rounded-md p-3 mb-3">
+            <h5 className="text-xs font-semibold text-orange-800 mb-2">Review the validation response before proceeding</h5>
+            <p className="text-xs text-orange-700 mb-2">
+              Not all "validation" meets FCRA standards. A response may still be <strong>legally deficient</strong> if it includes:
+            </p>
+            <ul className="text-xs text-orange-700 space-y-1 mb-3">
+              <li className="flex items-start gap-1">
+                <XCircle className="h-3 w-3 text-orange-600 mt-0.5 flex-shrink-0" />
+                <span>Generic computer printouts</span>
+              </li>
+              <li className="flex items-start gap-1">
+                <XCircle className="h-3 w-3 text-orange-600 mt-0.5 flex-shrink-0" />
+                <span>Balance-only statements with no account detail</span>
+              </li>
+              <li className="flex items-start gap-1">
+                <XCircle className="h-3 w-3 text-orange-600 mt-0.5 flex-shrink-0" />
+                <span>No proof of the original creditor</span>
+              </li>
+              <li className="flex items-start gap-1">
+                <XCircle className="h-3 w-3 text-orange-600 mt-0.5 flex-shrink-0" />
+                <span>No contract, charge-off breakdown, or itemization</span>
+              </li>
+              <li className="flex items-start gap-1">
+                <XCircle className="h-3 w-3 text-orange-600 mt-0.5 flex-shrink-0" />
+                <span>Missing interest or fee explanations</span>
+              </li>
+              <li className="flex items-start gap-1">
+                <XCircle className="h-3 w-3 text-orange-600 mt-0.5 flex-shrink-0" />
+                <span>No proof of authority to collect (for third-party collectors)</span>
+              </li>
+            </ul>
+            <div className="bg-orange-100 border-l-2 border-orange-400 p-2 rounded">
+              <p className="text-xs text-orange-800 font-medium mb-1">Key Principle:</p>
+              <p className="text-xs text-orange-700 italic">
+                "Accuracy ≠ Compliance — Even if a debt exists, it must be <strong>complete, accurate, and verifiable</strong> under FCRA and Metro 2 rules."
+              </p>
             </div>
           </div>
           
