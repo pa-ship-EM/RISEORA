@@ -505,6 +505,31 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
           </div>
         </div>
         
+        <div className="bg-purple-50 border border-purple-200 rounded-md p-3">
+          <h5 className="text-xs font-semibold text-purple-800 mb-2 flex items-center gap-1">
+            <Scale className="h-3 w-3" />
+            Metro 2 Compliance Review (Advanced Education)
+          </h5>
+          <p className="text-xs text-purple-700 mb-2">
+            Most FCRA violations occur <strong>after validation</strong>, during Metro 2 reporting.
+          </p>
+          <p className="text-xs text-purple-600 mb-2">Common Metro 2 compliance issues include:</p>
+          <ul className="text-xs text-purple-700 space-y-0.5 mb-3 list-disc list-inside ml-1">
+            <li>Incorrect Date of First Delinquency (DOFD)</li>
+            <li>Re-aging accounts</li>
+            <li>Inaccurate payment history grids</li>
+            <li>Wrong account status (Open vs Closed)</li>
+            <li>Balances reported after charge-off</li>
+            <li>Duplicate tradelines (OC + Collection Agency)</li>
+          </ul>
+          <div className="bg-purple-100 border-l-2 border-purple-400 p-2 rounded flex items-start gap-2">
+            <Shield className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-purple-800">
+              <strong>Metro 2 Education is available to Compliance+ members</strong> and explains how these violations occur — even when a debt is technically "valid."
+            </p>
+          </div>
+        </div>
+        
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <Clock className="h-3 w-3" />
           <span>Suggested Timeline: {guidance.timeline}</span>
