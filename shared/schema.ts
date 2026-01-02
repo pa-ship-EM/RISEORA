@@ -119,6 +119,19 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// AI-generated escalation guidance for disputes
+export const disputeAiGuidance = pgTable("dispute_ai_guidance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  disputeId: varchar("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
+  
+  guidanceType: text("guidance_type").notNull().default("ESCALATION"), // ESCALATION, FOLLOW_UP, etc.
+  guidanceText: text("guidance_text").notNull(), // Markdown formatted guidance
+  
+  aiModel: text("ai_model").default("gpt-4o-mini"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas with validation
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -163,6 +176,11 @@ export const insertUserNotificationSettingsSchema = createInsertSchema(userNotif
   updatedAt: true,
 });
 
+export const insertDisputeAiGuidanceSchema = createInsertSchema(disputeAiGuidance).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertDispute = z.infer<typeof insertDisputeSchema>;
@@ -175,6 +193,8 @@ export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertUserNotificationSettings = z.infer<typeof insertUserNotificationSettingsSchema>;
 export type UserNotificationSettings = typeof userNotificationSettings.$inferSelect;
+export type InsertDisputeAiGuidance = z.infer<typeof insertDisputeAiGuidanceSchema>;
+export type DisputeAiGuidance = typeof disputeAiGuidance.$inferSelect;
 
 // Default checklist items for new disputes
 export const DEFAULT_DISPUTE_CHECKLIST = [
