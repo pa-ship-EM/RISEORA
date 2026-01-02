@@ -636,6 +636,16 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Forbidden" });
       }
       
+      // Check subscription tier - only GROWTH and COMPLIANCE_PLUS can access AI guidance
+      const subscription = await storage.getSubscriptionForUser(req.session.userId!);
+      const tier = subscription?.tier || "FREE";
+      if (!["GROWTH", "COMPLIANCE_PLUS"].includes(tier)) {
+        return res.status(403).json({ 
+          message: "AI escalation guidance requires Growth or Compliance+ subscription",
+          requiredTier: "GROWTH"
+        });
+      }
+      
       const guidance = await storage.getGuidanceForDispute(req.params.id);
       res.json(guidance || null);
     } catch (error) {
@@ -665,17 +675,24 @@ export async function registerRoutes(
       }
       
       // Generate AI guidance based on dispute context
-      const systemPrompt = `You are an expert credit dispute advisor focused on FCRA and CROA compliance. 
-Your role is to provide educational guidance on next steps when a credit dispute has not been resolved satisfactorily.
+      const systemPrompt = `You are an educational credit rights advisor. Your role is to provide EDUCATIONAL INFORMATION ONLY about credit dispute processes.
 
-IMPORTANT COMPLIANCE RULES:
-- You are providing educational information only, NOT legal advice
-- You must never guarantee specific outcomes or results
-- All suggestions must be framed as educational options for the consumer to consider
-- Reference relevant FCRA sections when applicable (e.g., Section 611, Section 623)
-- Emphasize that consumers have rights but must pursue them through proper channels
+CRITICAL LEGAL COMPLIANCE (CROA & FCRA):
+1. You are NOT an attorney and CANNOT provide legal advice
+2. You MUST NOT act as or represent yourself as performing work of a credit repair organization
+3. NEVER guarantee, promise, or imply specific outcomes or results (CROA Section 1679b violation)
+4. NEVER suggest you can remove accurate negative information from credit reports
+5. Frame ALL guidance as educational options for the consumer to research and consider
+6. Reference relevant FCRA sections (e.g., Section 611 reinvestigation rights, Section 623 furnisher duties)
+7. Always recommend consulting with a consumer rights attorney for complex situations
+8. Emphasize that consumers must pursue their own rights through proper legal channels
 
-Provide structured, actionable educational guidance that empowers the consumer to understand their options.`;
+DISCLAIMER REQUIREMENTS:
+- Include language that this is educational information only
+- Remind users they have the right to dispute inaccurate information themselves for free
+- Never imply that escalation will definitely result in item removal
+
+Your guidance should empower consumers with knowledge about their rights under FCRA while staying compliant with CROA regulations.`;
 
       const userPrompt = `A consumer's credit dispute has been escalated and needs guidance on next steps.
 
@@ -683,8 +700,8 @@ DISPUTE DETAILS:
 - Creditor: ${dispute.creditorName}
 - Account Number: ${dispute.accountNumber || "Not provided"}
 - Bureau: ${dispute.bureau}
-- Dispute Type: ${dispute.disputeType}
-- Reason: ${dispute.disputeReason}
+- Dispute Reason: ${dispute.disputeReason}
+- Custom Reason: ${dispute.customReason || "None provided"}
 - Original Letter Content: ${dispute.letterContent || "Not available"}
 
 Please provide:

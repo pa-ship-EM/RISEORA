@@ -125,7 +125,11 @@ export const disputeAiGuidance = pgTable("dispute_ai_guidance", {
   disputeId: varchar("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
   
   guidanceType: text("guidance_type").notNull().default("ESCALATION"), // ESCALATION, FOLLOW_UP, etc.
-  guidanceText: text("guidance_text").notNull(), // Markdown formatted guidance
+  summary: text("summary").notNull(), // Brief analysis of the situation
+  nextSteps: text("next_steps").array().notNull(), // Array of action steps
+  fcraRights: text("fcra_rights").array().notNull(), // Relevant FCRA rights
+  followUpTemplate: text("follow_up_template").notNull(), // Template for follow-up letter
+  timeline: text("timeline").notNull(), // Suggested timeline for actions
   
   aiModel: text("ai_model").default("gpt-4o-mini"),
   

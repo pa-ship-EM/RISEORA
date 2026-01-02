@@ -15,8 +15,10 @@ import { useLocation } from "wouter";
 import { 
   FileText, Plus, Clock, CheckCircle, AlertCircle, Loader2, 
   ChevronDown, ChevronRight, Mail, Package, CalendarDays,
-  Shield, FileCheck, Truck, Bell, ExternalLink
+  Shield, FileCheck, Truck, Bell, ExternalLink, Sparkles, Scale, ListChecks, Copy
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow, format, addDays, differenceInDays } from "date-fns";
 import type { Dispute } from "@shared/schema";
 
@@ -255,6 +257,179 @@ function DisputeActions({ dispute }: { dispute: Dispute }) {
   );
 }
 
+interface GuidanceData {
+  id: string;
+  disputeId: string;
+  guidanceType: string;
+  summary: string;
+  nextSteps: string[];
+  fcraRights: string[];
+  followUpTemplate: string;
+  timeline: string;
+  createdAt: string;
+}
+
+function EscalationGuidance({ dispute }: { dispute: Dispute }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const { data: guidance, isLoading: loadingGuidance } = useQuery<GuidanceData | null>({
+    queryKey: ['/api/disputes', dispute.id, 'guidance'],
+    queryFn: async () => {
+      const res = await fetch(`/api/disputes/${dispute.id}/guidance`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch guidance');
+      return res.json();
+    },
+    enabled: dispute.status === 'ESCALATED',
+  });
+
+  const generateGuidance = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/disputes/${dispute.id}/generate-guidance`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to generate guidance');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/disputes', dispute.id, 'guidance'] });
+      toast({ title: "Guidance Generated", description: "AI escalation guidance is now available." });
+    },
+    onError: (error: Error) => {
+      if (error.message.includes('requires Growth')) {
+        toast({ 
+          title: "Upgrade Required", 
+          description: "AI escalation guidance requires Growth or Compliance+ subscription.",
+          variant: "destructive"
+        });
+      } else {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      }
+    },
+  });
+
+  const copyTemplate = () => {
+    if (guidance?.followUpTemplate) {
+      navigator.clipboard.writeText(guidance.followUpTemplate);
+      toast({ title: "Copied", description: "Follow-up template copied to clipboard." });
+    }
+  };
+
+  if (dispute.status !== 'ESCALATED') return null;
+
+  if (loadingGuidance) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading guidance...
+      </div>
+    );
+  }
+
+  if (!guidance) {
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-amber-600" />
+          <span className="font-medium text-amber-800">Escalation Guidance Available</span>
+        </div>
+        <p className="text-sm text-amber-700">
+          Get AI-powered educational guidance on next steps for your escalated dispute, including FCRA rights and follow-up templates.
+        </p>
+        <Button 
+          size="sm" 
+          onClick={() => generateGuidance.mutate()}
+          disabled={generateGuidance.isPending}
+          data-testid={`button-generate-guidance-${dispute.id}`}
+        >
+          {generateGuidance.isPending ? (
+            <>
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-3 w-3 mr-1" />
+              Generate AI Guidance
+            </>
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 text-blue-600" />
+        <span className="font-medium text-blue-800">AI Escalation Guidance</span>
+      </div>
+      
+      <div className="space-y-3">
+        <div>
+          <h4 className="text-sm font-medium text-slate-700 mb-1">Summary</h4>
+          <p className="text-sm text-slate-600">{guidance.summary}</p>
+        </div>
+        
+        <div>
+          <h4 className="text-sm font-medium text-slate-700 mb-1 flex items-center gap-1">
+            <ListChecks className="h-4 w-4" />
+            Recommended Next Steps
+          </h4>
+          <ul className="text-sm text-slate-600 space-y-1">
+            {guidance.nextSteps?.map((step, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+        <div>
+          <h4 className="text-sm font-medium text-slate-700 mb-1 flex items-center gap-1">
+            <Scale className="h-4 w-4" />
+            Your FCRA Rights
+          </h4>
+          <ul className="text-sm text-slate-600 list-disc list-inside space-y-0.5">
+            {guidance.fcraRights?.map((right, i) => (
+              <li key={i}>{right}</li>
+            ))}
+          </ul>
+        </div>
+        
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <h4 className="text-sm font-medium text-slate-700">Follow-Up Template</h4>
+            <Button variant="ghost" size="sm" onClick={copyTemplate} data-testid={`button-copy-template-${dispute.id}`}>
+              <Copy className="h-3 w-3 mr-1" />
+              Copy
+            </Button>
+          </div>
+          <div className="bg-white border rounded-md p-3 text-xs font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
+            {guidance.followUpTemplate}
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <Clock className="h-3 w-3" />
+          <span>Suggested Timeline: {guidance.timeline}</span>
+        </div>
+      </div>
+      
+      <p className="text-xs text-slate-500 italic mt-2">
+        This is educational guidance only, not legal advice. Consider consulting a consumer rights attorney for complex cases.
+      </p>
+    </div>
+  );
+}
+
 function DisputeCard({ dispute }: { dispute: Dispute }) {
   const [isOpen, setIsOpen] = useState(false);
   const [viewLetterOpen, setViewLetterOpen] = useState(false);
@@ -361,6 +536,8 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
             <DisputeChecklist disputeId={dispute.id} />
             
             <DisputeActions dispute={dispute} />
+            
+            <EscalationGuidance dispute={dispute} />
             
             <div className="flex items-center justify-between">
               <div className="text-xs text-muted-foreground">
