@@ -29,7 +29,7 @@ export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
   
-  tier: text("tier").notNull().default("FREE"), // FREE, PRO, ELITE
+  tier: text("tier").notNull().default("FREE"), // FREE, SELF_STARTER, GROWTH, COMPLIANCE_PLUS
   status: text("status").notNull().default("ACTIVE"), // ACTIVE, CANCELED, PAST_DUE
   
   // Stripe integration (for future use)
@@ -200,7 +200,7 @@ export const insertDisputeSchema = createInsertSchema(disputes, {
 });
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions, {
-  tier: z.enum(["FREE", "PRO", "ELITE"]),
+  tier: z.enum(["FREE", "SELF_STARTER", "GROWTH", "COMPLIANCE_PLUS"]),
   status: z.enum(["ACTIVE", "CANCELED", "PAST_DUE"]),
 }).omit({
   id: true,
@@ -315,7 +315,21 @@ export const TIER_FEATURES = {
     hasAdvancedTemplates: false,
     hasAdvisorSupport: false,
   },
-  PRO: {
+  SELF_STARTER: {
+    name: "Self-Starter",
+    price: 49,
+    disputesPerMonth: 3,
+    hasDisputeWizard: true,
+    hasAdvancedAnalysis: false,
+    hasUnlimitedDocs: false,
+    hasMetro2Education: false,
+    hasPrioritySupport: false,
+    hasEscalationPrep: false,
+    hasStrategyIntelligence: false,
+    hasAdvancedTemplates: false,
+    hasAdvisorSupport: false,
+  },
+  GROWTH: {
     name: "RiseOra Pro",
     price: 99,
     disputesPerMonth: -1, // unlimited
@@ -329,7 +343,7 @@ export const TIER_FEATURES = {
     hasAdvancedTemplates: false,
     hasAdvisorSupport: false,
   },
-  ELITE: {
+  COMPLIANCE_PLUS: {
     name: "RiseOra Elite",
     price: 149,
     disputesPerMonth: -1, // unlimited

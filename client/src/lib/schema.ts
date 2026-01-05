@@ -11,7 +11,7 @@ export interface User {
   updatedAt: string;
 }
 
-export type SubscriptionTier = 'FREE' | 'PRO' | 'ELITE';
+export type SubscriptionTier = 'FREE' | 'SELF_STARTER' | 'GROWTH' | 'COMPLIANCE_PLUS';
 
 export interface Subscription {
   id: string;
