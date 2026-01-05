@@ -15,8 +15,12 @@ import { useLocation } from "wouter";
 import { 
   FileText, Plus, Clock, CheckCircle, AlertCircle, Loader2, 
   ChevronDown, ChevronRight, Mail, Package, CalendarDays,
-  Shield, FileCheck, Truck, Bell, ExternalLink, Sparkles, Scale, ListChecks, Copy, XCircle
+  Shield, FileCheck, Truck, Bell, ExternalLink, Sparkles, Scale, ListChecks, Copy, XCircle,
+  Upload, Paperclip, Trash2, Image, File, AlertTriangle
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { DisputeEvidence, DocumentType } from "@/lib/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow, format, addDays, differenceInDays } from "date-fns";
@@ -55,6 +59,62 @@ const BEST_PRACTICES = [
     description: "Save copies of everything you send, including the letter, documents, certified mail receipt, and tracking information.",
   }
 ];
+
+function DeadlineCountdown({ dispute }: { dispute: Dispute }) {
+  if (!dispute.responseDeadline) return null;
+  
+  const deadline = new Date(dispute.responseDeadline);
+  const today = new Date();
+  const daysRemaining = differenceInDays(deadline, today);
+  
+  // Determine urgency level and styling
+  const getUrgencyStyles = () => {
+    if (daysRemaining < 0) {
+      return { bg: "bg-red-100", text: "text-red-700", border: "border-red-200", label: "OVERDUE" };
+    } else if (daysRemaining <= 3) {
+      return { bg: "bg-red-50", text: "text-red-600", border: "border-red-200", label: "URGENT" };
+    } else if (daysRemaining <= 7) {
+      return { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-200", label: "Soon" };
+    } else if (daysRemaining <= 15) {
+      return { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-200", label: "Upcoming" };
+    } else {
+      return { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200", label: "On Track" };
+    }
+  };
+  
+  const urgency = getUrgencyStyles();
+  const deadlineDays = dispute.disputeType === "identity_theft" ? 45 : 30;
+  
+  return (
+    <div className={`flex items-center justify-between p-3 rounded-lg border ${urgency.bg} ${urgency.border}`} data-testid={`countdown-${dispute.id}`}>
+      <div className="flex items-center gap-3">
+        <div className={`flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-white border ${urgency.border}`}>
+          <span className={`text-2xl font-bold ${urgency.text}`}>
+            {Math.abs(daysRemaining)}
+          </span>
+          <span className="text-[10px] text-muted-foreground uppercase">
+            {daysRemaining < 0 ? "days ago" : "days"}
+          </span>
+        </div>
+        <div>
+          <div className={`font-semibold ${urgency.text} flex items-center gap-1`}>
+            <Clock className="h-4 w-4" />
+            {daysRemaining < 0 ? "Response Overdue" : `${deadlineDays}-Day Response Deadline`}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {daysRemaining < 0 
+              ? `Was due ${format(deadline, 'MMM d, yyyy')}`
+              : `Due by ${format(deadline, 'MMMM d, yyyy')}`
+            }
+          </div>
+        </div>
+      </div>
+      <Badge className={`${urgency.bg} ${urgency.text} border ${urgency.border}`}>
+        {urgency.label}
+      </Badge>
+    </div>
+  );
+}
 
 function DisputeProgressBar({ dispute }: { dispute: Dispute }) {
   const stage = getDisputeStage(dispute);
@@ -131,6 +191,220 @@ function DisputeChecklist({ disputeId }: { disputeId: string }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+const DOCUMENT_TYPES: { value: DocumentType; label: string; description: string }[] = [
+  { value: 'ID', label: 'Government ID', description: 'Driver\'s license, state ID, or passport' },
+  { value: 'PROOF_OF_ADDRESS', label: 'Proof of Address', description: 'Utility bill, bank statement, or lease' },
+  { value: 'SSN_CARD', label: 'SSN Card', description: 'Copy with first 5 digits redacted' },
+  { value: 'UTILITY_BILL', label: 'Utility Bill', description: 'Recent utility bill showing your address' },
+  { value: 'FTC_REPORT', label: 'FTC Identity Theft Report', description: 'Report from identitytheft.gov' },
+  { value: 'CREDIT_REPORT', label: 'Credit Report', description: 'Annual credit report or bureau report' },
+  { value: 'OTHER', label: 'Other Document', description: 'Any other supporting evidence' },
+];
+
+function EvidenceManager({ disputeId }: { disputeId: string }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<DocumentType>('OTHER');
+  const [description, setDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const { data: evidence = [], isLoading } = useQuery<DisputeEvidence[]>({
+    queryKey: ['/api/disputes', disputeId, 'evidence'],
+    queryFn: async () => {
+      const res = await fetch(`/api/disputes/${disputeId}/evidence`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+    
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('documentType', selectedType);
+      if (description) formData.append('description', description);
+      
+      const res = await fetch(`/api/disputes/${disputeId}/evidence`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to upload');
+      }
+      
+      toast({ title: 'Document Uploaded', description: 'Your evidence has been attached to this dispute.' });
+      queryClient.invalidateQueries({ queryKey: ['/api/disputes', disputeId, 'evidence'] });
+      setUploadOpen(false);
+      setSelectedFile(null);
+      setDescription('');
+      setSelectedType('OTHER');
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/evidence/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+    },
+    onSuccess: () => {
+      toast({ title: 'Document Deleted' });
+      queryClient.invalidateQueries({ queryKey: ['/api/disputes', disputeId, 'evidence'] });
+    },
+    onError: () => {
+      toast({ variant: 'destructive', title: 'Delete Failed' });
+    },
+  });
+
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return <Image className="h-4 w-4" />;
+    return <File className="h-4 w-4" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Paperclip className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Evidence & Documents</span>
+        </div>
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={() => setUploadOpen(true)}
+          data-testid="button-upload-evidence"
+        >
+          <Upload className="h-3 w-3 mr-1" />
+          Upload
+        </Button>
+      </div>
+      
+      {isLoading ? (
+        <div className="text-sm text-muted-foreground">Loading documents...</div>
+      ) : evidence.length === 0 ? (
+        <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          No documents attached. Upload ID, proof of address, and other evidence.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {evidence.map((doc) => (
+            <div 
+              key={doc.id} 
+              className="flex items-center justify-between p-2 bg-muted/30 rounded-md border"
+              data-testid={`evidence-${doc.id}`}
+            >
+              <div className="flex items-center gap-3">
+                {getFileIcon(doc.mimeType)}
+                <div>
+                  <p className="text-sm font-medium truncate max-w-[200px]">{doc.fileName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {DOCUMENT_TYPES.find(t => t.value === doc.documentType)?.label || doc.documentType} • {formatFileSize(doc.fileSize)}
+                  </p>
+                </div>
+              </div>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => deleteMutation.mutate(doc.id)}
+                disabled={deleteMutation.isPending}
+                data-testid={`button-delete-evidence-${doc.id}`}
+              >
+                <Trash2 className="h-3 w-3 text-destructive" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Evidence Document</DialogTitle>
+            <DialogDescription>
+              Attach supporting documents to strengthen your dispute.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Document Type</Label>
+              <Select value={selectedType} onValueChange={(v) => setSelectedType(v as DocumentType)}>
+                <SelectTrigger data-testid="select-document-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DOCUMENT_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {DOCUMENT_TYPES.find(t => t.value === selectedType)?.description}
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>File</Label>
+              <Input 
+                type="file" 
+                accept="image/*,.pdf"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                data-testid="input-evidence-file"
+              />
+              <p className="text-xs text-muted-foreground">
+                Accepts JPEG, PNG, GIF, or PDF up to 10MB
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Description (Optional)</Label>
+              <Input 
+                placeholder="Brief description of this document"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                data-testid="input-evidence-description"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleUpload}
+              disabled={!selectedFile || isUploading}
+              data-testid="button-confirm-upload"
+            >
+              {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+              Upload Document
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -541,10 +815,17 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              {daysUntilDeadline !== null && daysUntilDeadline <= 5 && daysUntilDeadline > 0 && (
-                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+              {daysUntilDeadline !== null && daysUntilDeadline <= 7 && (
+                <Badge 
+                  variant="outline" 
+                  className={
+                    daysUntilDeadline < 0 ? "bg-red-100 text-red-700 border-red-200" :
+                    daysUntilDeadline <= 3 ? "bg-red-50 text-red-600 border-red-200" :
+                    "bg-orange-50 text-orange-700 border-orange-200"
+                  }
+                >
                   <Bell className="h-3 w-3 mr-1" />
-                  {daysUntilDeadline} days left
+                  {daysUntilDeadline < 0 ? "Overdue" : `${daysUntilDeadline}d left`}
                 </Badge>
               )}
               <Badge className={getStatusColor(dispute.status)}>
@@ -581,14 +862,11 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
               </div>
             )}
             
-            {dispute.responseDeadline && (
-              <div className="flex items-center gap-2 text-sm">
-                <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                <span>Response deadline: {format(new Date(dispute.responseDeadline), 'MMMM d, yyyy')}</span>
-              </div>
-            )}
+            <DeadlineCountdown dispute={dispute} />
             
             <DisputeChecklist disputeId={dispute.id} />
+            
+            <EvidenceManager disputeId={dispute.id} />
             
             <DisputeActions dispute={dispute} />
             

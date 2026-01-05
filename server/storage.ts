@@ -1,9 +1,12 @@
 import { 
   users, disputes, subscriptions, disputeChecklists, notifications, userNotificationSettings, disputeAiGuidance,
+  disputeEvidence, auditLog,
   type User, type InsertUser, type Dispute, type InsertDispute, type Subscription, type InsertSubscription,
   type DisputeChecklist, type InsertDisputeChecklist, type Notification, type InsertNotification,
   type UserNotificationSettings, type InsertUserNotificationSettings,
   type DisputeAiGuidance, type InsertDisputeAiGuidance,
+  type DisputeEvidence, type InsertDisputeEvidence,
+  type AuditLog, type InsertAuditLog,
   DEFAULT_DISPUTE_CHECKLIST
 } from "@shared/schema";
 import { db, withRetry } from "./db";
@@ -58,6 +61,15 @@ export interface IStorage {
   // AI Guidance methods
   getGuidanceForDispute(disputeId: string): Promise<DisputeAiGuidance | undefined>;
   createGuidance(guidance: InsertDisputeAiGuidance): Promise<DisputeAiGuidance>;
+  
+  // Evidence methods
+  getEvidenceForDispute(disputeId: string): Promise<DisputeEvidence[]>;
+  createEvidence(evidence: InsertDisputeEvidence): Promise<DisputeEvidence>;
+  deleteEvidence(id: string): Promise<boolean>;
+  
+  // Audit log methods
+  getAuditLogsForUser(userId: string): Promise<AuditLog[]>;
+  createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -302,6 +314,42 @@ export class DatabaseStorage implements IStorage {
   async createGuidance(guidance: InsertDisputeAiGuidance): Promise<DisputeAiGuidance> {
     const [created] = await db.insert(disputeAiGuidance)
       .values(guidance)
+      .returning();
+    return created;
+  }
+
+  // Evidence methods
+  async getEvidenceForDispute(disputeId: string): Promise<DisputeEvidence[]> {
+    return await db.select().from(disputeEvidence)
+      .where(eq(disputeEvidence.disputeId, disputeId))
+      .orderBy(desc(disputeEvidence.createdAt));
+  }
+
+  async createEvidence(evidence: InsertDisputeEvidence): Promise<DisputeEvidence> {
+    const [created] = await db.insert(disputeEvidence)
+      .values(evidence)
+      .returning();
+    return created;
+  }
+
+  async deleteEvidence(id: string): Promise<boolean> {
+    const result = await db.delete(disputeEvidence)
+      .where(eq(disputeEvidence.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Audit log methods
+  async getAuditLogsForUser(userId: string): Promise<AuditLog[]> {
+    return await db.select().from(auditLog)
+      .where(eq(auditLog.userId, userId))
+      .orderBy(desc(auditLog.createdAt))
+      .limit(100);
+  }
+
+  async createAuditLog(log: InsertAuditLog): Promise<AuditLog> {
+    const [created] = await db.insert(auditLog)
+      .values(log)
       .returning();
     return created;
   }

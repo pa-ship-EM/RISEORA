@@ -78,6 +78,48 @@ export interface PasswordResetToken {
   expiresAt: string;
 }
 
+export type DocumentType = 'ID' | 'PROOF_OF_ADDRESS' | 'SSN_CARD' | 'UTILITY_BILL' | 'FTC_REPORT' | 'CREDIT_REPORT' | 'OTHER';
+
+export interface DisputeEvidence {
+  id: string;
+  disputeId: string;
+  userId: string;
+  documentType: DocumentType;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  storagePath: string;
+  description?: string | null;
+  bureau?: 'EXPERIAN' | 'TRANSUNION' | 'EQUIFAX' | null;
+  createdAt: string;
+}
+
+export type AuditAction = 
+  | 'LETTER_GENERATED' 
+  | 'DISPUTE_CREATED' 
+  | 'DISPUTE_UPDATED'
+  | 'FILE_UPLOADED' 
+  | 'FILE_DELETED'
+  | 'STATUS_UPDATED' 
+  | 'PROFILE_UPDATED'
+  | 'PASSWORD_CHANGED'
+  | 'LOGIN'
+  | 'LOGOUT';
+
+export type AuditResourceType = 'DISPUTE' | 'DOCUMENT' | 'PROFILE' | 'SESSION';
+
+export interface AuditLog {
+  id: string;
+  userId: string;
+  action: AuditAction;
+  resourceType: AuditResourceType;
+  resourceId?: string | null;
+  details?: string | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  createdAt: string;
+}
+
 // Mock Database State Interface
 export interface MockDatabase {
   users: User[];

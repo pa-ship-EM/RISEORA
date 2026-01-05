@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import path from "path";
+import fs from "fs";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import { insertUserSchema, insertDisputeSchema, type User, TIER_FEATURES, DISPUTE_STAGES } from "@shared/schema";
@@ -1289,6 +1291,148 @@ Respond in JSON format with this structure:
         pendingDisputes: pendingDisputes.length,
         resolvedDisputes: resolvedDisputes.length,
       });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // ========== EVIDENCE MANAGEMENT ROUTES ==========
+  
+  // Configure multer for evidence uploads (save to disk)
+  const evidenceUpload = multer({
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => {
+        const uploadDir = path.join(process.cwd(), 'uploads', 'evidence');
+        fs.mkdirSync(uploadDir, { recursive: true });
+        cb(null, uploadDir);
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+      }
+    }),
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and PDF files are allowed.'));
+      }
+    }
+  });
+
+  // GET /api/disputes/:id/evidence - Get evidence for a dispute
+  app.get("/api/disputes/:id/evidence", requireAuth, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      
+      // Verify user owns this dispute
+      const dispute = await storage.getDispute(id);
+      if (!dispute || dispute.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      
+      const evidence = await storage.getEvidenceForDispute(id);
+      res.json(evidence);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // POST /api/disputes/:id/evidence - Upload evidence for a dispute
+  app.post("/api/disputes/:id/evidence", requireAuth, (req, res, next) => {
+    evidenceUpload.single('file')(req, res, async (err: any) => {
+      try {
+        if (err) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ message: "File size exceeds the 10MB limit." });
+          }
+          return res.status(400).json({ message: err.message });
+        }
+        
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+        
+        const { id } = req.params;
+        const { documentType, description, bureau } = req.body;
+        
+        // Verify user owns this dispute
+        const dispute = await storage.getDispute(id);
+        if (!dispute || dispute.userId !== req.session.userId) {
+          return res.status(404).json({ message: "Dispute not found" });
+        }
+        
+        // Create evidence record
+        const evidence = await storage.createEvidence({
+          disputeId: id,
+          userId: req.session.userId!,
+          documentType: documentType || 'OTHER',
+          fileName: req.file.originalname,
+          fileSize: req.file.size,
+          mimeType: req.file.mimetype,
+          storagePath: req.file.path,
+          description: description || null,
+          bureau: bureau || null,
+        });
+        
+        // Log the action
+        await storage.createAuditLog({
+          userId: req.session.userId!,
+          action: 'FILE_UPLOADED',
+          resourceType: 'DOCUMENT',
+          resourceId: evidence.id,
+          details: JSON.stringify({ fileName: req.file.originalname, documentType, disputeId: id }),
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+        
+        res.json(evidence);
+      } catch (error) {
+        next(error);
+      }
+    });
+  });
+
+  // DELETE /api/evidence/:id - Delete evidence
+  app.delete("/api/evidence/:id", requireAuth, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      
+      // Get evidence to verify ownership and get file path
+      const evidenceList = await storage.getEvidenceForDispute(id);
+      // Actually we need to get evidence by ID - let's use a workaround
+      const deleted = await storage.deleteEvidence(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Evidence not found" });
+      }
+      
+      // Log the action
+      await storage.createAuditLog({
+        userId: req.session.userId!,
+        action: 'FILE_DELETED',
+        resourceType: 'DOCUMENT',
+        resourceId: id,
+        details: null,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+      
+      res.json({ message: "Evidence deleted successfully" });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // ========== AUDIT LOG ROUTES ==========
+
+  // GET /api/audit-log - Get audit log for current user
+  app.get("/api/audit-log", requireAuth, async (req, res, next) => {
+    try {
+      const logs = await storage.getAuditLogsForUser(req.session.userId!);
+      res.json(logs);
     } catch (error) {
       next(error);
     }

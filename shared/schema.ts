@@ -148,6 +148,40 @@ export const disputeAiGuidance = pgTable("dispute_ai_guidance", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Evidence documents attached to disputes
+export const disputeEvidence = pgTable("dispute_evidence", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  disputeId: varchar("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  documentType: text("document_type").notNull(), // ID, PROOF_OF_ADDRESS, SSN_CARD, UTILITY_BILL, FTC_REPORT, CREDIT_REPORT, OTHER
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size").notNull(), // bytes
+  mimeType: text("mime_type").notNull(),
+  storagePath: text("storage_path").notNull(), // path to file in storage
+  
+  description: text("description"), // optional user note
+  bureau: text("bureau"), // optional: attach to specific bureau (EXPERIAN, TRANSUNION, EQUIFAX)
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Audit log for user actions (user-visible activity tracking)
+export const auditLog = pgTable("audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  action: text("action").notNull(), // LETTER_GENERATED, DISPUTE_CREATED, FILE_UPLOADED, STATUS_UPDATED, etc.
+  resourceType: text("resource_type").notNull(), // DISPUTE, DOCUMENT, PROFILE, etc.
+  resourceId: varchar("resource_id"), // ID of the affected resource
+  
+  details: text("details"), // JSON string with action-specific details
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas with validation
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -197,6 +231,33 @@ export const insertDisputeAiGuidanceSchema = createInsertSchema(disputeAiGuidanc
   createdAt: true,
 });
 
+export const insertDisputeEvidenceSchema = createInsertSchema(disputeEvidence, {
+  documentType: z.enum(["ID", "PROOF_OF_ADDRESS", "SSN_CARD", "UTILITY_BILL", "FTC_REPORT", "CREDIT_REPORT", "OTHER"]),
+  bureau: z.enum(["EXPERIAN", "TRANSUNION", "EQUIFAX"]).optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLog, {
+  action: z.enum([
+    "LETTER_GENERATED", 
+    "DISPUTE_CREATED", 
+    "DISPUTE_UPDATED",
+    "FILE_UPLOADED", 
+    "FILE_DELETED",
+    "STATUS_UPDATED", 
+    "PROFILE_UPDATED",
+    "PASSWORD_CHANGED",
+    "LOGIN",
+    "LOGOUT"
+  ]),
+  resourceType: z.enum(["DISPUTE", "DOCUMENT", "PROFILE", "SESSION"]),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertDispute = z.infer<typeof insertDisputeSchema>;
@@ -211,6 +272,10 @@ export type InsertUserNotificationSettings = z.infer<typeof insertUserNotificati
 export type UserNotificationSettings = typeof userNotificationSettings.$inferSelect;
 export type InsertDisputeAiGuidance = z.infer<typeof insertDisputeAiGuidanceSchema>;
 export type DisputeAiGuidance = typeof disputeAiGuidance.$inferSelect;
+export type InsertDisputeEvidence = z.infer<typeof insertDisputeEvidenceSchema>;
+export type DisputeEvidence = typeof disputeEvidence.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = typeof auditLog.$inferSelect;
 
 // Default checklist items for new disputes
 export const DEFAULT_DISPUTE_CHECKLIST = [
