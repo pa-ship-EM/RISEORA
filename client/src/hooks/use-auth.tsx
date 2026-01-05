@@ -54,6 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (userData.role === "ADMIN") setLocation("/admin");
       else if (userData.role === "AFFILIATE") setLocation("/affiliate");
       else setLocation("/dashboard");
+    } catch (error) {
+      setIsLoading(false);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await res.json();
       setUser(userData);
       setLocation("/dashboard");
+    } catch (error) {
+      setIsLoading(false);
+      throw error;
     } finally {
       setIsLoading(false);
     }
