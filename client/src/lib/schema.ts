@@ -11,10 +11,12 @@ export interface User {
   updatedAt: string;
 }
 
+export type SubscriptionTier = 'FREE' | 'PRO' | 'ELITE';
+
 export interface Subscription {
   id: string;
   userId: string;
-  planId: 'STARTER' | 'PROFESSIONAL' | 'PREMIER';
+  tier: SubscriptionTier;
   status: 'ACTIVE' | 'CANCELED' | 'PAST_DUE';
   currentPeriodEnd: string;
   cancelAtPeriodEnd: boolean;

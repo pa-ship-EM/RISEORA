@@ -29,7 +29,7 @@ export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
   
-  tier: text("tier").notNull().default("FREE"), // FREE, SELF_STARTER, GROWTH, COMPLIANCE_PLUS
+  tier: text("tier").notNull().default("FREE"), // FREE, PRO, ELITE
   status: text("status").notNull().default("ACTIVE"), // ACTIVE, CANCELED, PAST_DUE
   
   // Stripe integration (for future use)
@@ -200,7 +200,7 @@ export const insertDisputeSchema = createInsertSchema(disputes, {
 });
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions, {
-  tier: z.enum(["FREE", "SELF_STARTER", "GROWTH", "COMPLIANCE_PLUS"]),
+  tier: z.enum(["FREE", "PRO", "ELITE"]),
   status: z.enum(["ACTIVE", "CANCELED", "PAST_DUE"]),
 }).omit({
   id: true,
@@ -302,7 +302,7 @@ export const DISPUTE_STAGES = [
 // Tier feature definitions
 export const TIER_FEATURES = {
   FREE: {
-    name: "DIY Scholar",
+    name: "Free Trial",
     price: 0,
     disputesPerMonth: 0,
     hasDisputeWizard: false,
@@ -310,19 +310,13 @@ export const TIER_FEATURES = {
     hasUnlimitedDocs: false,
     hasMetro2Education: false,
     hasPrioritySupport: false,
+    hasEscalationPrep: false,
+    hasStrategyIntelligence: false,
+    hasAdvancedTemplates: false,
+    hasAdvisorSupport: false,
   },
-  SELF_STARTER: {
-    name: "Self-Starter",
-    price: 49,
-    disputesPerMonth: 3,
-    hasDisputeWizard: true,
-    hasAdvancedAnalysis: false,
-    hasUnlimitedDocs: false,
-    hasMetro2Education: false,
-    hasPrioritySupport: false,
-  },
-  GROWTH: {
-    name: "Growth",
+  PRO: {
+    name: "RiseOra Pro",
     price: 99,
     disputesPerMonth: -1, // unlimited
     hasDisputeWizard: true,
@@ -330,9 +324,13 @@ export const TIER_FEATURES = {
     hasUnlimitedDocs: true,
     hasMetro2Education: false,
     hasPrioritySupport: true,
+    hasEscalationPrep: false,
+    hasStrategyIntelligence: false,
+    hasAdvancedTemplates: false,
+    hasAdvisorSupport: false,
   },
-  COMPLIANCE_PLUS: {
-    name: "Compliance+",
+  ELITE: {
+    name: "RiseOra Elite",
     price: 149,
     disputesPerMonth: -1, // unlimited
     hasDisputeWizard: true,
@@ -340,6 +338,10 @@ export const TIER_FEATURES = {
     hasUnlimitedDocs: true,
     hasMetro2Education: true,
     hasPrioritySupport: true,
+    hasEscalationPrep: true,
+    hasStrategyIntelligence: true,
+    hasAdvancedTemplates: true,
+    hasAdvisorSupport: true,
   },
 } as const;
 
