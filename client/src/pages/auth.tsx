@@ -45,6 +45,30 @@ export default function AuthPage() {
     defaultValues: { firstName: "", lastName: "", email: "", password: "" },
   });
 
+  const onLoginError = () => {
+    const errors = loginForm.formState.errors;
+    const errorMessages = Object.values(errors).map(e => e?.message).filter(Boolean);
+    if (errorMessages.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Please fix the following",
+        description: errorMessages.join(". "),
+      });
+    }
+  };
+
+  const onSignupError = () => {
+    const errors = signupForm.formState.errors;
+    const errorMessages = Object.values(errors).map(e => e?.message).filter(Boolean);
+    if (errorMessages.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Please fix the following",
+        description: errorMessages.join(". "),
+      });
+    }
+  };
+
   const onLogin = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
@@ -107,7 +131,7 @@ export default function AuthPage() {
               <CardTitle>Welcome Back</CardTitle>
               <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
             </CardHeader>
-            <form onSubmit={loginForm.handleSubmit(onLogin)}>
+            <form onSubmit={loginForm.handleSubmit(onLogin, onLoginError)}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -153,7 +177,7 @@ export default function AuthPage() {
               <CardTitle>Create Account</CardTitle>
               <CardDescription>Start your journey to financial freedom today.</CardDescription>
             </CardHeader>
-            <form onSubmit={signupForm.handleSubmit(onSignup)}>
+            <form onSubmit={signupForm.handleSubmit(onSignup, onSignupError)}>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -199,11 +223,13 @@ export default function AuthPage() {
                   <Input 
                     id="signup-password" 
                     type="password" 
+                    placeholder="Min. 8 characters"
                     data-testid="input-password-signup"
                     {...signupForm.register("password")} 
                   />
+                  <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
                   {signupForm.formState.errors.password && (
-                    <p className="text-xs text-destructive">{signupForm.formState.errors.password.message}</p>
+                    <p className="text-xs text-destructive font-medium">{signupForm.formState.errors.password.message}</p>
                   )}
                 </div>
                 <div className="mt-4 text-xs text-muted-foreground bg-secondary/10 p-3 rounded text-center space-y-1">
