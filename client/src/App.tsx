@@ -103,6 +103,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
+      <Route path="/admin/settings">
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <SettingsPage />
+        </ProtectedRoute>
+      </Route>
+
       <Route component={NotFound} />
     </Switch>
   );
