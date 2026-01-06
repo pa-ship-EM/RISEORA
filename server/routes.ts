@@ -649,7 +649,13 @@ export async function registerRoutes(
       }
       
       const guidance = await storage.getGuidanceForDispute(req.params.id);
-      res.json(guidance || null);
+      if (guidance) {
+        // Filter out internal notes before sending to customer
+        const { internalNotes: _, ...customerGuidance } = guidance;
+        res.json(customerGuidance);
+      } else {
+        res.json(null);
+      }
     } catch (error) {
       next(error);
     }
@@ -933,13 +939,21 @@ Instead, focus your guidance on:
 Set followUpTemplate to: "All formal dispute letters have been sent. At this stage, regulatory complaints and legal consultation are the appropriate next steps. No additional dispute letter is recommended."
 ` : ""}
 
+CUSTOMER-FACING CONTENT RULES (CRITICAL):
+- The "summary" field is shown directly to the customer - use friendly, educational language
+- NEVER use internal/admin terminology like "consumer insistence", "escalation triggered", "backend notes"
+- NEVER reference internal processes, knowledge bases, or administrative details
+- Focus on what the customer can DO, not internal reasons for escalation
+- Use "you" and "your" - speak directly to the customer
+
 Please provide educational guidance in this JSON format:
 {
-  "summary": "Analysis using phrases like 'Based on your dispute status...' - explain what step they completed and why the next step is appropriate",
+  "summary": "Customer-friendly explanation using 'Based on your dispute status...' - explain what step they completed and why the next step is appropriate. NO internal notes or admin language.",
   "nextSteps": ["Step 1: ...", "Step 2: ...", ...] - use phrases like "If you choose to proceed..." or "One option at this stage...",
   "fcraRights": ["Right 1 with FCRA section", ...],
   "followUpTemplate": "${allowedLetterType === "FCRA_611_CRA_DISPUTE" ? "Complete FCRA §611 CRA Dispute Letter with: Date, Consumer info placeholders, Bureau address, Account details, Specific inaccuracies, Legal citations, Signature line" : allowedLetterType === "MOV_REQUEST" ? "Complete Method of Verification Request with: Date, Consumer info, Bureau address, Account reference, Request for verification method details under §611(a)(7), Signature line" : allowedLetterType === "DIRECT_DISPUTE_FURNISHER" ? "Complete Direct Dispute to Furnisher letter under FCRA §623(a)(8) with: Date, Consumer info, Furnisher address, Account details, Specific inaccuracies, Legal citations, Signature line" : "Regulatory guidance only - no letter template"}",
-  "timeline": "Suggested timeline for actions"
+  "timeline": "Suggested timeline for actions",
+  "internalNotes": "Backend-only analysis for administrative purposes - include dispute context, escalation reasoning, case complexity notes. This is NOT shown to the customer."
 }`;
 
       const response = await openai.chat.completions.create({
@@ -960,7 +974,7 @@ Please provide educational guidance in this JSON format:
 
       const guidanceData = JSON.parse(content);
       
-      // Save guidance to database
+      // Save guidance to database (internalNotes stored but not returned to frontend)
       const guidance = await storage.createGuidance({
         disputeId: dispute.id,
         guidanceType: "ESCALATION",
@@ -969,7 +983,11 @@ Please provide educational guidance in this JSON format:
         fcraRights: guidanceData.fcraRights,
         followUpTemplate: guidanceData.followUpTemplate,
         timeline: guidanceData.timeline,
+        internalNotes: guidanceData.internalNotes || null,
       });
+      
+      // Return guidance without internal notes to customer
+      const { internalNotes: _, ...customerGuidance } = guidance;
 
       // Create notification about new guidance
       await storage.createNotification({
@@ -980,7 +998,7 @@ Please provide educational guidance in this JSON format:
         message: `AI-powered guidance is now available for your dispute with ${dispute.creditorName}.`,
       });
 
-      res.json(guidance);
+      res.json(customerGuidance);
     } catch (error) {
       console.error("AI guidance generation error:", error);
       next(error);
