@@ -31,6 +31,8 @@ export interface IStorage {
   createDisputesBulk(disputesData: InsertDispute[]): Promise<Dispute[]>;
   updateDispute(id: string, data: Partial<Dispute>): Promise<Dispute | undefined>;
   deleteDispute(id: string): Promise<boolean>;
+  countDisputesForUser(userId: string): Promise<number>;
+  countDisputesByBureauLast30Days(userId: string, bureau: string): Promise<number>;
   
   // Dispute checklist methods
   getChecklistForDispute(disputeId: string): Promise<DisputeChecklist[]>;
@@ -133,6 +135,23 @@ export class DatabaseStorage implements IStorage {
   // Dispute methods
   async getDisputesForUser(userId: string): Promise<Dispute[]> {
     return await db.select().from(disputes).where(eq(disputes.userId, userId));
+  }
+
+  async countDisputesForUser(userId: string): Promise<number> {
+    const result = await db.select().from(disputes).where(eq(disputes.userId, userId));
+    return result.length;
+  }
+
+  async countDisputesByBureauLast30Days(userId: string, bureau: string): Promise<number> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const result = await db.select().from(disputes).where(
+      and(
+        eq(disputes.userId, userId),
+        eq(disputes.bureau, bureau)
+      )
+    );
+    return result.filter(d => d.createdAt && new Date(d.createdAt) >= thirtyDaysAgo).length;
   }
 
   async getDispute(id: string): Promise<Dispute | undefined> {

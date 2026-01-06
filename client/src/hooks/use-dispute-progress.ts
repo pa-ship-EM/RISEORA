@@ -89,6 +89,18 @@ export function useDisputeProgress(disputeId: string) {
   };
 }
 
+export const STAGE_LABELS = [
+  "Draft",
+  "Ready to Mail",
+  "Mailed",
+  "Delivered",
+  "In Investigation",
+  "Response Received",
+  "Decision Made",
+  "Escalation Available",
+  "Closed"
+];
+
 export function getDisputeStage(dispute: Dispute): number {
   const stages: Record<string, number> = {
     "DRAFT": 0,
@@ -106,19 +118,8 @@ export function getDisputeStage(dispute: Dispute): number {
   return stages[dispute.status] ?? 0;
 }
 
-export const TOTAL_STAGES = 8;
+export const TOTAL_STAGES = STAGE_LABELS.length - 1;
 
 export function getStageLabel(stage: number): string {
-  const labels: Record<number, string> = {
-    0: "Draft",
-    1: "Ready to Mail",
-    2: "Mailed",
-    3: "Delivered",
-    4: "In Investigation",
-    5: "Response Received",
-    6: "Decision Made",
-    7: "Escalation Available",
-    8: "Closed"
-  };
-  return labels[stage] || "Unknown";
+  return STAGE_LABELS[stage] || "Unknown";
 }

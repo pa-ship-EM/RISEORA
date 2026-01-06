@@ -118,9 +118,6 @@ function DeadlineCountdown({ dispute }: { dispute: Dispute }) {
 
 function DisputeProgressBar({ dispute }: { dispute: Dispute }) {
   const stage = getDisputeStage(dispute);
-  const totalStages = 8;
-  const progressPercent = Math.round((stage / totalStages) * 100);
-  
   const stages = [
     { label: "Draft", completed: stage >= 0 },
     { label: "Ready", completed: stage >= 1 },
@@ -132,6 +129,7 @@ function DisputeProgressBar({ dispute }: { dispute: Dispute }) {
     { label: "Escalation", completed: stage >= 7 },
     { label: "Closed", completed: stage >= 8 },
   ];
+  const progressPercent = Math.round((stage / (stages.length - 1)) * 100);
   
   return (
     <div className="space-y-2">
@@ -429,6 +427,19 @@ function DisputeActions({ dispute }: { dispute: Dispute }) {
   return (
     <>
       <div className="flex flex-wrap gap-2 mt-4">
+        {dispute.status === "DRAFT" && dispute.letterContent && (
+          <Button 
+            size="sm" 
+            variant="default"
+            onClick={() => updateProgress({ action: "mark_ready" })}
+            disabled={isUpdating}
+            data-testid={`button-finalize-${dispute.id}`}
+          >
+            <FileCheck className="h-3 w-3 mr-1" />
+            Finalize Letter
+          </Button>
+        )}
+        
         {dispute.status === "READY_TO_MAIL" && (
           <Button 
             size="sm" 

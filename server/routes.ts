@@ -11,6 +11,7 @@ import OpenAI from "openai";
 import multer from "multer";
 import { PDFParse } from "pdf-parse";
 import { isValidTransition, getTargetStatus, getInvestigationDeadlineDays, type DisputeAction } from "@shared/disputeTransitions";
+import { canCreateDispute, isFirstDispute, escalationAllowed } from "@shared/guards";
 
 // Configure multer for PDF uploads (in memory)
 const upload = multer({
@@ -326,9 +327,20 @@ export async function registerRoutes(
   // POST /api/disputes
   app.post("/api/disputes", requireAuth, async (req, res, next) => {
     try {
+      const bureau = req.body.bureau;
+      const userId = req.session.userId!;
+      
+      // Check per-bureau limit (max 3 per bureau in last 30 days)
+      const disputesLast30Days = await storage.countDisputesByBureauLast30Days(userId, bureau);
+      if (!canCreateDispute(disputesLast30Days)) {
+        return res.status(400).json({ 
+          message: `You have reached the limit of 3 disputes per bureau in the last 30 days for ${bureau}.` 
+        });
+      }
+      
       const disputeData = {
         ...req.body,
-        userId: req.session.userId!,
+        userId,
         status: "DRAFT",
       };
       
@@ -356,6 +368,33 @@ export async function registerRoutes(
       
       if (disputesArray.length > 20) {
         return res.status(400).json({ message: "Maximum 20 disputes allowed per request" });
+      }
+      
+      const userId = req.session.userId!;
+      
+      // Check per-bureau limits (max 3 per bureau in last 30 days)
+      const bureauCounts: Record<string, number> = {};
+      for (const d of disputesArray) {
+        if (!bureauCounts[d.bureau]) {
+          bureauCounts[d.bureau] = await storage.countDisputesByBureauLast30Days(userId, d.bureau);
+        }
+      }
+      
+      // Count how many new disputes per bureau in this request
+      const newPerBureau: Record<string, number> = {};
+      for (const d of disputesArray) {
+        newPerBureau[d.bureau] = (newPerBureau[d.bureau] || 0) + 1;
+      }
+      
+      // Check if any bureau would exceed the limit
+      for (const bureau of Object.keys(newPerBureau)) {
+        const existing = bureauCounts[bureau] || 0;
+        const newCount = newPerBureau[bureau];
+        if (existing + newCount > 3) {
+          return res.status(400).json({ 
+            message: `Creating these disputes would exceed the limit of 3 per bureau in 30 days for ${bureau}.` 
+          });
+        }
       }
       
       // Validate each dispute has required fields
@@ -547,7 +586,14 @@ export async function registerRoutes(
         case "mark_no_response":
         case "mark_removed":
         case "mark_verified":
+          break;
         case "mark_escalation":
+          if (!escalationAllowed(currentStatus)) {
+            return res.status(400).json({ 
+              message: "Escalation is only available after VERIFIED or NO_RESPONSE status" 
+            });
+          }
+          break;
         case "mark_closed":
           break;
         default:
