@@ -1,9 +1,33 @@
 import { DisputeStatus, DisputeEvent } from "./disputeStates";
-import { isValidStatusTransition, validateTransition, getNextStatuses } from "./transitionMap";
+import { allowedTransitions, isValidStatusTransition, validateTransition, getNextStatuses } from "./transitionMap";
 
 export { DisputeStatus } from "./disputeStates";
 export type { DisputeEvent } from "./disputeStates";
-export { isValidStatusTransition, validateTransition, getNextStatuses } from "./transitionMap";
+export { allowedTransitions, isValidStatusTransition, validateTransition, getNextStatuses } from "./transitionMap";
+
+interface Dispute {
+  disputeId?: string;
+  userId?: string;
+  bureau?: string;
+  status: DisputeStatus;
+  [key: string]: any;
+}
+
+export function transitionDispute(
+  dispute: Dispute,
+  nextStatus: DisputeStatus
+): Dispute {
+  const allowed = allowedTransitions[dispute.status];
+
+  if (!allowed.includes(nextStatus)) {
+    throw new Error(
+      `Illegal transition: ${dispute.status} → ${nextStatus}`
+    );
+  }
+
+  dispute.status = nextStatus;
+  return dispute;
+}
 
 export type DisputeAction = 
   | "mark_ready"

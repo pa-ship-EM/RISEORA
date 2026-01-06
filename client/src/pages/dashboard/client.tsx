@@ -506,7 +506,7 @@ function DisputeProgressCard({ dispute, showDetails = false }: { dispute: Disput
               Tracking: {dispute.trackingNumber}
             </span>
           )}
-          <span>Created {formatDistanceToNow(new Date(dispute.createdAt), { addSuffix: true })}</span>
+          {dispute.createdAt && <span>Created {formatDistanceToNow(new Date(dispute.createdAt), { addSuffix: true })}</span>}
         </div>
       )}
     </div>
