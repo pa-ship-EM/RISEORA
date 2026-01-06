@@ -13,6 +13,29 @@ interface Dispute {
   [key: string]: any;
 }
 
+export interface SecurityEvent {
+  disputeId?: string;
+  userId?: string;
+  attemptedFrom: DisputeStatus;
+  attemptedTo: DisputeStatus;
+  reason: "ILLEGAL_TRANSITION" | "GUARD_VIOLATION" | "UNAUTHORIZED";
+  timestamp?: Date;
+}
+
+export type SecurityLogger = (event: SecurityEvent) => void;
+
+let securityLogger: SecurityLogger | null = null;
+
+export function setSecurityLogger(logger: SecurityLogger): void {
+  securityLogger = logger;
+}
+
+function logSecurityEvent(event: SecurityEvent): void {
+  if (securityLogger) {
+    securityLogger({ ...event, timestamp: new Date() });
+  }
+}
+
 export function transitionDispute(
   dispute: Dispute,
   nextStatus: DisputeStatus
@@ -20,9 +43,19 @@ export function transitionDispute(
   const allowed = allowedTransitions[dispute.status];
 
   if (!allowed.includes(nextStatus)) {
-    throw new Error(
+    const error = new Error(
       `Illegal transition: ${dispute.status} → ${nextStatus}`
     );
+    
+    logSecurityEvent({
+      disputeId: dispute.disputeId,
+      userId: dispute.userId,
+      attemptedFrom: dispute.status,
+      attemptedTo: nextStatus,
+      reason: "ILLEGAL_TRANSITION"
+    });
+    
+    throw error;
   }
 
   dispute.status = nextStatus;
