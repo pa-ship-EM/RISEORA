@@ -63,7 +63,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-4">Why Use The Dispute Wizard™?</h2>
-            <p className="text-muted-foreground">We combine Metro 2 compliance standards with automated precision to deliver results faster.</p>
+            <p className="text-muted-foreground">We combine Metro 2 compliance standards with automated precision to streamline document preparation.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -74,13 +74,13 @@ export default function Home() {
             />
             <FeatureCard 
               icon={<Wand2 className="h-10 w-10 text-secondary" />}
-              title="Automated Challenges"
-              description="Our Dispute Wizard™ instantly identifies factual errors and generates challenges based on FCRA laws."
+              title="Guided Dispute Drafting"
+              description="Our Dispute Wizard™ helps identify potential errors and generates dispute letter drafts based on consumer reporting standards."
             />
             <FeatureCard 
               icon={<Users className="h-10 w-10 text-secondary" />}
-              title="Expert Review"
-              description="Every automated dispute is reviewed by our compliance team to ensure maximum effectiveness."
+              title="Quality Checks"
+              description="System checks for completeness and formatting consistency before document finalization."
             />
           </div>
         </div>
@@ -90,9 +90,9 @@ export default function Home() {
       <section className="py-20 bg-primary text-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-white/10">
-            <Stat number="10k+" label="Disputes Won" />
-            <Stat number="$2M+" label="Debt Removed" />
-            <Stat number="92%" label="Wizard Success Rate" />
+            <Stat number="10k+" label="Documents Prepared" />
+            <Stat number="50k+" label="Consumer Records Reviewed" />
+            <Stat number="High" label="User Completion Rate" />
             <Stat number="24/7" label="Client Portal" />
           </div>
         </div>
@@ -197,7 +197,7 @@ export default function Home() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">Ready to take control of your credit report?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Start with our basic plan at just $49/mo and unleash the power of the Dispute Wizard™.
+            Start with our basic plan at just $49/mo and access guided dispute preparation tools.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link href="/auth?tab=signup">
