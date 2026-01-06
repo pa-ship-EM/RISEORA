@@ -63,14 +63,14 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-4">Why Use The Dispute Wizard™?</h2>
-            <p className="text-muted-foreground">We combine Metro 2 compliance standards with automated precision to streamline document preparation.</p>
+            <p className="text-muted-foreground">We combine industry reporting standards with automated precision to streamline document preparation.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <FeatureCard 
               icon={<Shield className="h-10 w-10 text-secondary" />}
-              title="Metro 2 Compliance"
-              description="We verify that creditors are reporting data according to the strict Metro 2 format required by law."
+              title="Metro 2® Standards"
+              description="Metro 2® is an industry reporting standard. RiseOra provides educational tools that help users understand how information is typically formatted."
             />
             <FeatureCard 
               icon={<Wand2 className="h-10 w-10 text-secondary" />}
@@ -184,8 +184,8 @@ export default function Home() {
                 <div className="w-14 h-14 rounded-xl bg-white shadow-sm flex items-center justify-center mb-6 text-secondary">
                   <Users className="h-8 w-8" />
                 </div>
-                <h4 className="text-xl font-bold text-primary mb-3">Expert Guidance</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">Advisor-led education for long-term health.</p>
+                <h4 className="text-xl font-bold text-primary mb-3">Educational Resources</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">Educational content developed using publicly available regulatory guidance.</p>
               </div>
             </div>
           </motion.div>
