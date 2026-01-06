@@ -225,7 +225,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
           creditorName: acc.creditorName,
           accountNumber: acc.accountNumber || undefined,
           bureau: formData.bureau as "EXPERIAN" | "TRANSUNION" | "EQUIFAX",
-          status: "GENERATED" as const,
+          status: "READY_TO_MAIL" as const,
           disputeReason: acc.disputeReason,
           customReason: acc.disputeReason === "other" ? acc.customReason : undefined,
           metro2Compliant: true,

@@ -90,25 +90,29 @@ export function useDisputeProgress(disputeId: string) {
 }
 
 export function getDisputeStage(dispute: Dispute): number {
-  if (dispute.status === "RESOLVED" || dispute.status === "ESCALATED") return 7;
-  if (dispute.responseReceivedAt) return 6;
-  if (dispute.deliveredAt) return 5;
-  if (dispute.mailedAt) return 4;
-  if (dispute.trackingNumber) return 3;
-  if (dispute.letterContent) return 1;
+  const terminalStatuses = ["REMOVED", "VERIFIED", "NO_RESPONSE", "ESCALATION_AVAILABLE", "CLOSED"];
+  if (terminalStatuses.includes(dispute.status)) return 7;
+  if (dispute.status === "RESPONSE_RECEIVED") return 6;
+  if (dispute.status === "IN_INVESTIGATION") return 5;
+  if (dispute.status === "DELIVERED" || dispute.deliveredAt) return 4;
+  if (dispute.status === "MAILED" || dispute.mailedAt) return 3;
+  if (dispute.status === "READY_TO_MAIL" || dispute.letterContent) return 2;
+  if (dispute.status === "DRAFT") return 1;
   return 0;
 }
 
+export const TOTAL_STAGES = 7;
+
 export function getStageLabel(stage: number): string {
-  const labels = [
-    "Draft",
-    "Letter Generated",
-    "Printed & Ready",
-    "Tracking Added",
-    "Mailed",
-    "30-Day Investigation",
-    "Response Received",
-    "Resolved"
-  ];
+  const labels: Record<number, string> = {
+    0: "Not Started",
+    1: "Draft",
+    2: "Ready to Mail",
+    3: "Mailed",
+    4: "Delivered",
+    5: "In Investigation",
+    6: "Response Received",
+    7: "Complete"
+  };
   return labels[stage] || "Unknown";
 }

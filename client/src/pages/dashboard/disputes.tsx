@@ -122,13 +122,13 @@ function DisputeProgressBar({ dispute }: { dispute: Dispute }) {
   const progressPercent = Math.round((stage / totalStages) * 100);
   
   const stages = [
-    { label: "Generated", completed: stage >= 1 },
-    { label: "Printed", completed: stage >= 2 },
-    { label: "Mailed", completed: stage >= 4 },
-    { label: "Delivered", completed: stage >= 5 },
+    { label: "Draft", completed: stage >= 1 },
+    { label: "Ready", completed: stage >= 2 },
+    { label: "Mailed", completed: stage >= 3 },
+    { label: "Delivered", completed: stage >= 4 },
     { label: "Investigation", completed: stage >= 5 },
     { label: "Response", completed: stage >= 6 },
-    { label: "Resolved", completed: stage >= 7 },
+    { label: "Complete", completed: stage >= 7 },
   ];
   
   return (
@@ -466,7 +466,20 @@ function DisputeActions({ dispute }: { dispute: Dispute }) {
           </Button>
         )}
         
-        {dispute.deliveredAt && !dispute.responseReceivedAt && (
+        {dispute.status === "DELIVERED" && (
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => updateProgress({ action: "mark_in_investigation" })}
+            disabled={isUpdating}
+            data-testid={`button-in-investigation-${dispute.id}`}
+          >
+            <Clock className="h-3 w-3 mr-1" />
+            Start 30-Day Timer
+          </Button>
+        )}
+        
+        {dispute.status === "IN_INVESTIGATION" && (
           <Button 
             size="sm" 
             variant="outline"
@@ -479,29 +492,68 @@ function DisputeActions({ dispute }: { dispute: Dispute }) {
           </Button>
         )}
         
-        {dispute.responseReceivedAt && dispute.status !== "RESOLVED" && dispute.status !== "ESCALATED" && (
+        {dispute.responseReceivedAt && !["REMOVED", "VERIFIED", "NO_RESPONSE", "ESCALATION_AVAILABLE", "CLOSED"].includes(dispute.status) && (
           <>
             <Button 
               size="sm" 
               variant="default"
-              onClick={() => updateProgress({ action: "mark_resolved" })}
+              onClick={() => updateProgress({ action: "mark_removed" })}
               disabled={isUpdating}
-              data-testid={`button-mark-resolved-${dispute.id}`}
+              data-testid={`button-mark-removed-${dispute.id}`}
             >
               <CheckCircle className="h-3 w-3 mr-1" />
-              Mark Resolved
+              Item Removed
             </Button>
             <Button 
               size="sm" 
               variant="outline"
-              onClick={() => updateProgress({ action: "mark_escalated" })}
+              onClick={() => updateProgress({ action: "mark_verified" })}
               disabled={isUpdating}
-              data-testid={`button-escalate-${dispute.id}`}
+              data-testid={`button-mark-verified-${dispute.id}`}
             >
               <AlertCircle className="h-3 w-3 mr-1" />
-              Escalate
+              Item Verified
             </Button>
           </>
+        )}
+        
+        {dispute.status === "IN_INVESTIGATION" && !dispute.responseReceivedAt && (
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => updateProgress({ action: "mark_no_response" })}
+            disabled={isUpdating}
+            data-testid={`button-no-response-${dispute.id}`}
+          >
+            <AlertCircle className="h-3 w-3 mr-1" />
+            No Response (30+ days)
+          </Button>
+        )}
+        
+        {(dispute.status === "VERIFIED" || dispute.status === "NO_RESPONSE") && (
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => updateProgress({ action: "mark_escalation_available" })}
+            disabled={isUpdating}
+            data-testid={`button-escalation-${dispute.id}`}
+          >
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Ready to Escalate
+          </Button>
+        )}
+        
+        {["REMOVED", "ESCALATION_AVAILABLE"].includes(dispute.status) && (
+          <Button 
+            size="sm" 
+            variant="ghost"
+            onClick={() => updateProgress({ action: "mark_closed" })}
+            disabled={isUpdating}
+            data-testid={`button-close-${dispute.id}`}
+          >
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Close Dispute
+          </Button>
         )}
       </div>
       
@@ -553,8 +605,8 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
     dispute.craResponseResult === 'corrected';
   
   // Check if dispute state allows AI guidance generation
-  // Requirements: status=ESCALATED, dvSent=true, dvResponseReceived=true, not resolved
-  const canGenerateGuidance = dispute.status === 'ESCALATED' && 
+  // Requirements: status=ESCALATION_AVAILABLE, dvSent=true, dvResponseReceived=true, not resolved
+  const canGenerateGuidance = dispute.status === 'ESCALATION_AVAILABLE' && 
     dispute.dvSent && 
     dispute.dvResponseReceived &&
     !isResolved;
@@ -588,7 +640,7 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
       if (!res.ok) throw new Error('Failed to fetch guidance');
       return res.json();
     },
-    enabled: dispute.status === 'ESCALATED',
+    enabled: dispute.status === 'ESCALATION_AVAILABLE',
   });
 
   const generateGuidance = useMutation({
@@ -627,8 +679,8 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
     }
   };
 
-  // Don't show anything if not escalated
-  if (dispute.status !== 'ESCALATED') return null;
+  // Don't show anything if not in escalation available state
+  if (dispute.status !== 'ESCALATION_AVAILABLE') return null;
 
   if (loadingGuidance) {
     return (
@@ -765,15 +817,23 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
   
   const getStatusIcon = (status: string) => {
     switch (status) {
+      case "DRAFT":
+      case "READY_TO_MAIL":
+        return <FileText className="h-4 w-4 text-slate-400" />;
       case "MAILED":
-      case "IN_PROGRESS":
+      case "DELIVERED":
+      case "IN_INVESTIGATION":
         return <Clock className="h-4 w-4 text-amber-500" />;
       case "RESPONSE_RECEIVED":
         return <AlertCircle className="h-4 w-4 text-blue-500" />;
-      case "RESOLVED":
+      case "REMOVED":
         return <CheckCircle className="h-4 w-4 text-emerald-500" />;
-      case "ESCALATED":
+      case "VERIFIED":
+      case "NO_RESPONSE":
+      case "ESCALATION_AVAILABLE":
         return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case "CLOSED":
+        return <CheckCircle className="h-4 w-4 text-slate-500" />;
       default:
         return <FileText className="h-4 w-4 text-slate-400" />;
     }
@@ -781,16 +841,28 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case "DRAFT":
+        return "bg-slate-100 text-slate-800";
+      case "READY_TO_MAIL":
+        return "bg-purple-100 text-purple-800";
       case "MAILED":
         return "bg-amber-100 text-amber-800";
-      case "IN_PROGRESS":
+      case "DELIVERED":
+        return "bg-yellow-100 text-yellow-800";
+      case "IN_INVESTIGATION":
         return "bg-blue-100 text-blue-800";
       case "RESPONSE_RECEIVED":
-        return "bg-purple-100 text-purple-800";
-      case "RESOLVED":
+        return "bg-indigo-100 text-indigo-800";
+      case "REMOVED":
         return "bg-emerald-100 text-emerald-800";
-      case "ESCALATED":
+      case "VERIFIED":
+        return "bg-orange-100 text-orange-800";
+      case "NO_RESPONSE":
         return "bg-red-100 text-red-800";
+      case "ESCALATION_AVAILABLE":
+        return "bg-rose-100 text-rose-800";
+      case "CLOSED":
+        return "bg-slate-100 text-slate-800";
       default:
         return "bg-slate-100 text-slate-800";
     }

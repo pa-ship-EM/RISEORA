@@ -35,19 +35,25 @@ export default function AdminDisputesPage() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'GENERATED': return 'bg-purple-100 text-purple-700';
+      case 'DRAFT': return 'bg-slate-100 text-slate-700';
+      case 'READY_TO_MAIL': return 'bg-purple-100 text-purple-700';
       case 'MAILED': return 'bg-amber-100 text-amber-700';
-      case 'IN_PROGRESS': return 'bg-blue-100 text-blue-700';
+      case 'DELIVERED': return 'bg-yellow-100 text-yellow-700';
+      case 'IN_INVESTIGATION': return 'bg-blue-100 text-blue-700';
       case 'RESPONSE_RECEIVED': return 'bg-indigo-100 text-indigo-700';
-      case 'RESOLVED': return 'bg-emerald-100 text-emerald-700';
-      case 'ESCALATED': return 'bg-red-100 text-red-700';
+      case 'REMOVED': return 'bg-emerald-100 text-emerald-700';
+      case 'VERIFIED': return 'bg-orange-100 text-orange-700';
+      case 'NO_RESPONSE': return 'bg-red-100 text-red-700';
+      case 'ESCALATION_AVAILABLE': return 'bg-rose-100 text-rose-700';
+      case 'CLOSED': return 'bg-slate-100 text-slate-700';
       default: return 'bg-slate-100 text-slate-700';
     }
   };
 
-  const pendingDisputes = disputes.filter(d => d.status === 'GENERATED');
-  const inProgressDisputes = disputes.filter(d => ['MAILED', 'IN_PROGRESS'].includes(d.status));
-  const resolvedDisputes = disputes.filter(d => ['RESOLVED', 'ESCALATED'].includes(d.status));
+  const terminalStatuses = ['REMOVED', 'VERIFIED', 'NO_RESPONSE', 'ESCALATION_AVAILABLE', 'CLOSED'];
+  const pendingDisputes = disputes.filter(d => ['DRAFT', 'READY_TO_MAIL'].includes(d.status));
+  const inProgressDisputes = disputes.filter(d => ['MAILED', 'DELIVERED', 'IN_INVESTIGATION', 'RESPONSE_RECEIVED'].includes(d.status));
+  const resolvedDisputes = disputes.filter(d => terminalStatuses.includes(d.status));
 
   return (
     <DashboardLayout>

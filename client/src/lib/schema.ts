@@ -28,7 +28,7 @@ export interface Dispute {
   creditorName: string;
   accountNumber?: string | null;
   bureau: 'EXPERIAN' | 'TRANSUNION' | 'EQUIFAX' | 'ALL';
-  status: 'DRAFT' | 'GENERATED' | 'MAILED' | 'SENT' | 'IN_PROGRESS' | 'RESPONSE_RECEIVED' | 'RESOLVED' | 'ESCALATED' | 'DELETED';
+  status: 'DRAFT' | 'READY_TO_MAIL' | 'MAILED' | 'DELIVERED' | 'IN_INVESTIGATION' | 'RESPONSE_RECEIVED' | 'REMOVED' | 'VERIFIED' | 'NO_RESPONSE' | 'ESCALATION_AVAILABLE' | 'CLOSED';
   disputeReason: string;
   customReason?: string | null;
   letterContent?: string | null;

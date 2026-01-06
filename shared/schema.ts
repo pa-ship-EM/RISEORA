@@ -52,7 +52,7 @@ export const disputes = pgTable("disputes", {
   creditorName: text("creditor_name").notNull(),
   accountNumber: text("account_number"),
   bureau: text("bureau").notNull(), // EXPERIAN, TRANSUNION, EQUIFAX
-  status: text("status").notNull().default("DRAFT"), // DRAFT, GENERATED, MAILED, IN_PROGRESS, RESPONSE_RECEIVED, RESOLVED, ESCALATED
+  status: text("status").notNull().default("DRAFT"), // DRAFT, READY_TO_MAIL, MAILED, DELIVERED, IN_INVESTIGATION, RESPONSE_RECEIVED, REMOVED, VERIFIED, NO_RESPONSE, ESCALATION_AVAILABLE, CLOSED
   disputeReason: text("dispute_reason").notNull(),
   customReason: text("custom_reason"),
   
@@ -291,13 +291,17 @@ export const DEFAULT_DISPUTE_CHECKLIST = [
 
 // Dispute progress stages for UI
 export const DISPUTE_STAGES = [
-  { id: "generated", label: "Letter Generated", description: "Your dispute letter has been created" },
-  { id: "printed", label: "Printed & Ready", description: "Letter printed with required documents" },
-  { id: "mailed", label: "Mailed", description: "Sent via Certified Mail" },
-  { id: "delivered", label: "Delivered", description: "Confirmed delivery to bureau" },
-  { id: "investigation", label: "30-Day Investigation", description: "Bureau is investigating your dispute" },
-  { id: "response", label: "Response Received", description: "Bureau has responded to your dispute" },
-  { id: "resolved", label: "Resolved", description: "Dispute has been resolved" },
+  { id: "DRAFT", label: "Draft", description: "Your dispute letter is being prepared" },
+  { id: "READY_TO_MAIL", label: "Ready to Mail", description: "Letter generated and ready to send" },
+  { id: "MAILED", label: "Mailed", description: "Sent via Certified Mail" },
+  { id: "DELIVERED", label: "Delivered", description: "Confirmed delivery to bureau" },
+  { id: "IN_INVESTIGATION", label: "In Investigation", description: "Bureau is investigating (30 days)" },
+  { id: "RESPONSE_RECEIVED", label: "Response Received", description: "Bureau has responded" },
+  { id: "REMOVED", label: "Removed", description: "Item removed from credit report" },
+  { id: "VERIFIED", label: "Verified", description: "Bureau verified the account" },
+  { id: "NO_RESPONSE", label: "No Response", description: "Bureau failed to respond in 30 days" },
+  { id: "ESCALATION_AVAILABLE", label: "Escalation Available", description: "Ready for next steps" },
+  { id: "CLOSED", label: "Closed", description: "Dispute process complete" },
 ] as const;
 
 // Tier feature definitions

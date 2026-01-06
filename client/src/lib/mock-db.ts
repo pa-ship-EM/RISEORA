@@ -46,7 +46,7 @@ const initialDisputes: Dispute[] = [
     userId: "user-1",
     creditorName: "Chase Bank",
     bureau: "EXPERIAN",
-    status: "IN_PROGRESS",
+    status: "IN_INVESTIGATION",
     disputeReason: "Late Payment",
     dateCreated: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
     lastUpdated: new Date().toISOString(),
@@ -57,7 +57,7 @@ const initialDisputes: Dispute[] = [
     userId: "user-1",
     creditorName: "Midland Credit",
     bureau: "ALL",
-    status: "SENT",
+    status: "MAILED",
     disputeReason: "Collection",
     dateCreated: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(), // 10 days ago
     lastUpdated: new Date().toISOString(),

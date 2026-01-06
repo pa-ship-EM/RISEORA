@@ -509,17 +509,29 @@ export async function registerRoutes(
           break;
         case "mark_delivered":
           updateData.deliveredAt = new Date();
-          updateData.status = "IN_PROGRESS";
+          updateData.status = "DELIVERED";
+          break;
+        case "mark_in_investigation":
+          updateData.status = "IN_INVESTIGATION";
           break;
         case "mark_response_received":
           updateData.responseReceivedAt = new Date();
           updateData.status = "RESPONSE_RECEIVED";
           break;
-        case "mark_resolved":
-          updateData.status = "RESOLVED";
+        case "mark_removed":
+          updateData.status = "REMOVED";
           break;
-        case "mark_escalated":
-          updateData.status = "ESCALATED";
+        case "mark_verified":
+          updateData.status = "VERIFIED";
+          break;
+        case "mark_no_response":
+          updateData.status = "NO_RESPONSE";
+          break;
+        case "mark_escalation_available":
+          updateData.status = "ESCALATION_AVAILABLE";
+          break;
+        case "mark_closed":
+          updateData.status = "CLOSED";
           break;
         default:
           return res.status(400).json({ message: "Invalid action" });
@@ -685,13 +697,13 @@ export async function registerRoutes(
       // === STATE VALIDATION (CRITICAL FAILSAFE) ===
       // AI guidance is ONLY available when ALL conditions are met:
       // 1. Tier is GROWTH or COMPLIANCE_PLUS (checked above)
-      // 2. Status is ESCALATED
+      // 2. Status is ESCALATION_AVAILABLE
       // 3. DV sent = true
       // 4. DV response received = true
       
-      if (dispute.status !== "ESCALATED") {
+      if (dispute.status !== "ESCALATION_AVAILABLE") {
         return res.status(400).json({ 
-          message: "AI guidance is only available for escalated disputes"
+          message: "AI guidance is only available for disputes in escalation state"
         });
       }
       
