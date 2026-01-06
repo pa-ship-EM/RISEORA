@@ -1,7 +1,9 @@
 import { DisputeStatus, DisputeEvent } from "./disputeStates";
+import { isValidStatusTransition, validateTransition, getNextStatuses } from "./transitionMap";
 
 export { DisputeStatus } from "./disputeStates";
 export type { DisputeEvent } from "./disputeStates";
+export { isValidStatusTransition, validateTransition, getNextStatuses } from "./transitionMap";
 
 export type DisputeAction = 
   | "mark_ready"
@@ -54,9 +56,7 @@ const STATE_MACHINE: Record<DisputeStatus, Partial<Record<DisputeEvent, DisputeS
   [DisputeStatus.NO_RESPONSE]: {
     "USER_ESCALATED": DisputeStatus.ESCALATION_AVAILABLE,
   },
-  [DisputeStatus.ESCALATION_AVAILABLE]: {
-    "USER_CLOSED": DisputeStatus.CLOSED,
-  },
+  [DisputeStatus.ESCALATION_AVAILABLE]: {},
   [DisputeStatus.CLOSED]: {},
 };
 
@@ -82,6 +82,9 @@ export function advanceDispute<T extends DisputeState>(dispute: T, event: Disput
   }
   
   const newStatus = transitions[event]!;
+  
+  validateTransition(currentStatus, newStatus);
+  
   return { ...dispute, status: newStatus };
 }
 
@@ -110,7 +113,7 @@ export const VALID_TRANSITIONS: Record<string, DisputeAction[]> = {
   "REMOVED": ["mark_closed"],
   "VERIFIED": ["mark_escalation"],
   "NO_RESPONSE": ["mark_escalation"],
-  "ESCALATION_AVAILABLE": ["mark_closed"],
+  "ESCALATION_AVAILABLE": [],
   "CLOSED": []
 };
 

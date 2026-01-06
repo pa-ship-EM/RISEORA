@@ -97,8 +97,7 @@ export const STAGE_LABELS = [
   "In Investigation",
   "Response Received",
   "Decision Made",
-  "Escalation Available",
-  "Closed"
+  "Escalation Available"
 ];
 
 export function getDisputeStage(dispute: Dispute): number {
@@ -113,7 +112,7 @@ export function getDisputeStage(dispute: Dispute): number {
     "VERIFIED": 6,
     "NO_RESPONSE": 6,
     "ESCALATION_AVAILABLE": 7,
-    "CLOSED": 8
+    "CLOSED": 7
   };
   return stages[dispute.status] ?? 0;
 }

@@ -82,7 +82,7 @@ export default function ClientDashboard() {
     );
   }
 
-  const terminalStatuses = ["CLOSED"];
+  const terminalStatuses = ["CLOSED", "ESCALATION_AVAILABLE"];
   const activeDisputes = disputes.filter(d => !terminalStatuses.includes(d.status));
   const completedDisputes = disputes.filter(d => terminalStatuses.includes(d.status));
   const pendingDeadlines = disputes.filter(d => {

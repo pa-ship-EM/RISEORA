@@ -127,7 +127,6 @@ function DisputeProgressBar({ dispute }: { dispute: Dispute }) {
     { label: "Response", completed: stage >= 5 },
     { label: "Decision", completed: stage >= 6 },
     { label: "Escalation", completed: stage >= 7 },
-    { label: "Closed", completed: stage >= 8 },
   ];
   const progressPercent = Math.round((stage / (stages.length - 1)) * 100);
   
@@ -568,18 +567,6 @@ function DisputeActions({ dispute }: { dispute: Dispute }) {
           </Button>
         )}
         
-        {dispute.status === "ESCALATION_AVAILABLE" && (
-          <Button 
-            size="sm" 
-            variant="ghost"
-            onClick={() => updateProgress({ action: "mark_closed" })}
-            disabled={isUpdating}
-            data-testid={`button-close-${dispute.id}`}
-          >
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Close Dispute
-          </Button>
-        )}
       </div>
       
       <Dialog open={trackingDialogOpen} onOpenChange={setTrackingDialogOpen}>
