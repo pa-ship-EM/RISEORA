@@ -19,7 +19,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed">
-              Empowering individuals to take control of their financial future through expert credit repair and education.
+              Empowering individuals to take control of their financial future through credit education and dispute document preparation tools.
             </p>
           </div>
 

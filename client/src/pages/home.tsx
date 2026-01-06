@@ -36,11 +36,11 @@ export default function Home() {
               Introducing the Dispute Wizard™ (Beta)
             </div>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-primary leading-tight mb-6">
-              Automated Credit Repair <br />
-              <span className="text-secondary">Powered by AI.</span>
+              Tools to Help You Prepare Your <br />
+              <span className="text-secondary">Credit Report Dispute Documents.</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
-              Use our intelligent Dispute Wizard™ to identify errors, generate legal challenges, and remove negative items from your report automatically.
+              RiseOra uses intelligent workflows to assist you in identifying potential errors and preparing consumer dispute letters.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/auth?tab=signup">
@@ -195,7 +195,7 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-24 bg-secondary/5">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">Ready to fix your credit?</h2>
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">Ready to take control of your credit report?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Start with our basic plan at just $49/mo and unleash the power of the Dispute Wizard™.
           </p>

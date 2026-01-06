@@ -20,7 +20,7 @@ export default function Services() {
             </div>
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary mb-6">Credit Education & Guided Workflows</h1>
             <p className="text-xl text-muted-foreground">
-              RiseOra provides the tools and education you need to manage your own credit repair. 
+              RiseOra provides the tools and education you need to prepare your own dispute documents. 
               We empower you to challenge inaccuracies with precision using our proprietary software.
             </p>
             <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-200 inline-block text-left">
@@ -35,7 +35,7 @@ export default function Services() {
             <PricingCard 
               title="DIY Scholar (Free)"
               price="$0"
-              description="Free educational access to learn the fundamentals of credit repair."
+              description="Free educational access to learn the fundamentals of credit disputes."
               features={[
                 "RiseOra 'Credit Master' E-Book",
                 "Basic Credit Building Modules",
