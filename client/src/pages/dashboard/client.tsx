@@ -82,9 +82,9 @@ export default function ClientDashboard() {
     );
   }
 
-  const terminalStatuses = ["REMOVED", "VERIFIED", "NO_RESPONSE", "ESCALATION_AVAILABLE", "CLOSED"];
+  const terminalStatuses = ["ESCALATION_AVAILABLE", "CLOSED"];
   const activeDisputes = disputes.filter(d => !terminalStatuses.includes(d.status));
-  const resolvedDisputes = disputes.filter(d => terminalStatuses.includes(d.status));
+  const completedDisputes = disputes.filter(d => terminalStatuses.includes(d.status));
   const pendingDeadlines = disputes.filter(d => {
     if (!d.responseDeadline) return false;
     const days = differenceInDays(new Date(d.responseDeadline), new Date());
@@ -150,7 +150,7 @@ export default function ClientDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white/70 text-sm">Resolved</p>
-                  <p className="text-3xl font-bold">{resolvedDisputes.length}</p>
+                  <p className="text-3xl font-bold">{completedDisputes.length}</p>
                 </div>
                 <div className="p-3 bg-white/20 rounded-full">
                   <CheckCircle className="h-6 w-6" />
@@ -386,12 +386,12 @@ export default function ClientDashboard() {
                         </div>
                       </div>
                     )}
-                    {resolvedDisputes.length > 0 && (
+                    {completedDisputes.length > 0 && (
                       <div className="flex items-center gap-4 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
                         <CheckCircle className="h-8 w-8 text-emerald-500" />
                         <div>
                           <p className="font-medium text-emerald-900">Disputes Resolved</p>
-                          <p className="text-sm text-emerald-700">{resolvedDisputes.length} dispute(s) successfully resolved</p>
+                          <p className="text-sm text-emerald-700">{completedDisputes.length} dispute(s) successfully resolved</p>
                         </div>
                       </div>
                     )}
@@ -441,7 +441,7 @@ export default function ClientDashboard() {
 
 function DisputeProgressCard({ dispute, showDetails = false }: { dispute: Dispute; showDetails?: boolean }) {
   const stage = getDisputeStage(dispute);
-  const totalStages = 7;
+  const totalStages = 6;
   const progressPercent = Math.round((stage / totalStages) * 100);
   
   const daysUntilDeadline = dispute.responseDeadline 
@@ -453,14 +453,10 @@ function DisputeProgressCard({ dispute, showDetails = false }: { dispute: Disput
       case 'DRAFT': return 'text-slate-600 bg-slate-50 border-slate-200';
       case 'READY_TO_MAIL': return 'text-purple-600 bg-purple-50 border-purple-200';
       case 'MAILED': return 'text-amber-600 bg-amber-50 border-amber-200';
-      case 'DELIVERED': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
       case 'IN_INVESTIGATION': return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'RESPONSE_RECEIVED': return 'text-indigo-600 bg-indigo-50 border-indigo-200';
-      case 'REMOVED': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
-      case 'VERIFIED': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'NO_RESPONSE': return 'text-red-600 bg-red-50 border-red-200';
-      case 'ESCALATION_AVAILABLE': return 'text-rose-600 bg-rose-50 border-rose-200';
-      case 'CLOSED': return 'text-slate-600 bg-slate-50 border-slate-200';
+      case 'ESCALATION_AVAILABLE': return 'text-orange-600 bg-orange-50 border-orange-200';
+      case 'CLOSED': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
       default: return 'text-slate-600 bg-slate-50 border-slate-200';
     }
   };

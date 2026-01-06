@@ -10,6 +10,7 @@ import { encryptUserData, decryptUserData } from "./encryption";
 import OpenAI from "openai";
 import multer from "multer";
 import { PDFParse } from "pdf-parse";
+import { isValidTransition, getTargetStatus, getInvestigationDeadlineDays, type DisputeAction } from "@shared/disputeTransitions";
 
 // Configure multer for PDF uploads (in memory)
 const upload = multer({
@@ -328,6 +329,7 @@ export async function registerRoutes(
       const disputeData = {
         ...req.body,
         userId: req.session.userId!,
+        status: "DRAFT",
       };
       
       // Validate with schema
@@ -375,11 +377,12 @@ export async function registerRoutes(
         }
       }
       
-      // Validate and add userId to each dispute
+      // Validate and add userId to each dispute, forcing DRAFT status
       const validatedDisputes = disputesArray.map((d: any) => {
         const disputeData = {
           ...d,
           userId: req.session.userId!,
+          status: "DRAFT",
         };
         return insertDisputeSchema.parse(disputeData);
       });
@@ -407,7 +410,20 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      const updatedDispute = await storage.updateDispute(req.params.id, req.body);
+      // Only allow DRAFT → READY_TO_MAIL transition via this endpoint (for wizard)
+      // All other status changes must use /progress endpoint
+      const { status, mailedAt, deliveredAt, responseDeadline, responseReceivedAt, ...safeUpdates } = req.body;
+      if (status !== undefined) {
+        if (status === "READY_TO_MAIL" && dispute.status === "DRAFT") {
+          safeUpdates.status = "READY_TO_MAIL";
+        } else {
+          return res.status(400).json({ 
+            message: "Status cannot be changed directly. Use the progress actions to update dispute status." 
+          });
+        }
+      }
+      
+      const updatedDispute = await storage.updateDispute(req.params.id, safeUpdates);
       res.json(updatedDispute);
     } catch (error) {
       next(error);
@@ -491,15 +507,22 @@ export async function registerRoutes(
       
       const { action, trackingNumber } = req.body;
       const updateData: any = {};
+      const currentStatus = dispute.status;
+      
+      if (!isValidTransition(currentStatus, action as DisputeAction)) {
+        return res.status(400).json({ 
+          message: `Cannot perform '${action}' when dispute is in '${currentStatus}' status`
+        });
+      }
+      
+      const targetStatus = getTargetStatus(action as DisputeAction);
+      if (targetStatus) {
+        updateData.status = targetStatus;
+      }
       
       switch (action) {
         case "mark_mailed":
           updateData.mailedAt = new Date();
-          updateData.status = "MAILED";
-          // Set 30-day response deadline
-          const deadline = new Date();
-          deadline.setDate(deadline.getDate() + 30);
-          updateData.responseDeadline = deadline;
           break;
         case "add_tracking":
           if (!trackingNumber) {
@@ -508,30 +531,20 @@ export async function registerRoutes(
           updateData.trackingNumber = trackingNumber;
           break;
         case "mark_delivered":
-          updateData.deliveredAt = new Date();
-          updateData.status = "DELIVERED";
-          break;
-        case "mark_in_investigation":
-          updateData.status = "IN_INVESTIGATION";
+          const deliveredAt = new Date();
+          const investigationDeadline = new Date(deliveredAt);
+          const deadlineDays = getInvestigationDeadlineDays(dispute.disputeType || "");
+          investigationDeadline.setDate(investigationDeadline.getDate() + deadlineDays);
+          updateData.deliveredAt = deliveredAt;
+          updateData.responseDeadline = investigationDeadline;
           break;
         case "mark_response_received":
           updateData.responseReceivedAt = new Date();
-          updateData.status = "RESPONSE_RECEIVED";
           break;
         case "mark_removed":
-          updateData.status = "REMOVED";
-          break;
         case "mark_verified":
-          updateData.status = "VERIFIED";
-          break;
         case "mark_no_response":
-          updateData.status = "NO_RESPONSE";
-          break;
-        case "mark_escalation_available":
-          updateData.status = "ESCALATION_AVAILABLE";
-          break;
         case "mark_closed":
-          updateData.status = "CLOSED";
           break;
         default:
           return res.status(400).json({ message: "Invalid action" });

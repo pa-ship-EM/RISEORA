@@ -45,7 +45,7 @@ export default function AdminDisputesPage() {
       case 'VERIFIED': return 'bg-orange-100 text-orange-700';
       case 'NO_RESPONSE': return 'bg-red-100 text-red-700';
       case 'ESCALATION_AVAILABLE': return 'bg-rose-100 text-rose-700';
-      case 'CLOSED': return 'bg-slate-100 text-slate-700';
+      case 'CLOSED': return 'bg-emerald-100 text-emerald-700';
       default: return 'bg-slate-100 text-slate-700';
     }
   };
