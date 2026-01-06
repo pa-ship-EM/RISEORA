@@ -82,7 +82,7 @@ export default function ClientDashboard() {
     );
   }
 
-  const terminalStatuses = ["ESCALATION_AVAILABLE", "CLOSED"];
+  const terminalStatuses = ["CLOSED"];
   const activeDisputes = disputes.filter(d => !terminalStatuses.includes(d.status));
   const completedDisputes = disputes.filter(d => terminalStatuses.includes(d.status));
   const pendingDeadlines = disputes.filter(d => {
@@ -441,7 +441,7 @@ export default function ClientDashboard() {
 
 function DisputeProgressCard({ dispute, showDetails = false }: { dispute: Dispute; showDetails?: boolean }) {
   const stage = getDisputeStage(dispute);
-  const totalStages = 6;
+  const totalStages = 8;
   const progressPercent = Math.round((stage / totalStages) * 100);
   
   const daysUntilDeadline = dispute.responseDeadline 
@@ -453,9 +453,13 @@ function DisputeProgressCard({ dispute, showDetails = false }: { dispute: Disput
       case 'DRAFT': return 'text-slate-600 bg-slate-50 border-slate-200';
       case 'READY_TO_MAIL': return 'text-purple-600 bg-purple-50 border-purple-200';
       case 'MAILED': return 'text-amber-600 bg-amber-50 border-amber-200';
+      case 'DELIVERED': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
       case 'IN_INVESTIGATION': return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'RESPONSE_RECEIVED': return 'text-indigo-600 bg-indigo-50 border-indigo-200';
-      case 'ESCALATION_AVAILABLE': return 'text-orange-600 bg-orange-50 border-orange-200';
+      case 'REMOVED': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+      case 'VERIFIED': return 'text-orange-600 bg-orange-50 border-orange-200';
+      case 'NO_RESPONSE': return 'text-red-600 bg-red-50 border-red-200';
+      case 'ESCALATION_AVAILABLE': return 'text-rose-600 bg-rose-50 border-rose-200';
       case 'CLOSED': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
       default: return 'text-slate-600 bg-slate-50 border-slate-200';
     }

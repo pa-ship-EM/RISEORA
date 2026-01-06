@@ -521,6 +521,8 @@ export async function registerRoutes(
       }
       
       switch (action) {
+        case "mark_ready":
+          break;
         case "mark_mailed":
           updateData.mailedAt = new Date();
           break;
@@ -531,19 +533,21 @@ export async function registerRoutes(
           updateData.trackingNumber = trackingNumber;
           break;
         case "mark_delivered":
-          const deliveredAt = new Date();
-          const investigationDeadline = new Date(deliveredAt);
+          updateData.deliveredAt = new Date();
+          break;
+        case "start_investigation":
+          const investigationDeadline = new Date();
           const deadlineDays = getInvestigationDeadlineDays(dispute.disputeType || "");
           investigationDeadline.setDate(investigationDeadline.getDate() + deadlineDays);
-          updateData.deliveredAt = deliveredAt;
           updateData.responseDeadline = investigationDeadline;
           break;
         case "mark_response_received":
           updateData.responseReceivedAt = new Date();
           break;
+        case "mark_no_response":
         case "mark_removed":
         case "mark_verified":
-        case "mark_no_response":
+        case "mark_escalation":
         case "mark_closed":
           break;
         default:

@@ -90,29 +90,35 @@ export function useDisputeProgress(disputeId: string) {
 }
 
 export function getDisputeStage(dispute: Dispute): number {
-  switch (dispute.status) {
-    case "CLOSED": return 6;
-    case "ESCALATION_AVAILABLE": return 5;
-    case "RESPONSE_RECEIVED": return 4;
-    case "IN_INVESTIGATION": return 3;
-    case "MAILED": return 2;
-    case "READY_TO_MAIL": return 1;
-    case "DRAFT":
-    default: return 0;
-  }
+  const stages: Record<string, number> = {
+    "DRAFT": 0,
+    "READY_TO_MAIL": 1,
+    "MAILED": 2,
+    "DELIVERED": 3,
+    "IN_INVESTIGATION": 4,
+    "RESPONSE_RECEIVED": 5,
+    "REMOVED": 6,
+    "VERIFIED": 6,
+    "NO_RESPONSE": 6,
+    "ESCALATION_AVAILABLE": 7,
+    "CLOSED": 8
+  };
+  return stages[dispute.status] ?? 0;
 }
 
-export const TOTAL_STAGES = 6;
+export const TOTAL_STAGES = 8;
 
 export function getStageLabel(stage: number): string {
   const labels: Record<number, string> = {
     0: "Draft",
     1: "Ready to Mail",
     2: "Mailed",
-    3: "In Investigation",
-    4: "Response Received",
-    5: "Escalation Available",
-    6: "Closed"
+    3: "Delivered",
+    4: "In Investigation",
+    5: "Response Received",
+    6: "Decision Made",
+    7: "Escalation Available",
+    8: "Closed"
   };
   return labels[stage] || "Unknown";
 }
