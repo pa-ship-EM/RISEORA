@@ -1,16 +1,7 @@
-export enum DisputeStatus {
-  DRAFT = "DRAFT",
-  READY_TO_MAIL = "READY_TO_MAIL",
-  MAILED = "MAILED",
-  DELIVERED = "DELIVERED",
-  IN_INVESTIGATION = "IN_INVESTIGATION",
-  RESPONSE_RECEIVED = "RESPONSE_RECEIVED",
-  REMOVED = "REMOVED",
-  VERIFIED = "VERIFIED",
-  NO_RESPONSE = "NO_RESPONSE",
-  ESCALATION_AVAILABLE = "ESCALATION_AVAILABLE",
-  CLOSED = "CLOSED"
-}
+import { DisputeStatus, DisputeEvent } from "./disputeStates";
+
+export { DisputeStatus } from "./disputeStates";
+export type { DisputeEvent } from "./disputeStates";
 
 export type DisputeAction = 
   | "mark_ready"
@@ -24,6 +15,90 @@ export type DisputeAction =
   | "mark_verified"
   | "mark_escalation"
   | "mark_closed";
+
+interface DisputeState {
+  disputeId?: string;
+  userId?: string;
+  bureau?: string;
+  status: DisputeStatus;
+  [key: string]: any;
+}
+
+const STATE_MACHINE: Record<DisputeStatus, Partial<Record<DisputeEvent, DisputeStatus>>> = {
+  [DisputeStatus.DRAFT]: {
+    "ALL_DOCS_UPLOADED": DisputeStatus.READY_TO_MAIL,
+  },
+  [DisputeStatus.READY_TO_MAIL]: {
+    "USER_CONFIRMED_MAILING": DisputeStatus.MAILED,
+  },
+  [DisputeStatus.MAILED]: {
+    "TRACKING_SHOWS_DELIVERED": DisputeStatus.DELIVERED,
+  },
+  [DisputeStatus.DELIVERED]: {
+    "INVESTIGATION_STARTED": DisputeStatus.IN_INVESTIGATION,
+  },
+  [DisputeStatus.IN_INVESTIGATION]: {
+    "BUREAU_RESPONDED": DisputeStatus.RESPONSE_RECEIVED,
+    "DEADLINE_PASSED": DisputeStatus.NO_RESPONSE,
+  },
+  [DisputeStatus.RESPONSE_RECEIVED]: {
+    "ITEM_REMOVED": DisputeStatus.REMOVED,
+    "ITEM_VERIFIED": DisputeStatus.VERIFIED,
+  },
+  [DisputeStatus.REMOVED]: {
+    "USER_CLOSED": DisputeStatus.CLOSED,
+  },
+  [DisputeStatus.VERIFIED]: {
+    "USER_ESCALATED": DisputeStatus.ESCALATION_AVAILABLE,
+  },
+  [DisputeStatus.NO_RESPONSE]: {
+    "USER_ESCALATED": DisputeStatus.ESCALATION_AVAILABLE,
+  },
+  [DisputeStatus.ESCALATION_AVAILABLE]: {
+    "USER_CLOSED": DisputeStatus.CLOSED,
+  },
+  [DisputeStatus.CLOSED]: {},
+};
+
+const EVENT_TO_ACTION: Record<DisputeEvent, DisputeAction> = {
+  "ALL_DOCS_UPLOADED": "mark_ready",
+  "USER_CONFIRMED_MAILING": "mark_mailed",
+  "TRACKING_SHOWS_DELIVERED": "mark_delivered",
+  "INVESTIGATION_STARTED": "start_investigation",
+  "BUREAU_RESPONDED": "mark_response_received",
+  "DEADLINE_PASSED": "mark_no_response",
+  "ITEM_REMOVED": "mark_removed",
+  "ITEM_VERIFIED": "mark_verified",
+  "USER_ESCALATED": "mark_escalation",
+  "USER_CLOSED": "mark_closed",
+};
+
+export function advanceDispute<T extends DisputeState>(dispute: T, event: DisputeEvent): T {
+  const currentStatus = dispute.status;
+  const transitions = STATE_MACHINE[currentStatus];
+  
+  if (!transitions || !(event in transitions)) {
+    throw new Error(`Invalid transition: cannot apply '${event}' when status is '${currentStatus}'`);
+  }
+  
+  const newStatus = transitions[event]!;
+  return { ...dispute, status: newStatus };
+}
+
+export function canAdvance(status: DisputeStatus, event: DisputeEvent): boolean {
+  const transitions = STATE_MACHINE[status];
+  return transitions !== undefined && event in transitions;
+}
+
+export function getValidEvents(status: DisputeStatus): DisputeEvent[] {
+  const transitions = STATE_MACHINE[status];
+  if (!transitions) return [];
+  return Object.keys(transitions) as DisputeEvent[];
+}
+
+export function eventToAction(event: DisputeEvent): DisputeAction {
+  return EVENT_TO_ACTION[event];
+}
 
 export const VALID_TRANSITIONS: Record<string, DisputeAction[]> = {
   "DRAFT": ["mark_ready"],

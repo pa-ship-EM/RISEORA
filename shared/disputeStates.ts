@@ -1,0 +1,31 @@
+export enum DisputeStatus {
+  DRAFT = "DRAFT",
+  READY_TO_MAIL = "READY_TO_MAIL",
+  MAILED = "MAILED",
+  DELIVERED = "DELIVERED",
+  IN_INVESTIGATION = "IN_INVESTIGATION",
+  RESPONSE_RECEIVED = "RESPONSE_RECEIVED",
+  REMOVED = "REMOVED",
+  VERIFIED = "VERIFIED",
+  NO_RESPONSE = "NO_RESPONSE",
+  ESCALATION_AVAILABLE = "ESCALATION_AVAILABLE",
+  CLOSED = "CLOSED"
+}
+
+export type DisputeEvent =
+  | "ALL_DOCS_UPLOADED"
+  | "USER_CONFIRMED_MAILING"
+  | "TRACKING_SHOWS_DELIVERED"
+  | "INVESTIGATION_STARTED"
+  | "BUREAU_RESPONDED"
+  | "DEADLINE_PASSED"
+  | "ITEM_REMOVED"
+  | "ITEM_VERIFIED"
+  | "USER_ESCALATED"
+  | "USER_CLOSED";
+
+export const TERMINAL_STATES: DisputeStatus[] = [DisputeStatus.CLOSED];
+
+export function isTerminalStatus(status: DisputeStatus): boolean {
+  return TERMINAL_STATES.includes(status);
+}
