@@ -55,7 +55,7 @@ export default function InvestorOverview() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-slate-600">
-                    We don't just fix credit; we build credit intelligence. Our integrated education modules ensure clients understand the 'why' behind the 'what', leading to sustainable financial health.
+                    We don't just prepare documents; we build credit intelligence. Our integrated education modules ensure clients understand the 'why' behind the 'what', leading to sustainable financial health.
                   </p>
                 </CardContent>
               </Card>

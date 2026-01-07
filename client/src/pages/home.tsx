@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { ComplianceDisclaimer } from "@/components/ui/compliance-disclaimer";
 import { CheckCircle2, TrendingUp, Shield, ArrowRight, Users, Wand2, BookOpen } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -210,6 +211,9 @@ export default function Home() {
                 Browse Resources <BookOpen className="ml-2 h-5 w-5 text-secondary" />
               </Button>
             </Link>
+          </div>
+          <div className="mt-8 max-w-xl mx-auto">
+            <ComplianceDisclaimer variant="compact" />
           </div>
         </div>
       </section>

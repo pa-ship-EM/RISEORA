@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { ComplianceDisclaimer } from "@/components/ui/compliance-disclaimer";
 import { Check, ShieldCheck, Wand2, Zap, Scale, BookOpen } from "lucide-react";
 import { Link } from "wouter";
 
@@ -29,6 +30,10 @@ export default function Services() {
                 You remain in full control of all communications sent to credit bureaus.
               </p>
             </div>
+          </div>
+
+          <div className="max-w-3xl mx-auto mb-10">
+            <ComplianceDisclaimer variant="full" />
           </div>
 
           <div className="grid md:grid-cols-4 gap-6 max-w-7xl mx-auto">

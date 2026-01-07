@@ -21,7 +21,7 @@ const dashboardResources = [
   {
     name: "Experian Boost",
     url: "https://www.experian.com/boost?ref=your-code",
-    description: "Increase your credit score using Experian Boost."
+    description: "Add positive payment history to your credit file with Experian Boost."
   },
   {
     name: "Chime Bank",

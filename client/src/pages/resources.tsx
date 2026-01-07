@@ -58,7 +58,7 @@ export default function Resources() {
                 />
                 <AffiliateLink 
                   title="Credit Builder"
-                  description="Increase your credit score using Experian Boost."
+                  description="Add positive payment history to your credit file with Experian Boost."
                   partner="Experian Boost"
                   url="https://www.experian.com/boost?ref=your-code"
                 />
