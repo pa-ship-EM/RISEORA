@@ -299,6 +299,97 @@ export async function registerRoutes(
   
   // ========== DISPUTE ROUTES ==========
   
+  // GET /api/disputes/analytics - Get dispute analytics data
+  app.get("/api/disputes/analytics", requireAuth, async (req, res, next) => {
+    try {
+      const disputes = await storage.getDisputesForUser(req.session.userId!);
+      
+      // Calculate status breakdown
+      const statusCounts: Record<string, number> = {};
+      disputes.forEach(d => {
+        statusCounts[d.status] = (statusCounts[d.status] || 0) + 1;
+      });
+      
+      // Calculate bureau breakdown
+      const bureauCounts: Record<string, number> = {};
+      disputes.forEach(d => {
+        bureauCounts[d.bureau] = (bureauCounts[d.bureau] || 0) + 1;
+      });
+      
+      // Calculate success metrics
+      const resolved = disputes.filter(d => d.status === 'REMOVED' || d.status === 'CLOSED');
+      const removed = disputes.filter(d => d.status === 'REMOVED');
+      const verified = disputes.filter(d => d.status === 'VERIFIED');
+      const inProgress = disputes.filter(d => !['REMOVED', 'VERIFIED', 'CLOSED', 'NO_RESPONSE'].includes(d.status));
+      
+      // Calculate average resolution time (for resolved disputes)
+      let avgResolutionDays = 0;
+      const resolvedWithDates = resolved.filter(d => d.mailedAt);
+      if (resolvedWithDates.length > 0) {
+        const totalDays = resolvedWithDates.reduce((acc, d) => {
+          const start = new Date(d.mailedAt!);
+          const end = d.responseReceivedAt ? new Date(d.responseReceivedAt) : new Date();
+          return acc + Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        }, 0);
+        avgResolutionDays = Math.round(totalDays / resolvedWithDates.length);
+      }
+      
+      // Monthly trend data (last 6 months)
+      const monthlyTrend: Array<{ month: string; created: number; resolved: number }> = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+        const monthName = monthStart.toLocaleDateString('en-US', { month: 'short' });
+        
+        const created = disputes.filter(d => {
+          const date = new Date(d.createdAt);
+          return date >= monthStart && date <= monthEnd;
+        }).length;
+        
+        const resolvedInMonth = resolved.filter(d => {
+          const date = d.responseReceivedAt ? new Date(d.responseReceivedAt) : null;
+          return date && date >= monthStart && date <= monthEnd;
+        }).length;
+        
+        monthlyTrend.push({ month: monthName, created, resolved: resolvedInMonth });
+      }
+      
+      // Dispute reason breakdown
+      const reasonCounts: Record<string, number> = {};
+      disputes.forEach(d => {
+        const reason = d.disputeReason || 'Other';
+        reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
+      });
+      
+      res.json({
+        summary: {
+          total: disputes.length,
+          inProgress: inProgress.length,
+          removed: removed.length,
+          verified: verified.length,
+          successRate: disputes.length > 0 ? Math.round((removed.length / disputes.length) * 100) : 0,
+          avgResolutionDays,
+        },
+        statusBreakdown: Object.entries(statusCounts).map(([status, count]) => ({
+          status: status.replace(/_/g, ' '),
+          count,
+        })),
+        bureauBreakdown: Object.entries(bureauCounts).map(([bureau, count]) => ({
+          bureau,
+          count,
+        })),
+        monthlyTrend,
+        reasonBreakdown: Object.entries(reasonCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([reason, count]) => ({ reason, count })),
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // GET /api/disputes
   app.get("/api/disputes", requireAuth, async (req, res, next) => {
     try {

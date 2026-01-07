@@ -14,7 +14,8 @@ import {
   Bell,
   Check,
   Activity,
-  Upload
+  Upload,
+  BarChart3
 } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
@@ -117,6 +118,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/dashboard/credit-reports", label: "Credit Reports", icon: Upload },
       { href: "/dashboard/disputes", label: "My Disputes", icon: FileText },
+      { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
       { href: "/dashboard/documents", label: "Documents", icon: FileText },
       { href: "/dashboard/activity", label: "Activity Log", icon: Activity },
       { href: "/dashboard/settings", label: "Settings", icon: Settings },
