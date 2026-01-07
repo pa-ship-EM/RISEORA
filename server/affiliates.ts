@@ -1,3 +1,5 @@
+import type { AffiliateStateSurface } from "./affiliateStateMatrix";
+
 export type AffiliateSurface = 
   | "dashboard"
   | "resources"
@@ -11,7 +13,8 @@ export type AffiliateCategory =
   | "banking"
   | "credit_cards"
   | "loans"
-  | "education";
+  | "education"
+  | "identity";
 
 export interface Affiliate {
   id: string;
@@ -20,6 +23,7 @@ export interface Affiliate {
   description: string;
   url: string;
   surfaces: AffiliateSurface[];
+  allowedStateSurfaces?: AffiliateStateSurface[];
   minTier?: "FREE" | "SELF_STARTER" | "GROWTH" | "COMPLIANCE_PLUS";
   excludeStates?: string[];
   requiresActiveDispute?: boolean;
@@ -29,12 +33,35 @@ export interface Affiliate {
 
 export const AFFILIATES: Affiliate[] = [
   {
+    id: "identity_protection_tool",
+    name: "Optional Identity Protection Service",
+    category: "identity",
+    description: "Protect your identity with comprehensive monitoring and alerts.",
+    url: "https://www.identityprotection.example/?ref=your-code",
+    surfaces: ["dashboard", "resources"],
+    allowedStateSurfaces: ["WORKFLOW_COMPLETION", "EDUCATION_FOLLOWUP"],
+    priority: 95,
+    active: true
+  },
+  {
+    id: "credit_monitoring_tool",
+    name: "Optional Credit Monitoring Tool",
+    category: "credit_monitoring",
+    description: "Monitor your credit reports from all three bureaus.",
+    url: "https://www.creditmonitoring.example/?ref=your-code",
+    surfaces: ["dashboard", "resources"],
+    allowedStateSurfaces: ["RESOURCE_PAGE", "EDUCATION_FOLLOWUP"],
+    priority: 92,
+    active: true
+  },
+  {
     id: "credit_karma",
     name: "Credit Karma",
     category: "credit_monitoring",
     description: "Free credit monitoring tool to track your score.",
     url: "https://www.creditkarma.com/r/your-affiliate-code",
     surfaces: ["dashboard", "resources", "onboarding"],
+    allowedStateSurfaces: ["RESOURCE_PAGE", "EDUCATION_FOLLOWUP"],
     priority: 100,
     active: true
   },
@@ -45,6 +72,7 @@ export const AFFILIATES: Affiliate[] = [
     description: "Add positive payment history to your credit file with Experian Boost.",
     url: "https://www.experian.com/boost?ref=your-code",
     surfaces: ["dashboard", "resources", "dispute_wizard"],
+    allowedStateSurfaces: ["WORKFLOW_COMPLETION", "EDUCATION_FOLLOWUP"],
     priority: 90,
     active: true
   },
@@ -55,6 +83,7 @@ export const AFFILIATES: Affiliate[] = [
     description: "No-fee banking and early direct deposit.",
     url: "https://www.chime.com/?ref=your-affiliate-code",
     surfaces: ["dashboard", "resources"],
+    allowedStateSurfaces: ["RESOURCE_PAGE"],
     priority: 80,
     active: true
   },
@@ -65,6 +94,7 @@ export const AFFILIATES: Affiliate[] = [
     description: "Compare credit cards and track rewards.",
     url: "https://www.nerdwallet.com/best/credit-cards?ref=your-code",
     surfaces: ["dashboard", "resources"],
+    allowedStateSurfaces: ["RESOURCE_PAGE"],
     priority: 70,
     active: true
   },
@@ -75,6 +105,7 @@ export const AFFILIATES: Affiliate[] = [
     description: "Build credit with a credit-builder loan. No credit check required.",
     url: "https://www.self.inc/?ref=your-code",
     surfaces: ["dashboard", "resources", "onboarding"],
+    allowedStateSurfaces: ["WORKFLOW_COMPLETION", "EDUCATION_FOLLOWUP"],
     minTier: "SELF_STARTER",
     priority: 85,
     active: true
@@ -86,6 +117,7 @@ export const AFFILIATES: Affiliate[] = [
     description: "Build credit with no annual fee. Get your deposit back automatically.",
     url: "https://www.discover.com/credit-cards/secured/?ref=your-code",
     surfaces: ["resources"],
+    allowedStateSurfaces: ["RESOURCE_PAGE"],
     priority: 75,
     active: true
   }
