@@ -5,6 +5,7 @@
 RiseOra is a credit education and guided support platform that empowers consumers to understand, manage, and assert their credit rights. The platform provides tools for generating dispute letters, tracking dispute progress, and educating users about credit repair — all while maintaining strict compliance with CROA, FCRA, and FTC regulations.
 
 Key features include:
+- **Credit Report Upload**: PDF upload with AI-powered account extraction using OpenAI GPT-4o, stores reports and accounts for dispute creation
 - **Dispute Wizard™**: AI-assisted workflow for generating Metro 2-compliant dispute letters with multi-account selection
 - **Dispute Progress Tracking**: Per-letter progress bars, user-updatable checklists, and stage management
 - **AI Notifications**: Intelligent reminders for 30-day deadlines and follow-up actions
