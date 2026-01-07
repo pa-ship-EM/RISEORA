@@ -1180,12 +1180,127 @@ Respond in JSON format with this structure:
       }
       
       const parsed = JSON.parse(content);
-      res.json(parsed);
+      
+      // Save credit report to database
+      const creditReport = await storage.createCreditReport({
+        userId: req.session.userId!,
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        bureau: bureau,
+        status: "COMPLETED",
+        totalAccounts: parsed.accounts?.length || 0,
+        negativeAccounts: parsed.accounts?.filter((a: any) => 
+          a.status?.toLowerCase().includes('collection') || 
+          a.status?.toLowerCase().includes('charged') ||
+          a.status?.toLowerCase().includes('delinquent')
+        ).length || 0,
+      });
+      
+      // Update with processed timestamp
+      await storage.updateCreditReport(creditReport.id, {
+        processedAt: new Date(),
+      });
+      
+      // Helper function to parse currency strings to cents
+      const parseCurrencyToCents = (str: string | null | undefined): number | null => {
+        if (!str) return null;
+        const cleaned = str.replace(/[$,\s]/g, '');
+        const match = cleaned.match(/^-?([\d]+)(?:\.([\d]{1,2}))?/);
+        if (!match) return null;
+        const dollars = parseInt(match[1], 10);
+        const cents = match[2] ? parseInt(match[2].padEnd(2, '0'), 10) : 0;
+        return dollars * 100 + cents;
+      };
+      
+      // Save extracted accounts to database
+      if (parsed.accounts && parsed.accounts.length > 0) {
+        const accountsToCreate = parsed.accounts.map((account: any) => ({
+          reportId: creditReport.id,
+          userId: req.session.userId!,
+          creditorName: account.creditorName || "Unknown Creditor",
+          accountNumber: account.accountNumber || null,
+          accountType: account.accountType?.toUpperCase().replace(/\s+/g, '_') || null,
+          accountStatus: account.status || null,
+          isNegative: account.status?.toLowerCase().includes('collection') || 
+                     account.status?.toLowerCase().includes('charged') ||
+                     account.status?.toLowerCase().includes('delinquent') || false,
+          balance: parseCurrencyToCents(account.balance),
+          rawText: JSON.stringify(account.recommendedReasons || []),
+        }));
+        
+        try {
+          await storage.createCreditReportAccounts(accountsToCreate);
+        } catch (accountError) {
+          console.error("Error saving accounts:", accountError);
+          // Don't fail the whole request if accounts fail to save
+        }
+      }
+      
+      res.json({
+        ...parsed,
+        reportId: creditReport.id,
+      });
     } catch (error: any) {
         console.error("Error processing PDF:", error);
         next(error);
       }
     });
+  });
+  
+  // GET /api/credit-reports - Get all credit reports for user
+  app.get("/api/credit-reports", requireAuth, async (req, res, next) => {
+    try {
+      const reports = await storage.getCreditReportsForUser(req.session.userId!);
+      res.json(reports);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // GET /api/credit-reports/:id - Get single credit report with accounts
+  app.get("/api/credit-reports/:id", requireAuth, async (req, res, next) => {
+    try {
+      const report = await storage.getCreditReport(req.params.id);
+      if (!report) {
+        return res.status(404).json({ message: "Credit report not found" });
+      }
+      if (report.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const accounts = await storage.getAccountsForReport(report.id);
+      res.json({ report, accounts });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // GET /api/credit-report-accounts - Get all extracted accounts for user
+  app.get("/api/credit-report-accounts", requireAuth, async (req, res, next) => {
+    try {
+      const accounts = await storage.getAccountsForUser(req.session.userId!);
+      res.json(accounts);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // DELETE /api/credit-reports/:id - Delete a credit report
+  app.delete("/api/credit-reports/:id", requireAuth, async (req, res, next) => {
+    try {
+      const report = await storage.getCreditReport(req.params.id);
+      if (!report) {
+        return res.status(404).json({ message: "Credit report not found" });
+      }
+      if (report.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await storage.deleteCreditReport(report.id);
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
   });
   
   // POST /api/parse-credit-report - Parse credit report text and extract account info

@@ -1,12 +1,14 @@
 import { 
   users, disputes, subscriptions, disputeChecklists, notifications, userNotificationSettings, disputeAiGuidance,
-  disputeEvidence, auditLog,
+  disputeEvidence, auditLog, creditReports, creditReportAccounts,
   type User, type InsertUser, type Dispute, type InsertDispute, type Subscription, type InsertSubscription,
   type DisputeChecklist, type InsertDisputeChecklist, type Notification, type InsertNotification,
   type UserNotificationSettings, type InsertUserNotificationSettings,
   type DisputeAiGuidance, type InsertDisputeAiGuidance,
   type DisputeEvidence, type InsertDisputeEvidence,
   type AuditLog, type InsertAuditLog,
+  type CreditReport, type InsertCreditReport,
+  type CreditReportAccount, type InsertCreditReportAccount,
   DEFAULT_DISPUTE_CHECKLIST
 } from "@shared/schema";
 import { db, withRetry } from "./db";
@@ -74,6 +76,19 @@ export interface IStorage {
   // Audit log methods
   getAuditLogsForUser(userId: string): Promise<AuditLog[]>;
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
+  
+  // Credit report methods
+  getCreditReportsForUser(userId: string): Promise<CreditReport[]>;
+  getCreditReport(id: string): Promise<CreditReport | undefined>;
+  createCreditReport(report: InsertCreditReport): Promise<CreditReport>;
+  updateCreditReport(id: string, data: Partial<CreditReport>): Promise<CreditReport | undefined>;
+  deleteCreditReport(id: string): Promise<boolean>;
+  
+  // Credit report account methods
+  getAccountsForReport(reportId: string): Promise<CreditReportAccount[]>;
+  getAccountsForUser(userId: string): Promise<CreditReportAccount[]>;
+  createCreditReportAccounts(accounts: InsertCreditReportAccount[]): Promise<CreditReportAccount[]>;
+  linkAccountToDispute(accountId: string, disputeId: string): Promise<CreditReportAccount | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -385,6 +400,69 @@ export class DatabaseStorage implements IStorage {
       .values(log)
       .returning();
     return created;
+  }
+
+  // Credit report methods
+  async getCreditReportsForUser(userId: string): Promise<CreditReport[]> {
+    return await db.select().from(creditReports)
+      .where(eq(creditReports.userId, userId))
+      .orderBy(desc(creditReports.createdAt));
+  }
+
+  async getCreditReport(id: string): Promise<CreditReport | undefined> {
+    const [report] = await db.select().from(creditReports)
+      .where(eq(creditReports.id, id));
+    return report || undefined;
+  }
+
+  async createCreditReport(report: InsertCreditReport): Promise<CreditReport> {
+    const [created] = await db.insert(creditReports)
+      .values(report)
+      .returning();
+    return created;
+  }
+
+  async updateCreditReport(id: string, data: Partial<CreditReport>): Promise<CreditReport | undefined> {
+    const [updated] = await db.update(creditReports)
+      .set(data)
+      .where(eq(creditReports.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCreditReport(id: string): Promise<boolean> {
+    const result = await db.delete(creditReports)
+      .where(eq(creditReports.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Credit report account methods
+  async getAccountsForReport(reportId: string): Promise<CreditReportAccount[]> {
+    return await db.select().from(creditReportAccounts)
+      .where(eq(creditReportAccounts.reportId, reportId))
+      .orderBy(desc(creditReportAccounts.createdAt));
+  }
+
+  async getAccountsForUser(userId: string): Promise<CreditReportAccount[]> {
+    return await db.select().from(creditReportAccounts)
+      .where(eq(creditReportAccounts.userId, userId))
+      .orderBy(desc(creditReportAccounts.createdAt));
+  }
+
+  async createCreditReportAccounts(accounts: InsertCreditReportAccount[]): Promise<CreditReportAccount[]> {
+    if (accounts.length === 0) return [];
+    return await db.insert(creditReportAccounts)
+      .values(accounts)
+      .returning();
+  }
+
+  async linkAccountToDispute(accountId: string, disputeId: string): Promise<CreditReportAccount | undefined> {
+    const [updated] = await db.update(creditReportAccounts)
+      .set({ disputeId })
+      .where(eq(creditReportAccounts.id, accountId))
+      .returning();
+    return updated || undefined;
   }
 }
 

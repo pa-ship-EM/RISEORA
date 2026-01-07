@@ -13,7 +13,8 @@ import {
   X,
   Bell,
   Check,
-  Activity
+  Activity,
+  Upload
 } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
@@ -114,6 +115,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const navItems = {
     CLIENT: [
       { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+      { href: "/dashboard/credit-reports", label: "Credit Reports", icon: Upload },
       { href: "/dashboard/disputes", label: "My Disputes", icon: FileText },
       { href: "/dashboard/documents", label: "Documents", icon: FileText },
       { href: "/dashboard/activity", label: "Activity Log", icon: Activity },

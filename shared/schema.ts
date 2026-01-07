@@ -393,3 +393,76 @@ export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+
+// Credit Reports table - stores uploaded credit report files
+export const creditReports = pgTable("credit_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size").notNull(),
+  bureau: text("bureau"), // EXPERIAN, TRANSUNION, EQUIFAX, or null if unknown
+  reportDate: timestamp("report_date"), // Date the report was generated
+  
+  // Processing status
+  status: text("status").notNull().default("PENDING"), // PENDING, PROCESSING, COMPLETED, FAILED
+  errorMessage: text("error_message"),
+  
+  // Extracted summary (high-level stats)
+  totalAccounts: integer("total_accounts"),
+  negativeAccounts: integer("negative_accounts"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  processedAt: timestamp("processed_at"),
+});
+
+// Credit Report Accounts - extracted account info from reports
+export const creditReportAccounts = pgTable("credit_report_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportId: varchar("report_id").notNull().references(() => creditReports.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Account details
+  creditorName: text("creditor_name").notNull(),
+  accountNumber: text("account_number"), // Last 4 or masked
+  accountType: text("account_type"), // CREDIT_CARD, MORTGAGE, AUTO_LOAN, COLLECTION, etc.
+  
+  // Status indicators
+  accountStatus: text("account_status"), // OPEN, CLOSED, COLLECTION, CHARGE_OFF, etc.
+  paymentStatus: text("payment_status"), // CURRENT, LATE_30, LATE_60, LATE_90, LATE_120+
+  isNegative: boolean("is_negative").notNull().default(false),
+  
+  // Financial details
+  balance: integer("balance"), // Current balance in cents
+  creditLimit: integer("credit_limit"), // Credit limit in cents
+  highBalance: integer("high_balance"), // Highest balance in cents
+  monthlyPayment: integer("monthly_payment"), // Monthly payment in cents
+  
+  // Dates
+  dateOpened: timestamp("date_opened"),
+  lastReportedDate: timestamp("last_reported_date"),
+  
+  // Raw extracted text for reference
+  rawText: text("raw_text"),
+  
+  // Dispute linkage
+  disputeId: varchar("dispute_id").references(() => disputes.id),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCreditReportSchema = createInsertSchema(creditReports).omit({
+  id: true,
+  createdAt: true,
+  processedAt: true,
+});
+
+export const insertCreditReportAccountSchema = createInsertSchema(creditReportAccounts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type CreditReport = typeof creditReports.$inferSelect;
+export type InsertCreditReport = z.infer<typeof insertCreditReportSchema>;
+export type CreditReportAccount = typeof creditReportAccounts.$inferSelect;
+export type InsertCreditReportAccount = z.infer<typeof insertCreditReportAccountSchema>;

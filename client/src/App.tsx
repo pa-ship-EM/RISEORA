@@ -32,6 +32,7 @@ import AdminAffiliatesPage from "@/pages/admin/affiliates";
 import AdminDisputesPage from "@/pages/admin/disputes";
 import AdminCompliancePage from "@/pages/admin/compliance";
 import ActivityPage from "@/pages/dashboard/activity";
+import CreditReportsPage from "@/pages/dashboard/credit-reports";
 
 function Router() {
   return (
@@ -79,6 +80,12 @@ function Router() {
       <Route path="/dashboard/activity">
         <ProtectedRoute allowedRoles={['CLIENT']}>
           <ActivityPage />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/dashboard/credit-reports">
+        <ProtectedRoute allowedRoles={['CLIENT']}>
+          <CreditReportsPage />
         </ProtectedRoute>
       </Route>
 
