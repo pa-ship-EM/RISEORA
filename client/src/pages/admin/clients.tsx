@@ -167,13 +167,14 @@ export default function AdminClientsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-serif font-bold text-primary">Client Manager</h1>
-            <p className="text-muted-foreground">View and manage all registered clients.</p>
+            <h1 className="text-xl sm:text-2xl font-serif font-bold text-primary">Client Manager</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">View and manage all registered clients.</p>
           </div>
           <Button 
             variant="outline" 
+            className="h-11 w-full sm:w-auto"
             onClick={() => exportToCSV(filteredClients)}
             disabled={filteredClients.length === 0}
             data-testid="button-export-clients"
@@ -184,20 +185,24 @@ export default function AdminClientsPage() {
         </div>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>All Clients</CardTitle>
-              <CardDescription>{filteredClients.length} of {clients.length} clients</CardDescription>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search clients..." 
-                className="pl-9" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                data-testid="input-search-clients"
-              />
+          <CardHeader className="pb-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <CardTitle className="text-lg sm:text-xl">All Clients</CardTitle>
+                  <CardDescription>{filteredClients.length} of {clients.length} clients</CardDescription>
+                </div>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search clients..." 
+                  className="pl-9 h-11 text-base w-full sm:max-w-xs" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  data-testid="input-search-clients"
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -211,56 +216,103 @@ export default function AdminClientsPage() {
                 <p>{clients.length === 0 ? "No clients found." : "No clients match your search."}</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
                   {filteredClients.map((client) => (
-                    <TableRow key={client.id} data-testid={`row-client-${client.id}`}>
-                      <TableCell className="font-medium">{client.firstName} {client.lastName}</TableCell>
-                      <TableCell>{client.email}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">Active</Badge>
-                      </TableCell>
-                      <TableCell>{formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenUserDetail(client.id)}>
-                              <Eye className="h-4 w-4 mr-2" /> View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              className="text-destructive"
-                              onClick={() => setDeleteUserOpen(client)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
+                    <div 
+                      key={client.id} 
+                      className="bg-slate-50 rounded-xl p-4 space-y-3"
+                      data-testid={`card-client-${client.id}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-base">{client.firstName} {client.lastName}</p>
+                          <p className="text-sm text-muted-foreground truncate">{client.email}</p>
+                        </div>
+                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs flex-shrink-0">Active</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">
+                          Joined {formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}
+                        </span>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-9 px-3"
+                            onClick={() => handleOpenUserDetail(client.id)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" /> View
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-9 px-3 text-destructive hover:text-destructive"
+                            onClick={() => setDeleteUserOpen(client)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Joined</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredClients.map((client) => (
+                        <TableRow key={client.id} data-testid={`row-client-${client.id}`}>
+                          <TableCell className="font-medium">{client.firstName} {client.lastName}</TableCell>
+                          <TableCell>{client.email}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">Active</Badge>
+                          </TableCell>
+                          <TableCell>{formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-10 w-10">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleOpenUserDetail(client.id)}>
+                                  <Eye className="h-4 w-4 mr-2" /> View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-destructive"
+                                  onClick={() => setDeleteUserOpen(client)}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
       </div>
 
       <Dialog open={!!selectedUserId} onOpenChange={(open) => !open && setSelectedUserId(null)}>
-        <DialogContent className="max-w-xl max-h-[90vh]">
+        <DialogContent className="w-[95vw] max-w-xl max-h-[85vh] p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Client Details</DialogTitle>
             <DialogDescription>

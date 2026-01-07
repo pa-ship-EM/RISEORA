@@ -497,10 +497,10 @@ function EvidenceManager({ disputeId }: { disputeId: string }) {
           setSelectedType('OTHER');
         }
       }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[95vw] max-w-md p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Upload Evidence Document</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg">Upload Evidence Document</DialogTitle>
+            <DialogDescription className="text-sm">
               Attach supporting documents to strengthen your dispute.
             </DialogDescription>
           </DialogHeader>

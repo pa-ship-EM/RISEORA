@@ -184,43 +184,79 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-30 flex items-center justify-between px-4">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-slate-200 z-30 flex items-center justify-between px-4 safe-area-inset">
         <div className="flex items-center gap-2">
           <img src={logoImage} alt="RiseOra" className="h-8 w-8 object-contain" />
           <span className="font-serif font-bold text-lg text-primary">RiseOra</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <NotificationBell />
-          <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <X /> : <Menu />}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-11 w-11"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            data-testid="button-mobile-menu"
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         </div>
       </div>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-20 bg-background pt-16 animate-in slide-in-from-top-10">
-          <nav className="p-4 space-y-2">
-            {currentNav.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium bg-slate-50 text-slate-900 mb-2">
-                    <Icon className="h-5 w-5 text-primary" />
-                    {item.label}
-                  </div>
-                </Link>
-              );
-            })}
-            <Button variant="destructive" className="w-full mt-8" onClick={() => logout()}>
-              Sign Out
-            </Button>
+        <div 
+          className="md:hidden fixed inset-0 z-20 bg-background pt-14 animate-in slide-in-from-top-5 duration-200"
+          onClick={(e) => e.target === e.currentTarget && setIsMobileMenuOpen(false)}
+        >
+          <nav className="p-4 space-y-2 flex flex-col h-full">
+            <div className="flex-1 space-y-1">
+              {currentNav.map((item) => {
+                const Icon = item.icon;
+                const isActive = location === item.href;
+                return (
+                  <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
+                    <div className={`flex items-center gap-4 px-4 py-4 rounded-xl text-base font-medium transition-colors active:scale-[0.98] ${
+                      isActive 
+                        ? "bg-primary text-white shadow-md" 
+                        : "bg-slate-50 text-slate-900 active:bg-slate-100"
+                    }`}>
+                      <Icon className={`h-5 w-5 ${isActive ? "text-white" : "text-primary"}`} />
+                      {item.label}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            
+            <div className="pt-4 pb-6 border-t border-slate-200 space-y-3">
+              <div className="flex items-center gap-3 px-4 py-2">
+                <Avatar className="h-10 w-10 border border-slate-200">
+                  <AvatarImage />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                    {user?.firstName?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="overflow-hidden">
+                  <p className="text-sm font-medium text-slate-900 truncate">{user?.firstName} {user?.lastName}</p>
+                  <p className="text-xs text-slate-500 truncate capitalize">{user?.role?.toLowerCase()}</p>
+                </div>
+              </div>
+              <Button 
+                variant="destructive" 
+                className="w-full h-12 text-base" 
+                onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+              >
+                <LogOut className="mr-2 h-5 w-5" />
+                Sign Out
+              </Button>
+            </div>
           </nav>
         </div>
       )}
 
       {/* Main Content */}
-      <main className="flex-1 md:pl-64 pt-16 md:pt-0 p-4 md:p-8 overflow-y-auto">
+      <main className="flex-1 md:pl-64 pt-14 md:pt-0 px-4 py-4 md:p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
           {children}
         </div>

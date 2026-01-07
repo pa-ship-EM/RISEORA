@@ -147,13 +147,14 @@ export default function AdminDisputesPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-serif font-bold text-primary">Dispute Queue</h1>
-            <p className="text-muted-foreground">Monitor all dispute letters across the platform.</p>
+            <h1 className="text-xl sm:text-2xl font-serif font-bold text-primary">Dispute Queue</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Monitor all dispute letters across the platform.</p>
           </div>
           <Button 
             variant="outline" 
+            className="h-11 w-full sm:w-auto"
             onClick={() => exportToCSV(filteredDisputes)}
             disabled={filteredDisputes.length === 0}
             data-testid="button-export-disputes"
@@ -185,43 +186,47 @@ export default function AdminDisputesPage() {
         </div>
 
         <Card>
-          <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <CardTitle>All Disputes</CardTitle>
-                <CardDescription>{filteredDisputes.length} of {disputes.length} disputes</CardDescription>
+          <CardHeader className="pb-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <CardTitle className="text-lg sm:text-xl">All Disputes</CardTitle>
+                  <CardDescription>{filteredDisputes.length} of {disputes.length} disputes</CardDescription>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <div className="relative w-48">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1 sm:max-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     placeholder="Search..." 
-                    className="pl-9"
+                    className="pl-9 h-11 text-base"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     data-testid="input-search-disputes"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-40" data-testid="select-status-filter">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={bureauFilter} onValueChange={setBureauFilter}>
-                  <SelectTrigger className="w-36" data-testid="select-bureau-filter">
-                    <SelectValue placeholder="Bureau" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BUREAU_OPTIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2 flex-1 sm:flex-none">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="flex-1 sm:w-40 h-11" data-testid="select-status-filter">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={bureauFilter} onValueChange={setBureauFilter}>
+                    <SelectTrigger className="flex-1 sm:w-36 h-11" data-testid="select-bureau-filter">
+                      <SelectValue placeholder="Bureau" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BUREAU_OPTIONS.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -236,62 +241,92 @@ export default function AdminDisputesPage() {
                 <p>{disputes.length === 0 ? "No disputes yet." : "No disputes match your filters."}</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Creditor</TableHead>
-                    <TableHead>Bureau</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
                   {filteredDisputes.map((dispute) => (
-                    <TableRow key={dispute.id} data-testid={`row-dispute-${dispute.id}`}>
-                      <TableCell className="font-medium">{dispute.creditorName}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{dispute.bureau}</Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate">{dispute.disputeReason}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(dispute.status)}>
+                    <button 
+                      key={dispute.id} 
+                      className="w-full text-left bg-slate-50 rounded-xl p-4 space-y-3 active:bg-slate-100 transition-colors"
+                      onClick={() => setSelectedDisputeId(dispute.id)}
+                      data-testid={`button-card-dispute-${dispute.id}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-base truncate">{dispute.creditorName}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-1">{dispute.disputeReason}</p>
+                        </div>
+                        <Eye className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="text-xs">{dispute.bureau}</Badge>
+                        <Badge className={`text-xs ${getStatusColor(dispute.status)}`}>
                           {dispute.status.replace(/_/g, ' ')}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatDistanceToNow(new Date(dispute.createdAt), { addSuffix: true })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => setSelectedDisputeId(dispute.id)}
-                          data-testid={`button-view-dispute-${dispute.id}`}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {formatDistanceToNow(new Date(dispute.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                    </button>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Creditor</TableHead>
+                        <TableHead>Bureau</TableHead>
+                        <TableHead>Reason</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDisputes.map((dispute) => (
+                        <TableRow key={dispute.id} data-testid={`row-dispute-${dispute.id}`}>
+                          <TableCell className="font-medium">{dispute.creditorName}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{dispute.bureau}</Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate">{dispute.disputeReason}</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(dispute.status)}>
+                              {dispute.status.replace(/_/g, ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {formatDistanceToNow(new Date(dispute.createdAt), { addSuffix: true })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="h-10 w-10"
+                              onClick={() => setSelectedDisputeId(dispute.id)}
+                              data-testid={`button-view-dispute-${dispute.id}`}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
       </div>
 
       <Dialog open={!!selectedDisputeId} onOpenChange={(open) => !open && setSelectedDisputeId(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh]">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>Dispute Details</DialogTitle>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedDisputeId(null)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <DialogDescription>
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] p-4 sm:p-6">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg sm:text-xl">Dispute Details</DialogTitle>
+            <DialogDescription className="text-sm">
               Full details for this dispute letter
             </DialogDescription>
           </DialogHeader>
