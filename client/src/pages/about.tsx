@@ -10,10 +10,10 @@ export default function About() {
       
       <main className="flex-grow">
         {/* Header */}
-        <div className="bg-primary text-white py-24">
+        <div className="bg-primary py-24">
           <div className="container mx-auto px-4 text-center max-w-4xl">
-            <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6">About RiseOra</h1>
-            <p className="text-xl md:text-2xl text-primary-foreground/90 font-light italic">
+            <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6 text-white">About RiseOra</h1>
+            <p className="text-xl md:text-2xl text-white/90 font-light italic">
               Your Credit Education & Guided Support Platform
             </p>
           </div>
