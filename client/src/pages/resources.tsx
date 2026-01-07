@@ -2,9 +2,11 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, BookOpen, CreditCard, Home, Car } from "lucide-react";
+import { ExternalLink, BookOpen, CreditCard, Home, Loader2 } from "lucide-react";
+import { useAffiliates } from "@/hooks/use-affiliates";
 
 export default function Resources() {
+  const { affiliates, isLoading } = useAffiliates("resources");
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -50,30 +52,25 @@ export default function Resources() {
               </p>
               
               <div className="grid md:grid-cols-2 gap-6">
-                <AffiliateLink 
-                  title="Credit Monitoring"
-                  description="Free credit monitoring tool to track your score."
-                  partner="Credit Karma"
-                  url="https://www.creditkarma.com/r/your-affiliate-code"
-                />
-                <AffiliateLink 
-                  title="Credit Builder"
-                  description="Add positive payment history to your credit file with Experian Boost."
-                  partner="Experian Boost"
-                  url="https://www.experian.com/boost?ref=your-code"
-                />
-                <AffiliateLink 
-                  title="Banking & Credit"
-                  description="No-fee banking and early direct deposit."
-                  partner="Chime Bank"
-                  url="https://www.chime.com/?ref=your-affiliate-code"
-                />
-                <AffiliateLink 
-                  title="Comparison Tool"
-                  description="Compare credit cards and track rewards."
-                  partner="NerdWallet"
-                  url="https://www.nerdwallet.com/best/credit-cards?ref=your-code"
-                />
+                {isLoading ? (
+                  <div className="col-span-2 flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : affiliates.length === 0 ? (
+                  <div className="col-span-2 text-center py-8 text-muted-foreground">
+                    No affiliate resources available at this time.
+                  </div>
+                ) : (
+                  affiliates.map((affiliate) => (
+                    <AffiliateLink 
+                      key={affiliate.id}
+                      title={affiliate.category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      description={affiliate.description}
+                      partner={affiliate.name}
+                      url={affiliate.url}
+                    />
+                  ))
+                )}
               </div>
 
               <div className="mt-12 pt-8 border-t border-slate-100 text-slate-500 text-sm italic text-center">

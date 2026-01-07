@@ -12,6 +12,8 @@ import multer from "multer";
 import { PDFParse } from "pdf-parse";
 import { isValidTransition, getTargetStatus, getInvestigationDeadlineDays, type DisputeAction } from "@shared/disputeTransitions";
 import { canCreateDispute, isFirstDispute, escalationAllowed } from "@shared/guards";
+import { AFFILIATES, type AffiliateSurface } from "./affiliates";
+import { getEligibleAffiliates } from "./affiliateEligibility";
 
 // Configure multer for PDF uploads (in memory)
 const upload = multer({
@@ -1526,6 +1528,57 @@ Respond in JSON format with this structure:
     try {
       const logs = await storage.getAuditLogsForUser(req.session.userId!);
       res.json(logs);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // ========== AFFILIATE ROUTES ==========
+
+  // GET /api/affiliates - Get eligible affiliates for a surface
+  app.get("/api/affiliates", async (req, res, next) => {
+    try {
+      const { surface } = req.query;
+
+      if (!surface || typeof surface !== "string") {
+        return res.status(400).json({ error: "surface query parameter required" });
+      }
+
+      const validSurfaces: AffiliateSurface[] = ["dashboard", "resources", "dispute_wizard", "onboarding", "email"];
+      if (!validSurfaces.includes(surface as AffiliateSurface)) {
+        return res.status(400).json({ error: `Invalid surface. Must be one of: ${validSurfaces.join(", ")}` });
+      }
+
+      let userContext = null;
+      if (req.session?.userId) {
+        const user = await storage.getUser(req.session.userId);
+        const subscription = user ? await storage.getSubscriptionForUser(user.id) : null;
+        const disputes = user ? await storage.getDisputesForUser(user.id) : [];
+        const hasActiveDispute = disputes.some((d: { status: string }) => 
+          !["RESOLVED", "ESCALATED", "WITHDRAWN"].includes(d.status)
+        );
+
+        const decryptedUser = user ? decryptUserData(user) : null;
+
+        userContext = {
+          tier: (subscription?.tier || "FREE") as "FREE" | "SELF_STARTER" | "GROWTH" | "COMPLIANCE_PLUS",
+          state: decryptedUser?.state || undefined,
+          hasActiveDispute
+        };
+      }
+
+      const eligible = getEligibleAffiliates(userContext, AFFILIATES, surface as AffiliateSurface);
+
+      res.json({
+        surface,
+        affiliates: eligible.map(a => ({
+          id: a.id,
+          name: a.name,
+          category: a.category,
+          description: a.description,
+          url: a.url
+        }))
+      });
     } catch (error) {
       next(error);
     }

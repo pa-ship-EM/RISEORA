@@ -1,10 +1,11 @@
 import React from "react";
-import { ExternalLink, Info, BookOpen, Lock } from "lucide-react";
+import { ExternalLink, Info, BookOpen, Lock, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useAffiliates } from "@/hooks/use-affiliates";
 
 const baseLearningModules = [
   { title: "Credit Fundamentals", lessons: 4, status: "Completed", progress: 100, tier: "Free", requiresCompliance: false },
@@ -12,32 +13,10 @@ const baseLearningModules = [
   { title: "Metro 2 Education", lessons: 8, status: "Locked", progress: 0, tier: "Compliance+", requiresCompliance: true },
 ];
 
-const dashboardResources = [
-  {
-    name: "Credit Karma",
-    url: "https://www.creditkarma.com/r/your-affiliate-code",
-    description: "Monitor your credit for free and get insights."
-  },
-  {
-    name: "Experian Boost",
-    url: "https://www.experian.com/boost?ref=your-code",
-    description: "Add positive payment history to your credit file with Experian Boost."
-  },
-  {
-    name: "Chime Bank",
-    url: "https://www.chime.com/?ref=your-affiliate-code",
-    description: "No-fee banking and early direct deposit."
-  },
-  {
-    name: "NerdWallet Credit Tools",
-    url: "https://www.nerdwallet.com/best/credit-cards?ref=your-code",
-    description: "Compare credit cards and track rewards."
-  }
-];
-
 export default function DashboardTools() {
   const { subscription } = useSubscription();
   const hasCompliancePlus = subscription?.tier === "COMPLIANCE_PLUS";
+  const { affiliates, isLoading: affiliatesLoading } = useAffiliates("dashboard");
 
   const learningModules = baseLearningModules.map(mod => {
     if (mod.requiresCompliance) {
@@ -109,26 +88,38 @@ export default function DashboardTools() {
         </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-        {dashboardResources.map((res) => (
-          <div
-            key={res.name}
-            className="group p-5 md:p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-secondary/50 transition-all cursor-pointer flex flex-col h-full"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-base md:text-lg font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">{res.name}</h3>
-              <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-secondary transition-colors shrink-0" />
-            </div>
-            <p className="text-slate-600 text-sm mb-4 leading-relaxed flex-grow">{res.description}</p>
-            <a
-              href={res.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-bold text-primary underline underline-offset-4 decoration-secondary/30 hover:decoration-secondary transition-all mt-auto inline-flex items-center gap-1"
-            >
-              Learn More (Beta)
-            </a>
+        {affiliatesLoading ? (
+          <div className="col-span-2 flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
-        ))}
+        ) : affiliates.length === 0 ? (
+          <div className="col-span-2 text-center py-8 text-muted-foreground">
+            No affiliate resources available at this time.
+          </div>
+        ) : (
+          affiliates.map((res) => (
+            <div
+              key={res.id}
+              data-testid={`affiliate-card-${res.id}`}
+              className="group p-5 md:p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-secondary/50 transition-all cursor-pointer flex flex-col h-full"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-base md:text-lg font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">{res.name}</h3>
+                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-secondary transition-colors shrink-0" />
+              </div>
+              <p className="text-slate-600 text-sm mb-4 leading-relaxed flex-grow">{res.description}</p>
+              <a
+                href={res.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid={`affiliate-link-${res.id}`}
+                className="text-sm font-bold text-primary underline underline-offset-4 decoration-secondary/30 hover:decoration-secondary transition-all mt-auto inline-flex items-center gap-1"
+              >
+                Learn More (Beta)
+              </a>
+            </div>
+          ))
+        )}
       </div>
 
         <div className="flex gap-3 p-4 bg-white/50 rounded-xl border border-slate-200 text-slate-500 text-[10px] md:text-xs italic leading-relaxed">
