@@ -16,6 +16,10 @@ import AuthPage from "@/pages/auth";
 import InvestorOverview from "@/pages/investor";
 import TermsAndLegal from "@/pages/legal/terms";
 import SecurityPage from "@/pages/legal/security";
+import PrivacyPolicy from "@/pages/legal/privacy";
+import AffiliateDisclosure from "@/pages/legal/affiliate-disclosure";
+import AIDisclosure from "@/pages/legal/ai-disclosure";
+import CookiePolicy from "@/pages/legal/cookies";
 import BusinessPartnerships from "@/pages/partnerships";
 import ClientDashboard from "@/pages/dashboard/client";
 import AffiliateDashboard from "@/pages/dashboard/affiliate";
@@ -41,6 +45,10 @@ function Router() {
       <Route path="/investors" component={InvestorOverview} />
       <Route path="/legal" component={TermsAndLegal} />
       <Route path="/security" component={SecurityPage} />
+      <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/affiliate-disclosure" component={AffiliateDisclosure} />
+      <Route path="/ai-disclosure" component={AIDisclosure} />
+      <Route path="/cookies" component={CookiePolicy} />
       <Route path="/partnerships" component={BusinessPartnerships} />
 
       {/* Protected Routes */}

@@ -17,8 +17,8 @@ export const users = pgTable("users", {
   cityEncrypted: text("city_encrypted"),
   stateEncrypted: text("state_encrypted"),
   zipEncrypted: text("zip_encrypted"),
-  dobEncrypted: text("dob_encrypted"), // Date of birth
-  ssnLast4Encrypted: text("ssn_last4_encrypted"), // Last 4 SSN digits
+  birthYearEncrypted: text("birth_year_encrypted"), // Birth year only (not full DOB) for compliance
+  ssnLast4Encrypted: text("ssn_last4_encrypted"), // Last 4 SSN digits only
   
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

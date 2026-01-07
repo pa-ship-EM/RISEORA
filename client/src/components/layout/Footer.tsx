@@ -99,11 +99,13 @@ export function Footer() {
               RiseOra provides educational tools and guided support only. We do not submit disputes on behalf of consumers. Results vary. No guarantees are made.
             </p>
           </div>
-          <div className="flex gap-6">
-            <Link href="/legal" className="hover:text-white transition-colors">Legal & Terms</Link>
+          <div className="flex flex-wrap gap-4 md:gap-6 justify-center md:justify-end">
+            <Link href="/legal" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link>
+            <Link href="/ai-disclosure" className="hover:text-white transition-colors">AI Disclosure</Link>
+            <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
             <Link href="/security" className="hover:text-white transition-colors">Security</Link>
-            <Link href="/legal" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/legal" className="hover:text-white transition-colors">CROA Notice</Link>
           </div>
         </div>
       </div>

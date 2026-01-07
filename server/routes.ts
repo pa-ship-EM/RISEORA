@@ -155,7 +155,7 @@ export async function registerRoutes(
       // Decrypt sensitive fields
       const decryptedData = decryptUserData(user);
       
-      const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, dobEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
+      const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, birthYearEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
       res.json({ ...userWithoutSensitive, ...decryptedData });
     } catch (error) {
       next(error);
@@ -206,7 +206,7 @@ export async function registerRoutes(
         city,
         state,
         zip,
-        dob,
+        birthYear,
         ssnLast4
       } = req.body;
       
@@ -214,8 +214,8 @@ export async function registerRoutes(
       if (firstName) updateData.firstName = firstName;
       if (lastName) updateData.lastName = lastName;
       
-      // Encrypt sensitive fields if provided
-      const encryptedData = encryptUserData({ address, city, state, zip, dob, ssnLast4 });
+      // Encrypt sensitive fields if provided (only birth year, not full DOB for compliance)
+      const encryptedData = encryptUserData({ address, city, state, zip, birthYear, ssnLast4 });
       Object.assign(updateData, encryptedData);
       
       const user = await storage.updateUserProfile(req.session.userId!, updateData);
@@ -226,7 +226,7 @@ export async function registerRoutes(
       // Decrypt sensitive fields for response
       const decryptedData = decryptUserData(user);
       
-      const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, dobEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
+      const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, birthYearEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
       res.json({ ...userWithoutSensitive, ...decryptedData });
     } catch (error) {
       next(error);

@@ -69,13 +69,14 @@ export function decrypt(encryptedData: string): string {
 
 /**
  * Encrypts user sensitive data before storing in database
+ * Note: We only store birth year (not full DOB) for compliance
  */
 export function encryptUserData(data: {
   address?: string;
   city?: string;
   state?: string;
   zip?: string;
-  dob?: string;
+  birthYear?: string;
   ssnLast4?: string;
 }) {
   return {
@@ -83,7 +84,7 @@ export function encryptUserData(data: {
     cityEncrypted: data.city ? encrypt(data.city) : undefined,
     stateEncrypted: data.state ? encrypt(data.state) : undefined,
     zipEncrypted: data.zip ? encrypt(data.zip) : undefined,
-    dobEncrypted: data.dob ? encrypt(data.dob) : undefined,
+    birthYearEncrypted: data.birthYear ? encrypt(data.birthYear) : undefined,
     ssnLast4Encrypted: data.ssnLast4 ? encrypt(data.ssnLast4) : undefined,
   };
 }
@@ -96,7 +97,7 @@ export function decryptUserData(user: {
   cityEncrypted?: string | null;
   stateEncrypted?: string | null;
   zipEncrypted?: string | null;
-  dobEncrypted?: string | null;
+  birthYearEncrypted?: string | null;
   ssnLast4Encrypted?: string | null;
 }) {
   return {
@@ -104,7 +105,7 @@ export function decryptUserData(user: {
     city: user.cityEncrypted ? decrypt(user.cityEncrypted) : undefined,
     state: user.stateEncrypted ? decrypt(user.stateEncrypted) : undefined,
     zip: user.zipEncrypted ? decrypt(user.zipEncrypted) : undefined,
-    dob: user.dobEncrypted ? decrypt(user.dobEncrypted) : undefined,
+    birthYear: user.birthYearEncrypted ? decrypt(user.birthYearEncrypted) : undefined,
     ssnLast4: user.ssnLast4Encrypted ? decrypt(user.ssnLast4Encrypted) : undefined,
   };
 }

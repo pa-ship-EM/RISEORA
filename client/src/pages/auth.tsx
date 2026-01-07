@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ShieldCheck, Loader2 } from "lucide-react";
+import { Link } from "wouter";
 import logoImage from "@/assets/logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +25,9 @@ const signupSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  consent: z.boolean().refine(val => val === true, {
+    message: "You must agree to the Terms of Service and Privacy Policy",
+  }),
 });
 
 export default function AuthPage() {
@@ -42,7 +47,7 @@ export default function AuthPage() {
 
   const signupForm = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "" },
+    defaultValues: { firstName: "", lastName: "", email: "", password: "", consent: false },
   });
 
   const onLoginError = () => {
@@ -232,6 +237,29 @@ export default function AuthPage() {
                     <p className="text-xs text-destructive font-medium">{signupForm.formState.errors.password.message}</p>
                   )}
                 </div>
+                <div className="flex items-start space-x-3 mt-4">
+                  <Checkbox
+                    id="consent"
+                    data-testid="checkbox-consent"
+                    checked={signupForm.watch("consent")}
+                    onCheckedChange={(checked) => signupForm.setValue("consent", checked === true)}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <label
+                      htmlFor="consent"
+                      className="text-sm text-muted-foreground cursor-pointer"
+                    >
+                      I agree to the{" "}
+                      <Link href="/legal" className="text-secondary hover:underline">Terms of Service</Link>,{" "}
+                      <Link href="/privacy" className="text-secondary hover:underline">Privacy Policy</Link>, and{" "}
+                      <Link href="/ai-disclosure" className="text-secondary hover:underline">AI Usage Disclosure</Link>.
+                      I consent to the collection and processing of my data as described.
+                    </label>
+                    {signupForm.formState.errors.consent && (
+                      <p className="text-xs text-destructive">{signupForm.formState.errors.consent.message}</p>
+                    )}
+                  </div>
+                </div>
                 <div className="mt-4 text-xs text-muted-foreground bg-secondary/10 p-3 rounded text-center space-y-1">
                   <div className="font-semibold text-secondary-foreground flex items-center justify-center gap-1">
                     <ShieldCheck className="h-3 w-3" /> Bank-level encryption
@@ -255,7 +283,7 @@ export default function AuthPage() {
       </Card>
       
       <p className="mt-8 text-xs text-center text-muted-foreground max-w-sm">
-        By continuing, you agree to our Terms of Service and Privacy Policy. Protected by reCAPTCHA.
+        By continuing, you agree to our <Link href="/legal" className="text-secondary hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-secondary hover:underline">Privacy Policy</Link>.
       </p>
     </div>
   );

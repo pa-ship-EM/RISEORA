@@ -56,7 +56,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     city: "",
     state: "",
     zip: "",
-    dob: "",
+    birthYear: "",
     ssnLast4: "",
     bureau: "",
     creditorName: "",
@@ -79,7 +79,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
 
   const handleNext = async () => {
     if (step === "safety-check") setStep("personal-info");
-    else if (step === "personal-info" && formData.address && formData.city && formData.state && formData.zip && formData.dob && formData.ssnLast4) {
+    else if (step === "personal-info" && formData.address && formData.city && formData.state && formData.zip && formData.birthYear && formData.ssnLast4) {
       // Save personal info to user profile
       setIsLoading(true);
       try {
@@ -88,7 +88,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
           city: formData.city,
           state: formData.state,
           zip: formData.zip,
-          dob: formData.dob,
+          birthYear: formData.birthYear,
           ssnLast4: formData.ssnLast4,
         });
         await refreshUser();
@@ -344,7 +344,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     return `${formData.firstName} ${formData.lastName}
 ${formData.address}
 ${formData.city}, ${formData.state} ${formData.zip}
-DOB: ${formData.dob}
+Birth Year: ${formData.birthYear}
 SSN: ***-**-${formData.ssnLast4}
 
 ${today}
@@ -610,14 +610,18 @@ ${formData.firstName} ${formData.lastName}`;
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth</Label>
+                <Label htmlFor="birthYear">Birth Year</Label>
                 <Input 
-                  id="dob" 
-                  type="date"
-                  value={formData.dob}
-                  onChange={(e) => setFormData({...formData, dob: e.target.value})}
+                  id="birthYear" 
+                  type="number"
+                  min="1900"
+                  max={new Date().getFullYear()}
+                  placeholder="1985"
+                  value={formData.birthYear}
+                  onChange={(e) => setFormData({...formData, birthYear: e.target.value})}
                   className="bg-white"
                 />
+                <p className="text-xs text-muted-foreground">For privacy, we only collect birth year</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ssn">Last 4 SSN</Label>
