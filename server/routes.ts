@@ -1360,6 +1360,102 @@ Respond in JSON format with this structure:
     }
   });
   
+  // GET /api/admin/users/:id - Get user details with subscription and disputes
+  app.get("/api/admin/users/:id", requireAdmin, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const subscription = await storage.getSubscriptionForUser(id);
+      const disputes = await storage.getDisputesForUser(id);
+      const auditLogs = await storage.getAuditLogsForUser(id);
+      
+      const { passwordHash: _, ...userWithoutPassword } = user;
+      
+      res.json({
+        ...userWithoutPassword,
+        subscription,
+        disputes,
+        recentActivity: auditLogs.slice(0, 10),
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // PUT /api/admin/users/:id/subscription - Update user subscription
+  app.put("/api/admin/users/:id/subscription", requireAdmin, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { tier } = req.body;
+      
+      const validTiers = ['FREE', 'SELF_STARTER', 'GROWTH', 'COMPLIANCE_PLUS'];
+      if (!tier || !validTiers.includes(tier)) {
+        return res.status(400).json({ message: `Invalid tier. Must be one of: ${validTiers.join(', ')}` });
+      }
+      
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      let subscription = await storage.getSubscriptionForUser(id);
+      
+      if (subscription) {
+        subscription = await storage.updateSubscription(id, { tier });
+      } else {
+        subscription = await storage.createSubscription({
+          userId: id,
+          tier,
+          status: 'ACTIVE',
+        });
+      }
+      
+      await storage.createAuditLog({
+        userId: req.session.userId!,
+        action: 'PROFILE_UPDATED',
+        resourceType: 'PROFILE',
+        resourceId: id,
+        details: JSON.stringify({ subscriptionTier: tier, updatedBy: req.session.userId }),
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+      
+      res.json(subscription);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // GET /api/admin/disputes/:id - Get single dispute with details
+  app.get("/api/admin/disputes/:id", requireAdmin, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const dispute = await storage.getDispute(id);
+      
+      if (!dispute) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      
+      const user = await storage.getUser(dispute.userId);
+      const evidence = await storage.getEvidenceForDispute(id);
+      const checklist = await storage.getChecklistForDispute(id);
+      
+      res.json({
+        ...dispute,
+        user: user ? { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } : null,
+        evidence,
+        checklist,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // GET /api/admin/disputes - Get all disputes
   app.get("/api/admin/disputes", requireAdmin, async (req, res, next) => {
     try {
