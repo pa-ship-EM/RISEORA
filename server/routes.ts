@@ -1492,14 +1492,46 @@ Respond in JSON format with this structure:
     });
   });
 
+  // GET /api/evidence - Get all evidence for current user
+  app.get("/api/evidence", requireAuth, async (req, res, next) => {
+    try {
+      const evidence = await storage.getAllEvidenceForUser(req.session.userId!);
+      res.json(evidence);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // GET /api/evidence/:id/thumbnail - Get thumbnail for evidence
+  app.get("/api/evidence/:id/thumbnail", requireAuth, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      
+      const evidence = await storage.getEvidenceById(id);
+      if (!evidence || evidence.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Evidence not found" });
+      }
+      
+      if (!evidence.mimeType.startsWith('image/')) {
+        return res.status(400).json({ message: "Not an image file" });
+      }
+      
+      res.sendFile(evidence.storagePath, { root: '.' });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // DELETE /api/evidence/:id - Delete evidence
   app.delete("/api/evidence/:id", requireAuth, async (req, res, next) => {
     try {
       const { id } = req.params;
       
-      // Get evidence to verify ownership and get file path
-      const evidenceList = await storage.getEvidenceForDispute(id);
-      // Actually we need to get evidence by ID - let's use a workaround
+      const evidence = await storage.getEvidenceById(id);
+      if (!evidence || evidence.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Evidence not found" });
+      }
+      
       const deleted = await storage.deleteEvidence(id);
       
       if (!deleted) {

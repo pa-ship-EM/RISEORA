@@ -68,6 +68,8 @@ export interface IStorage {
   getEvidenceForDispute(disputeId: string): Promise<DisputeEvidence[]>;
   createEvidence(evidence: InsertDisputeEvidence): Promise<DisputeEvidence>;
   deleteEvidence(id: string): Promise<boolean>;
+  getEvidenceById(id: string): Promise<DisputeEvidence | undefined>;
+  getAllEvidenceForUser(userId: string): Promise<DisputeEvidence[]>;
   
   // Audit log methods
   getAuditLogsForUser(userId: string): Promise<AuditLog[]>;
@@ -356,6 +358,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(disputeEvidence.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  async getEvidenceById(id: string): Promise<DisputeEvidence | undefined> {
+    const [evidence] = await db.select().from(disputeEvidence)
+      .where(eq(disputeEvidence.id, id));
+    return evidence || undefined;
+  }
+
+  async getAllEvidenceForUser(userId: string): Promise<DisputeEvidence[]> {
+    return await db.select().from(disputeEvidence)
+      .where(eq(disputeEvidence.userId, userId))
+      .orderBy(desc(disputeEvidence.createdAt));
   }
 
   // Audit log methods

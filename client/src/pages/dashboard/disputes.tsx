@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -204,14 +204,24 @@ const DOCUMENT_TYPES: { value: DocumentType; label: string; description: string 
   { value: 'OTHER', label: 'Other Document', description: 'Any other supporting evidence' },
 ];
 
+const REQUIRED_DOCUMENTS: { type: DocumentType; label: string; required: boolean }[] = [
+  { type: 'ID', label: 'Government ID', required: true },
+  { type: 'PROOF_OF_ADDRESS', label: 'Proof of Address', required: true },
+  { type: 'SSN_CARD', label: 'SSN Card (last 4 visible)', required: false },
+];
+
 function EvidenceManager({ disputeId }: { disputeId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<DocumentType>('OTHER');
   const [description, setDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const { data: evidence = [], isLoading } = useQuery<DisputeEvidence[]>({
     queryKey: ['/api/disputes', disputeId, 'evidence'],
@@ -222,26 +232,87 @@ function EvidenceManager({ disputeId }: { disputeId: string }) {
     },
   });
 
+  const uploadedTypes = new Set(evidence.map(e => e.documentType));
+  const missingRequired = REQUIRED_DOCUMENTS.filter(d => d.required && !uploadedTypes.has(d.type));
+  const completionPercent = Math.round(((REQUIRED_DOCUMENTS.filter(d => d.required).length - missingRequired.length) / REQUIRED_DOCUMENTS.filter(d => d.required).length) * 100);
+
+  const handleFileSelect = useCallback((file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ variant: 'destructive', title: 'File Too Large', description: 'Maximum file size is 10MB' });
+      return;
+    }
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only JPEG, PNG, GIF, and PDF are allowed' });
+      return;
+    }
+    setSelectedFile(file);
+    if (file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    } else {
+      setPreviewUrl(null);
+    }
+    setUploadOpen(true);
+  }, [toast]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelect(file);
+  }, [handleFileSelect]);
+
   const handleUpload = async () => {
     if (!selectedFile) return;
     
     setIsUploading(true);
+    setUploadProgress(0);
+    
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('documentType', selectedType);
       if (description) formData.append('description', description);
       
-      const res = await fetch(`/api/disputes/${disputeId}/evidence`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
+      const xhr = new XMLHttpRequest();
       
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Failed to upload');
-      }
+      await new Promise<void>((resolve, reject) => {
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            setUploadProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        });
+        
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            try {
+              const error = JSON.parse(xhr.responseText);
+              reject(new Error(error.message || 'Upload failed'));
+            } catch {
+              reject(new Error('Upload failed'));
+            }
+          }
+        });
+        
+        xhr.addEventListener('error', () => reject(new Error('Network error')));
+        
+        xhr.open('POST', `/api/disputes/${disputeId}/evidence`);
+        xhr.withCredentials = true;
+        xhr.send(formData);
+      });
       
       toast({ title: 'Document Uploaded', description: 'Your evidence has been attached to this dispute.' });
       queryClient.invalidateQueries({ queryKey: ['/api/disputes', disputeId, 'evidence'] });
@@ -249,10 +320,12 @@ function EvidenceManager({ disputeId }: { disputeId: string }) {
       setSelectedFile(null);
       setDescription('');
       setSelectedType('OTHER');
+      setPreviewUrl(null);
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -285,45 +358,120 @@ function EvidenceManager({ disputeId }: { disputeId: string }) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Paperclip className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">Evidence & Documents</span>
+          {evidence.length > 0 && (
+            <Badge variant="secondary" className="text-xs">{evidence.length}</Badge>
+          )}
         </div>
-        <Button 
-          size="sm" 
-          variant="outline" 
-          onClick={() => setUploadOpen(true)}
-          data-testid="button-upload-evidence"
-        >
-          <Upload className="h-3 w-3 mr-1" />
-          Upload
-        </Button>
       </div>
-      
+
+      <div 
+        className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+          isDragOver 
+            ? 'border-primary bg-primary/5' 
+            : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        data-testid="dropzone-evidence"
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.pdf"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFileSelect(file);
+            e.target.value = '';
+          }}
+          data-testid="input-evidence-file-hidden"
+        />
+        <Upload className={`h-8 w-8 mx-auto mb-2 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
+        <p className="text-sm font-medium">
+          {isDragOver ? 'Drop file here' : 'Drag & drop or click to upload'}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          JPEG, PNG, GIF, or PDF up to 10MB
+        </p>
+      </div>
+
+      {missingRequired.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <span className="text-sm font-medium text-amber-800">Required Documents</span>
+            </div>
+            <span className="text-xs text-amber-600">{completionPercent}% complete</span>
+          </div>
+          <Progress value={completionPercent} className="h-1.5" />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {REQUIRED_DOCUMENTS.filter(d => d.required).map((doc) => {
+              const hasDoc = uploadedTypes.has(doc.type);
+              return (
+                <Badge 
+                  key={doc.type}
+                  variant={hasDoc ? "default" : "outline"}
+                  className={`text-xs ${hasDoc ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'text-amber-700 border-amber-300'}`}
+                  data-testid={`badge-doc-${doc.type}`}
+                >
+                  {hasDoc ? <CheckCircle className="h-3 w-3 mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
+                  {doc.label}
+                </Badge>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Loading documents...</div>
       ) : evidence.length === 0 ? (
         <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-amber-500" />
-          No documents attached. Upload ID, proof of address, and other evidence.
+          No documents attached yet. Upload ID, proof of address, and other evidence.
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid gap-2">
           {evidence.map((doc) => (
             <div 
               key={doc.id} 
-              className="flex items-center justify-between p-2 bg-muted/30 rounded-md border"
+              className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
               data-testid={`evidence-${doc.id}`}
             >
               <div className="flex items-center gap-3">
-                {getFileIcon(doc.mimeType)}
+                {doc.mimeType.startsWith('image/') ? (
+                  <div className="w-10 h-10 rounded bg-muted flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={`/api/evidence/${doc.id}/thumbnail`} 
+                      alt={doc.fileName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                )}
                 <div>
-                  <p className="text-sm font-medium truncate max-w-[200px]">{doc.fileName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {DOCUMENT_TYPES.find(t => t.value === doc.documentType)?.label || doc.documentType} • {formatFileSize(doc.fileSize)}
-                  </p>
+                  <p className="text-sm font-medium truncate max-w-[180px]">{doc.fileName}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                      {DOCUMENT_TYPES.find(t => t.value === doc.documentType)?.label || doc.documentType}
+                    </Badge>
+                    <span>{formatFileSize(doc.fileSize)}</span>
+                  </div>
                 </div>
               </div>
               <Button 
@@ -333,15 +481,23 @@ function EvidenceManager({ disputeId }: { disputeId: string }) {
                 disabled={deleteMutation.isPending}
                 data-testid={`button-delete-evidence-${doc.id}`}
               >
-                <Trash2 className="h-3 w-3 text-destructive" />
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
           ))}
         </div>
       )}
 
-      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-        <DialogContent>
+      <Dialog open={uploadOpen} onOpenChange={(open) => {
+        setUploadOpen(open);
+        if (!open) {
+          setSelectedFile(null);
+          setPreviewUrl(null);
+          setDescription('');
+          setSelectedType('OTHER');
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Upload Evidence Document</DialogTitle>
             <DialogDescription>
@@ -349,6 +505,22 @@ function EvidenceManager({ disputeId }: { disputeId: string }) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {previewUrl && (
+              <div className="relative w-full h-40 bg-muted rounded-lg overflow-hidden">
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
+              </div>
+            )}
+            
+            {selectedFile && !previewUrl && (
+              <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                <FileText className="h-8 w-8 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Document Type</Label>
               <Select value={selectedType} onValueChange={(v) => setSelectedType(v as DocumentType)}>
@@ -358,26 +530,16 @@ function EvidenceManager({ disputeId }: { disputeId: string }) {
                 <SelectContent>
                   {DOCUMENT_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      <div className="flex items-center gap-2">
+                        {uploadedTypes.has(type.value) && <CheckCircle className="h-3 w-3 text-emerald-500" />}
+                        {type.label}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
                 {DOCUMENT_TYPES.find(t => t.value === selectedType)?.description}
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>File</Label>
-              <Input 
-                type="file" 
-                accept="image/*,.pdf"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                data-testid="input-evidence-file"
-              />
-              <p className="text-xs text-muted-foreground">
-                Accepts JPEG, PNG, GIF, or PDF up to 10MB
               </p>
             </div>
             
@@ -390,16 +552,37 @@ function EvidenceManager({ disputeId }: { disputeId: string }) {
                 data-testid="input-evidence-description"
               />
             </div>
+
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Uploading...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setUploadOpen(false)} disabled={isUploading}>
+              Cancel
+            </Button>
             <Button 
               onClick={handleUpload}
               disabled={!selectedFile || isUploading}
               data-testid="button-confirm-upload"
             >
-              {isUploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-              Upload Document
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Document
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
