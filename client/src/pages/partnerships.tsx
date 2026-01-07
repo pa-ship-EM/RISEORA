@@ -8,12 +8,18 @@ import {
   ArrowRight, 
   ShieldCheck, 
   Target,
-  Zap
+  Zap,
+  FileText,
+  Building2,
+  Heart,
+  Laptop,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
 import corporateMeetingImage from "@assets/generated_images/business_meeting_in_modern_corporate_office.png";
+import b2bPdf from "@assets/RiseOra_B2B_Overview_1767745468172.pdf";
 
 export default function BusinessPartnerships() {
   return (
@@ -30,55 +36,119 @@ export default function BusinessPartnerships() {
           
           <div className="container mx-auto px-4 relative z-10 text-center">
             <Badge className="bg-secondary text-slate-900 font-bold mb-6">RiseOra For Enterprise</Badge>
-            <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6">Bridging the Gap Between Education & Financial Success</h1>
+            <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6">RiseOra B2B Overview</h1>
             <p className="text-xl text-primary-foreground/80 max-w-3xl mx-auto leading-relaxed">
-              Partnering with educational institutions and employers to provide essential financial literacy and credit mastery tools to the next generation of the American workforce.
+              RiseOra provides educational technology and guided workflows that help organizations support financial literacy and consumer understanding of credit reporting processes. Our platform is designed for institutions that want compliant, transparent tools — not credit repair services.
             </p>
           </div>
         </section>
 
-        {/* Schools & Colleges */}
+        {/* What RiseOra Offers */}
         <section className="py-20 bg-background/50">
           <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 text-secondary font-bold uppercase tracking-wider text-sm">
-                  <GraduationCap className="h-5 w-5" /> Higher Education Partnerships
-                </div>
-                <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary">Empowering Students for Life After Graduation</h2>
-                <p className="text-lg text-muted-foreground">
-                  Many students graduate with degree in hand but zero knowledge of how credit impacts their ability to rent an apartment, buy a car, or even secure certain jobs.
-                </p>
-                <ul className="space-y-4">
-                  <li className="flex gap-3">
-                    <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />
-                    <p className="text-slate-700"><strong>Curriculum Integration:</strong> We provide modular credit education units for career centers and financial aid offices.</p>
-                  </li>
-                  <li className="flex gap-3">
-                    <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />
-                    <p className="text-slate-700"><strong>Group Licensing:</strong> Bulk access for student bodies to use our Dispute Wizard™ and educational portal.</p>
-                  </li>
-                  <li className="flex gap-3">
-                    <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />
-                    <p className="text-slate-700"><strong>Workshop Series:</strong> Live virtual workshops led by RiseOra credit masters for graduating seniors.</p>
-                  </li>
-                </ul>
-                <Button className="bg-primary text-white h-12 px-8">Inquire for Your Campus</Button>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-slate-50 border-none shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-secondary text-4xl font-serif">85%</CardTitle>
-                    <CardDescription>of graduates wish they had better financial education.</CardDescription>
-                  </CardHeader>
-                </Card>
-                <Card className="bg-primary text-white border-none shadow-lg mt-8">
-                  <CardHeader>
-                    <CardTitle className="text-secondary text-4xl font-serif">0</CardTitle>
-                    <CardDescription className="text-white/80">Barriers to financial entry with RiseOra Scholar.</CardDescription>
-                  </CardHeader>
-                </Card>
-              </div>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-4">What RiseOra Offers</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Comprehensive tools designed for compliance-first organizations
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
+              <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="text-center">
+                  <FileText className="h-10 w-10 text-secondary mx-auto mb-2" />
+                  <CardTitle className="text-lg">Guided Dispute Document Preparation</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="text-center">
+                  <Target className="h-10 w-10 text-secondary mx-auto mb-2" />
+                  <CardTitle className="text-lg">Educational Credit Analysis Dashboards</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="text-center">
+                  <ShieldCheck className="h-10 w-10 text-secondary mx-auto mb-2" />
+                  <CardTitle className="text-lg">Metro 2® Standards Education</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="text-center">
+                  <FileText className="h-10 w-10 text-secondary mx-auto mb-2" />
+                  <CardTitle className="text-lg">Secure Document Management & Audit Logs</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="text-center">
+                  <ShieldCheck className="h-10 w-10 text-secondary mx-auto mb-2" />
+                  <CardTitle className="text-lg">Compliance-First Architecture</CardTitle>
+                </CardHeader>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Who Uses RiseOra */}
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-4">Who Uses RiseOra</h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+              <Card className="border-t-4 border-t-secondary shadow-sm">
+                <CardHeader>
+                  <GraduationCap className="h-10 w-10 text-secondary mb-2" />
+                  <CardTitle>Universities & Financial Education Programs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Integrate credit education into student success initiatives and financial literacy curricula.</p>
+                </CardContent>
+              </Card>
+              <Card className="border-t-4 border-t-primary shadow-sm">
+                <CardHeader>
+                  <Briefcase className="h-10 w-10 text-primary mb-2" />
+                  <CardTitle>Employers & HR Benefit Providers</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Offer financial wellness benefits that help employees understand and manage their credit.</p>
+                </CardContent>
+              </Card>
+              <Card className="border-t-4 border-t-secondary shadow-sm">
+                <CardHeader>
+                  <Heart className="h-10 w-10 text-secondary mb-2" />
+                  <CardTitle>Nonprofits & Community Organizations</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Empower underserved communities with accessible credit education tools.</p>
+                </CardContent>
+              </Card>
+              <Card className="border-t-4 border-t-primary shadow-sm">
+                <CardHeader>
+                  <Laptop className="h-10 w-10 text-primary mb-2" />
+                  <CardTitle>Fintech & Compliance-Focused Partners</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Integrate compliant credit education into your existing platforms and services.</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Compliance First */}
+        <section className="py-20 bg-slate-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <Card className="bg-emerald-50 border-emerald-200 shadow-lg">
+                <CardHeader className="text-center pb-4">
+                  <ShieldCheck className="h-16 w-16 text-emerald-600 mx-auto mb-4" />
+                  <CardTitle className="text-2xl md:text-3xl font-serif text-emerald-800">Compliance-First by Design</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-lg text-emerald-700 leading-relaxed max-w-2xl mx-auto">
+                    RiseOra does not submit disputes, provide legal advice, or guarantee outcomes. All tools are educational and user-directed. Platform language, workflows, and outputs are designed to align with consumer protection expectations and payment processor requirements.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
@@ -99,7 +169,7 @@ export default function BusinessPartnerships() {
                   <FeatureCard 
                     icon={<ShieldCheck className="h-6 w-6" />}
                     title="Employee Retention"
-                    description="Helping employees fix their credit leads to home ownership and stability, which in turn reduces workforce turnover."
+                    description="Helping employees understand their credit reports leads to home ownership and stability, which in turn reduces workforce turnover."
                   />
                   <FeatureCard 
                     icon={<Zap className="h-6 w-6" />}
@@ -128,13 +198,16 @@ export default function BusinessPartnerships() {
                     </p>
                     <ul className="space-y-3 text-sm">
                       <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-secondary" /> Per-Seat Licensing
+                        <CheckCircle className="h-4 w-4 text-secondary" /> White-labeled portals
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-secondary" /> Bulk Enrollment Discounts
+                        <CheckCircle className="h-4 w-4 text-secondary" /> Employee benefit integrations
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-secondary" /> Custom White-Label Portals
+                        <CheckCircle className="h-4 w-4 text-secondary" /> Campus & community deployment
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-secondary" /> API & data integrations
                       </li>
                     </ul>
                     <Button className="bg-secondary text-slate-900 font-bold w-full md:w-auto px-8">Contact Sales</Button>
@@ -164,7 +237,11 @@ export default function BusinessPartnerships() {
               </p>
               <div className="flex flex-col md:flex-row gap-4 justify-center">
                 <Button className="bg-secondary text-slate-900 font-bold h-14 px-10 text-lg">Schedule a Demo</Button>
-                <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 h-14 px-10 text-lg">Download B2B PDF</Button>
+                <a href={b2bPdf} download="RiseOra_B2B_Overview.pdf">
+                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 h-14 px-10 text-lg">
+                    <Download className="h-5 w-5 mr-2" /> Download B2B PDF
+                  </Button>
+                </a>
               </div>
             </Card>
           </div>
