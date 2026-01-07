@@ -14,6 +14,7 @@ import { isValidTransition, getTargetStatus, getInvestigationDeadlineDays, type 
 import { canCreateDispute, isFirstDispute, escalationAllowed } from "@shared/guards";
 import { AFFILIATES, type AffiliateSurface } from "./affiliates";
 import { getEligibleAffiliates } from "./affiliateEligibility";
+import { assertAffiliateAllowed } from "./affiliateGuards";
 
 // Configure multer for PDF uploads (in memory)
 const upload = multer({
@@ -1547,6 +1548,12 @@ Respond in JSON format with this structure:
       const validSurfaces: AffiliateSurface[] = ["dashboard", "resources", "dispute_wizard", "onboarding", "email"];
       if (!validSurfaces.includes(surface as AffiliateSurface)) {
         return res.status(400).json({ error: `Invalid surface. Must be one of: ${validSurfaces.join(", ")}` });
+      }
+
+      try {
+        assertAffiliateAllowed(surface);
+      } catch (err: any) {
+        return res.status(403).json({ error: err.message });
       }
 
       let userContext = null;
