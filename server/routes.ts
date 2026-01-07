@@ -15,6 +15,7 @@ import { canCreateDispute, isFirstDispute, escalationAllowed } from "@shared/gua
 import { AFFILIATES, type AffiliateSurface } from "./affiliates";
 import { getEligibleAffiliates } from "./affiliateEligibility";
 import { assertAffiliateAllowed } from "./affiliateGuards";
+import { resolveAffiliatesForDispute } from "./resolveAffiliatesForDispute";
 
 // Configure multer for PDF uploads (in memory)
 const upload = multer({
@@ -1579,6 +1580,45 @@ Respond in JSON format with this structure:
       res.json({
         surface,
         affiliates: eligible.map(a => ({
+          id: a.id,
+          name: a.name,
+          category: a.category,
+          description: a.description,
+          url: a.url
+        }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // GET /api/affiliates/dispute/:disputeId - Get eligible affiliates for a specific dispute based on its state
+  app.get("/api/affiliates/dispute/:disputeId", requireAuth, async (req, res, next) => {
+    try {
+      const { disputeId } = req.params;
+      
+      const dispute = await storage.getDispute(disputeId);
+      if (!dispute) {
+        return res.status(404).json({ error: "Dispute not found" });
+      }
+      
+      if (dispute.userId !== req.session.userId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const { DisputeStatus } = await import("@shared/disputeStates");
+      const disputeStatus = dispute.status as keyof typeof DisputeStatus;
+      
+      if (!Object.values(DisputeStatus).includes(disputeStatus as any)) {
+        return res.status(400).json({ error: "Invalid dispute status" });
+      }
+
+      const affiliates = resolveAffiliatesForDispute(disputeStatus as any);
+
+      res.json({
+        disputeId,
+        disputeStatus: dispute.status,
+        affiliates: affiliates.map(a => ({
           id: a.id,
           name: a.name,
           category: a.category,
