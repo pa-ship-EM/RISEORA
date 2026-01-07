@@ -58,6 +58,15 @@ Preferred communication style: Simple, everyday language.
 - **Default Checklist**: 7-step submission checklist auto-created for each dispute
 - **Notification Scheduler**: Background job checks for approaching deadlines and creates AI-generated reminders
 
+### Dynamic Affiliate System
+- **Key Safety Point**: Affiliates are never hard-coded into pages - resolved dynamically by user state + surface
+- **Affiliate Data**: `server/affiliates.ts` - centralized affiliate configurations with eligibility criteria
+- **Eligibility Logic**: `server/affiliateEligibility.ts` - filters by tier, state, active disputes
+- **API Endpoint**: `GET /api/affiliates?surface=<surface>` - returns eligible affiliates for a given surface
+- **Frontend Hook**: `useAffiliates(surface)` - React hook for consuming affiliate data
+- **Surfaces**: dashboard, resources, dispute_wizard, onboarding, email
+- **Filtering Criteria**: minTier, excludeStates, requiresActiveDispute, active status
+
 ### Project Structure
 ```
 ├── client/src/          # React frontend
