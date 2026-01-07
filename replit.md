@@ -60,14 +60,17 @@ Preferred communication style: Simple, everyday language.
 
 ### Dynamic Affiliate System
 - **Key Safety Point**: Affiliates are never hard-coded into pages - resolved dynamically by user state + surface
+- **Key Compliance Rule**: Affiliates only appear after value has been delivered, never before
 - **Affiliate Data**: `server/affiliates.ts` - centralized affiliate configurations with eligibility criteria
 - **Eligibility Logic**: `server/affiliateEligibility.ts` - filters by tier, state, active disputes
+- **State Matrix**: `server/affiliateStateMatrix.ts` - maps dispute states to allowed affiliate surfaces
 - **Guard Logic**: `server/affiliateGuards.ts` - hard stop enforcement blocking CHECKOUT, PAYMENT_CONFIRMATION, BILLING_EMAIL, UPGRADE_MODAL
 - **API Endpoint**: `GET /api/affiliates?surface=<surface>` - returns eligible affiliates for a given surface
 - **Frontend Hook**: `useAffiliates(surface)` - React hook for consuming affiliate data
 - **Allowed Surfaces**: dashboard, resources, dispute_wizard, onboarding, email
 - **Blocked Surfaces**: CHECKOUT, PAYMENT_CONFIRMATION, BILLING_EMAIL, UPGRADE_MODAL (403 error)
 - **Filtering Criteria**: minTier, excludeStates, requiresActiveDispute, active status
+- **State-Based Surfaces**: WORKFLOW_COMPLETION (after letter generated), EDUCATION_FOLLOWUP (after mailed), RESOURCE_PAGE (after resolved)
 
 ### Project Structure
 ```
