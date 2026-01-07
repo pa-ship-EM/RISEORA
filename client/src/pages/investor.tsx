@@ -31,8 +31,8 @@ export default function InvestorOverview() {
                 <p className="text-slate-600 text-lg leading-relaxed mb-4">
                   Traditional credit repair is broken. Consumers pay high monthly fees for "done-for-you" services that lack transparency, offer no guarantee, and leave them uneducated about how to maintain their results.
                 </p>
-                <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20 text-destructive-foreground">
-                  <p className="font-semibold">Current Industry churn is &gt;40% due to lack of trust.</p>
+                <div className="p-4 bg-red-100 rounded-lg border border-red-300">
+                  <p className="font-semibold text-red-800">Current Industry churn is &gt;40% due to lack of trust.</p>
                 </div>
               </div>
               <div>
