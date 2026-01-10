@@ -59,6 +59,10 @@ export const disputes = pgTable("disputes", {
   // Metro 2 compliance
   metro2Compliant: boolean("metro2_compliant").notNull().default(true),
   
+  // 5-Step Template Tracking
+  templateStage: text("template_stage").notNull().default("INVESTIGATION_REQUEST"), // INVESTIGATION_REQUEST, PERSONAL_INFO_REMOVER, VALIDATION_OF_DEBT, FACTUAL_LETTER, TERMINATION_LETTER, AI_ESCALATION
+  templateStageStartedAt: timestamp("template_stage_started_at"),
+  
   // Generated letter content
   letterContent: text("letter_content"),
   

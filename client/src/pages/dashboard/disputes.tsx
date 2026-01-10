@@ -16,7 +16,7 @@ import {
   FileText, Plus, Clock, CheckCircle, AlertCircle, Loader2, 
   ChevronDown, ChevronRight, Mail, Package, CalendarDays,
   Shield, FileCheck, Truck, Bell, ExternalLink, Sparkles, Scale, ListChecks, Copy, XCircle,
-  Upload, Paperclip, Trash2, Image, File, AlertTriangle
+  Upload, Paperclip, Trash2, Image, File, AlertTriangle, ArrowRight, RefreshCw
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1006,6 +1006,181 @@ function EscalationGuidance({ dispute }: { dispute: Dispute }) {
   );
 }
 
+const TEMPLATE_STAGES = [
+  { id: 'INVESTIGATION_REQUEST', label: 'Investigation Request', description: 'Initial dispute letter requesting investigation under FCRA' },
+  { id: 'PERSONAL_INFO_REMOVER', label: 'Personal Info Remover', description: 'Request removal of outdated personal information' },
+  { id: 'VALIDATION_OF_DEBT', label: 'Validation of Debt', description: 'Demand verification that the debt is valid' },
+  { id: 'FACTUAL_LETTER', label: 'Factual Dispute', description: 'Dispute with specific factual errors identified' },
+  { id: 'TERMINATION_LETTER', label: 'Termination Letter', description: 'Final demand for removal citing violations' },
+  { id: 'AI_ESCALATION', label: 'AI Escalation', description: 'AI-powered escalation letter' },
+] as const;
+
+function TemplateStageTracker({ dispute }: { dispute: Dispute }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  
+  const currentStage = (dispute as any).templateStage || 'INVESTIGATION_REQUEST';
+  const currentIndex = TEMPLATE_STAGES.findIndex(s => s.id === currentStage);
+  const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+  
+  const generateLetter = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/disputes/${dispute.id}/generate-letter`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to generate letter');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setError(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/disputes'] });
+      toast({ 
+        title: "Letter Generated", 
+        description: `${data.templateInfo.title} has been generated.` 
+      });
+    },
+    onError: (err: Error) => {
+      setError(err.message);
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const advanceStage = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/disputes/${dispute.id}/advance-stage`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to advance stage');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setError(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/disputes'] });
+      toast({ 
+        title: "Stage Advanced", 
+        description: `Now at: ${data.templateInfo.title}` 
+      });
+    },
+    onError: (err: Error) => {
+      setError(err.message);
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const isLastStage = safeCurrentIndex >= TEMPLATE_STAGES.length - 1;
+
+  return (
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50 border rounded-lg p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold text-slate-800 flex items-center gap-2">
+          <ListChecks className="h-4 w-4 text-primary" />
+          5-Step Dispute Template Process
+        </h4>
+        <Badge variant="outline" className="bg-white">
+          Step {safeCurrentIndex + 1} of {TEMPLATE_STAGES.length}
+        </Badge>
+      </div>
+      
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-2 rounded-md flex items-center gap-2">
+          <AlertCircle className="h-4 w-4" />
+          {error}
+        </div>
+      )}
+      
+      <div className="flex items-center gap-1 overflow-x-auto pb-2">
+        {TEMPLATE_STAGES.map((stage, index) => {
+          const isCompleted = index < safeCurrentIndex;
+          const isCurrent = index === safeCurrentIndex;
+          const isPending = index > safeCurrentIndex;
+          
+          return (
+            <div key={stage.id} className="flex items-center">
+              <div 
+                className={`flex flex-col items-center min-w-[80px] ${isCurrent ? 'scale-105' : ''}`}
+                data-testid={`stage-${stage.id}`}
+              >
+                <div 
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
+                    ${isCompleted ? 'bg-emerald-500 text-white' : 
+                      isCurrent ? 'bg-primary text-white ring-2 ring-primary/30' : 
+                      'bg-slate-200 text-slate-500'}`}
+                >
+                  {isCompleted ? <CheckCircle className="h-4 w-4" /> : index + 1}
+                </div>
+                <span className={`text-[10px] text-center mt-1 max-w-[70px] leading-tight
+                  ${isCurrent ? 'font-medium text-primary' : 'text-muted-foreground'}`}>
+                  {stage.label.split(' ').slice(0, 2).join(' ')}
+                </span>
+              </div>
+              {index < TEMPLATE_STAGES.length - 1 && (
+                <div className={`w-6 h-0.5 mx-1 ${isCompleted ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      
+      <div className="bg-white rounded-lg p-3 border">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h5 className="font-medium text-slate-800">
+              {TEMPLATE_STAGES[safeCurrentIndex]?.label || 'Unknown'}
+            </h5>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {TEMPLATE_STAGES[safeCurrentIndex]?.description || ''}
+            </p>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => generateLetter.mutate()}
+              disabled={generateLetter.isPending}
+              data-testid={`button-generate-letter-${dispute.id}`}
+            >
+              {generateLetter.isPending ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3 mr-1" />
+              )}
+              Generate
+            </Button>
+            {!isLastStage && (
+              <Button 
+                size="sm"
+                onClick={() => advanceStage.mutate()}
+                disabled={advanceStage.isPending || !dispute.letterContent}
+                data-testid={`button-advance-stage-${dispute.id}`}
+              >
+                {advanceStage.isPending ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-3 w-3 mr-1" />
+                )}
+                Next Step
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <p className="text-xs text-muted-foreground">
+        Work through each step in order. Generate a letter, mail it, wait for response, then advance to the next step if needed.
+      </p>
+    </div>
+  );
+}
+
 function DisputeCard({ dispute }: { dispute: Dispute }) {
   const [isOpen, setIsOpen] = useState(false);
   const [viewLetterOpen, setViewLetterOpen] = useState(false);
@@ -1130,6 +1305,8 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
             )}
             
             <DeadlineCountdown dispute={dispute} />
+            
+            <TemplateStageTracker dispute={dispute} />
             
             <DisputeChecklist disputeId={dispute.id} />
             

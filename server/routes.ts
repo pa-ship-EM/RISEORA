@@ -11,6 +11,7 @@ import OpenAI from "openai";
 import multer from "multer";
 import { PDFParse } from "pdf-parse";
 import { isValidTransition, getTargetStatus, getInvestigationDeadlineDays, type DisputeAction } from "@shared/disputeTransitions";
+import { generateDisputeLetter, getNextTemplateStage, TEMPLATE_DESCRIPTIONS, type DisputeTemplateStage, type DisputeTemplateData } from "@shared/disputeTemplates";
 import { canCreateDispute, isFirstDispute, escalationAllowed } from "@shared/guards";
 import { AFFILIATES, type AffiliateSurface } from "./affiliates";
 import { getEligibleAffiliates } from "./affiliateEligibility";
@@ -583,6 +584,134 @@ export async function registerRoutes(
       } else {
         res.status(500).json({ message: "Failed to delete dispute" });
       }
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // ========== DISPUTE TEMPLATE ROUTES ==========
+  
+  // GET /api/dispute-templates - Get template stage info
+  app.get("/api/dispute-templates", requireAuth, async (req, res) => {
+    res.json(TEMPLATE_DESCRIPTIONS);
+  });
+  
+  // POST /api/disputes/:id/generate-letter - Generate letter from current template stage
+  app.post("/api/disputes/:id/generate-letter", requireAuth, async (req, res, next) => {
+    try {
+      const dispute = await storage.getDispute(req.params.id);
+      if (!dispute) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      if (dispute.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Get user info for letter
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Decrypt user data for letter
+      const decryptedUser = decryptUserData(user);
+      
+      // Build template data
+      const templateData: DisputeTemplateData = {
+        fullName: `${decryptedUser.firstName} ${decryptedUser.lastName}`,
+        address: decryptedUser.addressEncrypted || '',
+        city: decryptedUser.cityEncrypted || '',
+        state: decryptedUser.stateEncrypted || '',
+        zip: decryptedUser.zipEncrypted || '',
+        ssn4: decryptedUser.ssnLast4Encrypted || '',
+        birthYear: decryptedUser.birthYearEncrypted || '',
+        creditorName: dispute.creditorName,
+        accountNumber: dispute.accountNumber || undefined,
+        bureau: dispute.bureau,
+        disputeReason: dispute.disputeReason,
+        customReason: dispute.customReason || undefined,
+      };
+      
+      // Get current template stage
+      const currentStage = (dispute.templateStage as DisputeTemplateStage) || 'INVESTIGATION_REQUEST';
+      
+      // Generate letter using template
+      let letterContent: string;
+      
+      if (currentStage === 'AI_ESCALATION') {
+        // Use AI for escalation
+        const systemPrompt = `You are a credit dispute expert. Generate an escalation letter for a consumer dispute based on the dispute history and current status. The letter should be professional, cite FCRA rights, and demand resolution. Do not guarantee outcomes.`;
+        
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Generate an escalation dispute letter for:
+Creditor: ${dispute.creditorName}
+Account: ${dispute.accountNumber || 'Unknown'}
+Bureau: ${dispute.bureau}
+Dispute Reason: ${dispute.disputeReason}
+Additional Details: ${dispute.customReason || 'None'}
+User Name: ${templateData.fullName}
+Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${templateData.zip}` }
+          ],
+          max_tokens: 1500,
+        });
+        
+        letterContent = response.choices[0]?.message?.content || '';
+      } else {
+        letterContent = generateDisputeLetter(currentStage, templateData);
+      }
+      
+      // Update dispute with generated letter
+      await storage.updateDispute(dispute.id, { 
+        letterContent,
+        templateStageStartedAt: new Date(),
+      });
+      
+      res.json({ 
+        letterContent,
+        templateStage: currentStage,
+        templateInfo: TEMPLATE_DESCRIPTIONS[currentStage],
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // POST /api/disputes/:id/advance-stage - Advance to next template stage
+  app.post("/api/disputes/:id/advance-stage", requireAuth, async (req, res, next) => {
+    try {
+      const dispute = await storage.getDispute(req.params.id);
+      if (!dispute) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      if (dispute.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const currentStage = (dispute.templateStage as DisputeTemplateStage) || 'INVESTIGATION_REQUEST';
+      const nextStage = getNextTemplateStage(currentStage);
+      
+      if (!nextStage) {
+        return res.status(400).json({ 
+          message: "Already at final stage. Consider escalating or closing the dispute.",
+          currentStage,
+        });
+      }
+      
+      const updated = await storage.updateDispute(dispute.id, {
+        templateStage: nextStage,
+        templateStageStartedAt: new Date(),
+        // Keep existing letter content - user can regenerate with new template when ready
+      });
+      
+      res.json({
+        dispute: updated,
+        previousStage: currentStage,
+        currentStage: nextStage,
+        templateInfo: TEMPLATE_DESCRIPTIONS[nextStage],
+      });
     } catch (error) {
       next(error);
     }
