@@ -53,6 +53,17 @@ Preferred communication style: Simple, everyday language.
 - **AI Notifications**: OpenAI-powered reminder generation for dispute deadlines
 - **AI Escalation Guidance**: When disputes are escalated, GROWTH/COMPLIANCE_PLUS users can generate AI-powered educational guidance including FCRA rights, next steps, and follow-up templates (stored in `dispute_ai_guidance` table)
 
+### 5-Step Dispute Template System
+- **Template Location**: `shared/disputeTemplates.ts` - all 5 FCRA-compliant letter templates
+- **Template Stages**: INVESTIGATION_REQUEST → PERSONAL_INFO_REMOVER → VALIDATION_OF_DEBT → FACTUAL_LETTER → TERMINATION_LETTER → AI_ESCALATION
+- **Database Fields**: `templateStage` and `templateStageStartedAt` track current position in 5-step process
+- **API Endpoints**: 
+  - GET /api/dispute-templates - Template stage info
+  - POST /api/disputes/:id/generate-letter - Generate letter from current template
+  - POST /api/disputes/:id/advance-stage - Move to next template stage
+- **Compliance**: All templates use educational language without outcome guarantees
+- **AI Escalation**: Final stage uses OpenAI to generate custom escalation letters
+
 ### Dispute Progress Tracking
 - **Database Tables**: `dispute_checklists`, `notifications`, `user_notification_settings`
 - **Progress Stages**: GENERATED → MAILED → DELIVERED → INVESTIGATION → RESPONSE → RESOLVED
