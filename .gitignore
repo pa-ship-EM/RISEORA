@@ -1,6 +1,48 @@
+# Dependencies
 node_modules
+
+# Build output
 dist
-.DS_Store
 server/public
+
+# Environment variables (CRITICAL - never commit these)
+.env
+.env.local
+.env.production
+.env.development
+
+# Replit specific
+.replit
+replit.nix
+.config/
+.cache/
+.upm/
+
+# IDE and OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Vite
 vite.config.ts.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Archives
 *.tar.gz
+*.zip
+
+# Uploaded files (if storing locally)
+uploads/
+attached_assets/
+
+# Database files (if using SQLite locally)
+*.sqlite
+*.db
+
+# Test coverage
+coverage/
