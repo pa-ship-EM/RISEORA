@@ -618,13 +618,13 @@ export async function registerRoutes(
       
       // Build template data
       const templateData: DisputeTemplateData = {
-        fullName: `${decryptedUser.firstName} ${decryptedUser.lastName}`,
-        address: decryptedUser.addressEncrypted || '',
-        city: decryptedUser.cityEncrypted || '',
-        state: decryptedUser.stateEncrypted || '',
-        zip: decryptedUser.zipEncrypted || '',
-        ssn4: decryptedUser.ssnLast4Encrypted || '',
-        birthYear: decryptedUser.birthYearEncrypted || '',
+        fullName: `${user.firstName} ${user.lastName}`,
+        address: decryptedUser.address || '',
+        city: decryptedUser.city || '',
+        state: decryptedUser.state || '',
+        zip: decryptedUser.zip || '',
+        ssn4: decryptedUser.ssnLast4 || '',
+        birthYear: decryptedUser.birthYear || '',
         creditorName: dispute.creditorName,
         accountNumber: dispute.accountNumber || undefined,
         bureau: dispute.bureau,
