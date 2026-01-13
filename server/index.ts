@@ -10,6 +10,11 @@ import { startNotificationScheduler } from "./notification-scheduler";
 const app = express();
 const httpServer = createServer(app);
 
+// FORCE HEALTH CHECK - must be first before any middleware
+app.get("/", (_req, res) => {
+  res.status(200).send("OK");
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
