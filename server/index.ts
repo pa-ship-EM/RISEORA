@@ -4,6 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import cors from "cors";
 import { startNotificationScheduler } from "./notification-scheduler";
 
 const app = express();
@@ -15,8 +16,73 @@ declare module "http" {
   }
 }
 
+// Trust proxy for secure cookies behind reverse proxy (Replit)
+app.set("trust proxy", 1);
+
+// CORS configuration for external device access
+const allowedOrigins = [
+  "https://riseora.org",
+  "https://www.riseora.org",
+  process.env.CLIENT_URL,
+].filter(Boolean) as string[];
+
+// Trusted domain suffixes (verified via URL parsing)
+const trustedDomainSuffixes = [
+  ".replit.dev",
+  ".replit.app",
+];
+
+function isAllowedOrigin(origin: string): boolean {
+  // Check exact matches in allowlist
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+  
+  // Parse origin to validate domain properly
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname;
+    
+    // Allow localhost for development
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return true;
+    }
+    
+    // Check trusted domain suffixes using proper endsWith validation
+    for (const suffix of trustedDomainSuffixes) {
+      if (hostname.endsWith(suffix) || hostname === suffix.slice(1)) {
+        return true;
+      }
+    }
+  } catch {
+    // Invalid URL, reject
+    return false;
+  }
+  
+  return false;
+}
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, same-origin requests)
+      if (!origin) return callback(null, true);
+      
+      if (isAllowedOrigin(origin)) {
+        return callback(null, true);
+      }
+      
+      // Reject unknown origins
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
+
 // Session configuration
 const MemStore = MemoryStore(session);
+const isProduction = process.env.NODE_ENV === "production";
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "riseora-dev-secret-change-in-production",
@@ -26,10 +92,10 @@ app.use(
       checkPeriod: 86400000, // 24 hours
     }),
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: "lax",
+      sameSite: isProduction ? "none" : "lax", // 'none' required for cross-origin in production
     },
   }),
 );
