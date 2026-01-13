@@ -19,6 +19,23 @@ declare module "http" {
 // Trust proxy for secure cookies behind reverse proxy (Replit)
 app.set("trust proxy", 1);
 
+// Health check endpoint - must be early in middleware chain for fast response
+app.get("/health", (_req, res) => {
+  res.status(200).send("OK");
+});
+
+// Health check for root path - only for non-browser requests (deployment health checks)
+app.use((req, res, next) => {
+  if (req.path === "/" && req.method === "GET") {
+    const acceptHeader = req.get("Accept") || "";
+    // If not requesting HTML (likely a health check), return 200 immediately
+    if (!acceptHeader.includes("text/html")) {
+      return res.status(200).send("OK");
+    }
+  }
+  next();
+});
+
 // CORS configuration for external device access
 const allowedOrigins = [
   "https://riseora.org",
