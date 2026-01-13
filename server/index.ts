@@ -190,13 +190,12 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  // Start the notification scheduler for AI-powered reminders
-  startNotificationScheduler();
+  // Non-negotiable port binding
+  const PORT = Number(process.env.PORT) || 5000;
+  
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Listening on ${PORT}`);
+    // Start the notification scheduler for AI-powered reminders
+    startNotificationScheduler();
+  });
 })();
-
-// Non-negotiable port binding at the bottom
-const PORT = Number(process.env.PORT) || 5000;
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Listening on ${PORT}`);
-});
