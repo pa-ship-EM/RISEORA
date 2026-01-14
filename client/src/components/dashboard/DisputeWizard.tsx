@@ -405,6 +405,10 @@ ${formData.firstName} ${formData.lastName}`;
               </li>
               <li className="flex gap-2">
                 <div className="h-5 w-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-[10px] font-bold shrink-0">3</div>
+                <span><strong>Add supporting documents from your credit report</strong> — highlight the disputed accounts.</span>
+              </li>
+              <li className="flex gap-2">
+                <div className="h-5 w-5 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-[10px] font-bold shrink-0">4</div>
                 <span>Mail via Certified Mail to the bureau.</span>
               </li>
             </ul>

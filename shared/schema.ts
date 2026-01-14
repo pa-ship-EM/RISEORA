@@ -288,6 +288,7 @@ export const DEFAULT_DISPUTE_CHECKLIST = [
   { label: "Gather ID documents", description: "Make copies of your driver's license or state ID" },
   { label: "Include proof of address", description: "Utility bill, bank statement, or lease agreement" },
   { label: "Include partial SSN proof", description: "Copy of SSN card with first 5 digits redacted" },
+  { label: "Add supporting documents from credit report", description: "Include highlighted pages from your credit report showing the disputed accounts" },
   { label: "Send via Certified Mail", description: "Use USPS Certified Mail with Return Receipt Requested" },
   { label: "Save tracking number", description: "Record your certified mail tracking number" },
   { label: "Set calendar reminder", description: "Mark 30 days from mail date for follow-up" },
