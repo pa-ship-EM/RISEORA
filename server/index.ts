@@ -3,9 +3,10 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import session from "express-session";
-import MemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
 import cors from "cors";
 import { startNotificationScheduler } from "./notification-scheduler";
+import { pool } from "./db";
 
 const app = express();
 const httpServer = createServer(app);
@@ -96,8 +97,8 @@ app.use(
   })
 );
 
-// Session configuration
-const MemStore = MemoryStore(session);
+// Session configuration with PostgreSQL store
+const PgSession = connectPgSimple(session);
 const isProduction = process.env.NODE_ENV === "production";
 
 app.use(
@@ -105,8 +106,10 @@ app.use(
     secret: process.env.SESSION_SECRET || "riseora-dev-secret-change-in-production",
     resave: false,
     saveUninitialized: false,
-    store: new MemStore({
-      checkPeriod: 86400000, // 24 hours
+    store: new PgSession({
+      pool: pool,
+      tableName: "user_sessions",
+      createTableIfMissing: true,
     }),
     cookie: {
       secure: isProduction,
