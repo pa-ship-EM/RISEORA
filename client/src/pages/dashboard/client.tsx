@@ -26,7 +26,6 @@ import {
   CalendarDays,
   ArrowRight
 } from "lucide-react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAuth } from "@/hooks/use-auth";
 import { DisputeWizard } from "@/components/dashboard/DisputeWizard";
 import DashboardTools from "@/components/dashboard/DashboardTools";
@@ -41,15 +40,6 @@ import { SubscriptionGate } from "@/components/subscription/SubscriptionGate";
 import { useSubscription } from "@/hooks/use-subscription";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getDisputeStage, getStageLabel } from "@/hooks/use-dispute-progress";
-
-const creditData = [
-  { month: "Jan", score: 580 },
-  { month: "Feb", score: 592 },
-  { month: "Mar", score: 605 },
-  { month: "Apr", score: 610 },
-  { month: "May", score: 625 },
-  { month: "Jun", score: 642 },
-];
 
 const QUICK_TIPS = [
   { icon: Mail, title: "Send via Certified Mail", desc: "Always use USPS Certified Mail with Return Receipt" },
@@ -278,50 +268,6 @@ export default function ClientDashboard() {
               </Card>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="col-span-1 lg:col-span-2 shadow-sm border-slate-200 bg-white">
-                <CardHeader className="p-4 md:p-6">
-                  <CardTitle className="text-lg md:text-xl">Credit Score History</CardTitle>
-                  <CardDescription>Track your score improvements over time</CardDescription>
-                </CardHeader>
-                <CardContent className="p-2 md:p-6 pt-0">
-                  <div className="h-[250px] md:h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={creditData}>
-                        <defs>
-                          <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis domain={[500, 850]} stroke="#888888" fontSize={12} tickLine={false} axisLine={false} hide={window.innerWidth < 768} />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#colorScore)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-sm border-slate-200 bg-primary text-white">
-                <CardHeader>
-                  <CardTitle className="text-white">Current Score</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center">
-                  <div className="relative flex items-center justify-center w-32 h-32 rounded-full border-8 border-secondary/30 mb-4 animate-in zoom-in duration-700">
-                    <div className="text-4xl font-bold font-serif text-white">642</div>
-                  </div>
-                  <div className="w-full space-y-2">
-                    <div className="flex justify-between text-sm text-white/80">
-                      <span>Progress</span>
-                      <span>+62 pts</span>
-                    </div>
-                    <Progress value={65} className="h-2 bg-white/20" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
 
           <TabsContent value="disputes" className="space-y-6 outline-none">
