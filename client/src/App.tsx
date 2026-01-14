@@ -31,6 +31,7 @@ import AdminClientsPage from "@/pages/admin/clients";
 import AdminAffiliatesPage from "@/pages/admin/affiliates";
 import AdminDisputesPage from "@/pages/admin/disputes";
 import AdminCompliancePage from "@/pages/admin/compliance";
+import AdminSettingsPage from "@/pages/admin/settings";
 import ActivityPage from "@/pages/dashboard/activity";
 import CreditReportsPage from "@/pages/dashboard/credit-reports";
 import AnalyticsPage from "@/pages/dashboard/analytics";
@@ -134,7 +135,7 @@ function Router() {
 
       <Route path="/admin/settings">
         <ProtectedRoute allowedRoles={['ADMIN']}>
-          <SettingsPage />
+          <AdminSettingsPage />
         </ProtectedRoute>
       </Route>
 
