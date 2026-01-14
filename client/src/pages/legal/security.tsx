@@ -1,7 +1,7 @@
 import React from "react";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
-import { Shield, Lock, CreditCard, Server, FileKey, CheckCircle, FileText, Bot, Eye, Scale, HeartHandshake } from "lucide-react";
+import { Shield, Lock, CreditCard, Server, FileKey, CheckCircle, FileText, Bot, Eye, Scale, HeartHandshake, AlertTriangle, Activity, User } from "lucide-react";
 
 export default function SecurityPage() {
   return (
@@ -272,6 +272,118 @@ export default function SecurityPage() {
                   </ul>
                   <p className="text-sm font-medium text-primary/80 pt-2 border-t border-border/50 mt-4">
                     We empower you with knowledge and tools — you stay in control.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 8. Anti-Fraud & Abuse Prevention */}
+            <div className="bg-white p-8 rounded-xl border shadow-sm">
+              <div className="flex items-start gap-6">
+                <div className="bg-red-50 p-4 rounded-lg shrink-0">
+                  <AlertTriangle className="h-8 w-8 text-red-600" />
+                </div>
+                <div className="space-y-4 flex-1">
+                  <h2 className="text-2xl font-bold text-primary">Anti-Fraud & Abuse Prevention</h2>
+                  <p className="text-muted-foreground">
+                    We actively discourage misuse of credit dispute processes:
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Monitoring for excessive or repetitive disputes</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Flags for unverifiable or high-risk usage patterns</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Limits on automated document generation by plan tier</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Manual review pathways for escalated workflows (education only)</span>
+                    </li>
+                  </ul>
+                  <p className="text-sm font-medium text-primary/80 pt-2 border-t border-border/50 mt-4">
+                    All dispute templates encourage truthful, factual, and consumer-initiated actions.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 9. Infrastructure & Monitoring */}
+            <div className="bg-white p-8 rounded-xl border shadow-sm">
+              <div className="flex items-start gap-6">
+                <div className="bg-blue-50 p-4 rounded-lg shrink-0">
+                  <Activity className="h-8 w-8 text-primary" />
+                </div>
+                <div className="space-y-4 flex-1">
+                  <h2 className="text-2xl font-bold text-primary">Infrastructure & Monitoring</h2>
+                  <p className="text-muted-foreground">
+                    Our systems are continuously monitored to ensure stability and protection:
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Secure cloud hosting with firewall protections</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Continuous uptime and integrity monitoring</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Regular dependency and security updates</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Incident response protocols for system issues</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>IoT device inventory tracking for network security</span>
+                    </li>
+                  </ul>
+                  <p className="text-sm font-medium text-primary/80 pt-2 border-t border-border/50 mt-4">
+                    We maintain enterprise-grade infrastructure to keep your data safe.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 10. User Responsibility */}
+            <div className="bg-white p-8 rounded-xl border shadow-sm">
+              <div className="flex items-start gap-6">
+                <div className="bg-amber-50 p-4 rounded-lg shrink-0">
+                  <User className="h-8 w-8 text-amber-600" />
+                </div>
+                <div className="space-y-4 flex-1">
+                  <h2 className="text-2xl font-bold text-primary">Your Responsibility as a User</h2>
+                  <p className="text-muted-foreground">
+                    While we provide secure tools, users are responsible for:
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Submitting accurate and truthful information</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Mailing dispute packets themselves when using certified mail</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Following bureau-specific submission requirements</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Keeping their login credentials secure</span>
+                    </li>
+                  </ul>
+                  <p className="text-sm font-medium text-primary/80 pt-2 border-t border-border/50 mt-4">
+                    Security is a shared responsibility between RiseOra and our users.
                   </p>
                 </div>
               </div>
