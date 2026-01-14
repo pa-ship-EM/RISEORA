@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Database, Lock, Eye, Trash2, Globe, Mail } from "lucide-react";
+import { Shield, Database, Lock, Eye, Trash2, Globe, Mail, ShieldOff, Activity, AlertTriangle } from "lucide-react";
 
 export default function PrivacyPolicy() {
   return (
@@ -83,6 +83,84 @@ export default function PrivacyPolicy() {
                   <li><strong>Role-Based Access Control:</strong> Only authorized personnel with legitimate business needs can access user data</li>
                   <li><strong>Secure Password Storage:</strong> Passwords are hashed using bcrypt with salt, never stored in plain text</li>
                   <li><strong>Regular Security Audits:</strong> We conduct ongoing security assessments and vulnerability testing</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-green-200 bg-green-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldOff className="h-5 w-5 text-green-600" />
+                  We Do NOT Sell Your Data
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="prose prose-slate max-w-none">
+                <p className="text-lg font-medium text-green-800">
+                  RiseOra will never sell, rent, lease, or trade your personal information to any third party for their marketing or commercial purposes.
+                </p>
+                <p>This commitment means:</p>
+                <ul>
+                  <li>Your data is used solely to provide and improve our services to you</li>
+                  <li>We do not participate in data broker networks or data selling arrangements</li>
+                  <li>We do not share your information with advertisers for targeted advertising</li>
+                  <li>We do not monetize your personal data in any way other than providing you direct service</li>
+                  <li>If this policy ever changes, we will provide explicit notice and obtain your consent</li>
+                </ul>
+                <p className="font-medium">Your trust is our priority. Your data belongs to you—not to advertisers, marketers, or data brokers.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-secondary" />
+                  Security Monitoring
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="prose prose-slate max-w-none">
+                <p>To protect your information and our platform, we implement continuous security monitoring:</p>
+                <ul>
+                  <li><strong>Access Logging:</strong> All system access is logged with timestamps, IP addresses, and actions taken</li>
+                  <li><strong>Anomaly Detection:</strong> We monitor for unusual activity patterns that may indicate unauthorized access attempts</li>
+                  <li><strong>Real-Time Alerts:</strong> Security events trigger immediate notifications to our security team</li>
+                  <li><strong>Device Inventory:</strong> IoT and network devices are tracked and monitored for security compliance</li>
+                  <li><strong>Audit Trails:</strong> Complete audit logs are maintained for all user and administrative actions</li>
+                </ul>
+                <p>This monitoring is designed to protect your account and data, not to track your personal activities for marketing purposes.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-secondary" />
+                  Incident Response
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="prose prose-slate max-w-none">
+                <p>In the event of a security incident that affects your personal data, we are committed to:</p>
+                
+                <h4>Detection & Containment</h4>
+                <ul>
+                  <li>Immediate investigation of any suspected security breach</li>
+                  <li>Rapid containment measures to prevent further unauthorized access</li>
+                  <li>Preservation of evidence for forensic analysis</li>
+                </ul>
+
+                <h4>Notification</h4>
+                <ul>
+                  <li>Prompt notification to affected users within 72 hours of confirmed breach discovery</li>
+                  <li>Clear communication about what information was affected</li>
+                  <li>Guidance on steps you can take to protect yourself</li>
+                  <li>Notification to relevant regulatory authorities as required by law</li>
+                </ul>
+
+                <h4>Remediation</h4>
+                <ul>
+                  <li>Root cause analysis to prevent future incidents</li>
+                  <li>Implementation of additional security controls where needed</li>
+                  <li>Ongoing monitoring for any related suspicious activity</li>
+                  <li>Free credit monitoring services for affected users when appropriate</li>
                 </ul>
               </CardContent>
             </Card>
