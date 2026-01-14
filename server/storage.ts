@@ -1,6 +1,6 @@
 import { 
   users, disputes, subscriptions, disputeChecklists, notifications, userNotificationSettings, disputeAiGuidance,
-  disputeEvidence, auditLog, creditReports, creditReportAccounts,
+  disputeEvidence, auditLog, creditReports, creditReportAccounts, iotDevices,
   type User, type InsertUser, type Dispute, type InsertDispute, type Subscription, type InsertSubscription,
   type DisputeChecklist, type InsertDisputeChecklist, type Notification, type InsertNotification,
   type UserNotificationSettings, type InsertUserNotificationSettings,
@@ -9,6 +9,7 @@ import {
   type AuditLog, type InsertAuditLog,
   type CreditReport, type InsertCreditReport,
   type CreditReportAccount, type InsertCreditReportAccount,
+  type IotDevice, type InsertIotDevice,
   DEFAULT_DISPUTE_CHECKLIST
 } from "@shared/schema";
 import { db, withRetry } from "./db";
@@ -89,6 +90,14 @@ export interface IStorage {
   getAccountsForUser(userId: string): Promise<CreditReportAccount[]>;
   createCreditReportAccounts(accounts: InsertCreditReportAccount[]): Promise<CreditReportAccount[]>;
   linkAccountToDispute(accountId: string, disputeId: string): Promise<CreditReportAccount | undefined>;
+  
+  // IoT device methods
+  getAllIotDevices(): Promise<IotDevice[]>;
+  getIotDevice(id: string): Promise<IotDevice | undefined>;
+  getIotDeviceByDeviceId(deviceId: string): Promise<IotDevice | undefined>;
+  createIotDevice(device: InsertIotDevice): Promise<IotDevice>;
+  updateIotDevice(id: string, data: Partial<IotDevice>): Promise<IotDevice | undefined>;
+  deleteIotDevice(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -463,6 +472,46 @@ export class DatabaseStorage implements IStorage {
       .where(eq(creditReportAccounts.id, accountId))
       .returning();
     return updated || undefined;
+  }
+
+  // IoT device methods
+  async getAllIotDevices(): Promise<IotDevice[]> {
+    return await db.select().from(iotDevices)
+      .orderBy(desc(iotDevices.createdAt));
+  }
+
+  async getIotDevice(id: string): Promise<IotDevice | undefined> {
+    const [device] = await db.select().from(iotDevices)
+      .where(eq(iotDevices.id, id));
+    return device || undefined;
+  }
+
+  async getIotDeviceByDeviceId(deviceId: string): Promise<IotDevice | undefined> {
+    const [device] = await db.select().from(iotDevices)
+      .where(eq(iotDevices.deviceId, deviceId));
+    return device || undefined;
+  }
+
+  async createIotDevice(device: InsertIotDevice): Promise<IotDevice> {
+    const [created] = await db.insert(iotDevices)
+      .values(device)
+      .returning();
+    return created;
+  }
+
+  async updateIotDevice(id: string, data: Partial<IotDevice>): Promise<IotDevice | undefined> {
+    const [updated] = await db.update(iotDevices)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(iotDevices.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteIotDevice(id: string): Promise<boolean> {
+    const result = await db.delete(iotDevices)
+      .where(eq(iotDevices.id, id))
+      .returning();
+    return result.length > 0;
   }
 }
 

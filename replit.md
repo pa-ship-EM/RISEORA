@@ -84,6 +84,20 @@ Preferred communication style: Simple, everyday language.
 - **Filtering Criteria**: minTier, excludeStates, requiresActiveDispute, active status
 - **State-Based Surfaces**: WORKFLOW_COMPLETION (after letter generated), EDUCATION_FOLLOWUP (after mailed), RESOURCE_PAGE (after resolved)
 
+### IoT Device Inventory Management
+- **Database Table**: `iot_devices` - stores device inventory with identification, location, network info, and status
+- **Device Fields**: deviceId, deviceName, deviceType (SENSOR, CAMERA, GATEWAY, CONTROLLER, OTHER), ownerDepartment, location
+- **Network Fields**: macAddress, ipAddress, networkSegment (highlights devices with missing network info)
+- **Technical Fields**: firmwareVersion, manufacturer, model, serialNumber
+- **Status Options**: ACTIVE, INACTIVE, MAINTENANCE, RETIRED
+- **API Endpoints** (admin-only with Zod validation):
+  - GET /api/admin/iot-devices - List all devices
+  - POST /api/admin/iot-devices - Create device
+  - PATCH /api/admin/iot-devices/:id - Update device
+  - DELETE /api/admin/iot-devices/:id - Delete device
+- **Admin Dashboard**: `/admin/iot` - Device table with add/edit dialogs, stats cards, CSV export
+- **Visual Indicators**: Devices missing MAC/IP addresses are highlighted with orange warning
+
 ### Project Structure
 ```
 ├── client/src/          # React frontend

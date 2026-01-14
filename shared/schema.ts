@@ -471,3 +471,45 @@ export type CreditReport = typeof creditReports.$inferSelect;
 export type InsertCreditReport = z.infer<typeof insertCreditReportSchema>;
 export type CreditReportAccount = typeof creditReportAccounts.$inferSelect;
 export type InsertCreditReportAccount = z.infer<typeof insertCreditReportAccountSchema>;
+
+// IoT Devices table for inventory management
+export const iotDevices = pgTable("iot_devices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Device identification
+  deviceId: text("device_id").notNull().unique(), // Custom device identifier
+  deviceName: text("device_name").notNull(),
+  deviceType: text("device_type").notNull(), // SENSOR, CAMERA, GATEWAY, CONTROLLER, OTHER
+  
+  // Ownership and location
+  ownerDepartment: text("owner_department").notNull(),
+  location: text("location").notNull(),
+  
+  // Technical details
+  macAddress: text("mac_address"),
+  ipAddress: text("ip_address"),
+  firmwareVersion: text("firmware_version"),
+  manufacturer: text("manufacturer"),
+  model: text("model"),
+  serialNumber: text("serial_number"),
+  
+  // Status and network
+  status: text("status").notNull().default("ACTIVE"), // ACTIVE, INACTIVE, MAINTENANCE, RETIRED
+  networkSegment: text("network_segment"),
+  
+  // Audit fields
+  lastSeenAt: timestamp("last_seen_at"),
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertIotDeviceSchema = createInsertSchema(iotDevices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type IotDevice = typeof iotDevices.$inferSelect;
+export type InsertIotDevice = z.infer<typeof insertIotDeviceSchema>;

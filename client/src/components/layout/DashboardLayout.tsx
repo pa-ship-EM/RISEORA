@@ -15,7 +15,8 @@ import {
   Check,
   Activity,
   Upload,
-  BarChart3
+  BarChart3,
+  Cpu
 } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
@@ -135,6 +136,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       { href: "/admin/disputes", label: "Dispute Queue", icon: ShieldCheck },
       { href: "/admin/compliance", label: "Audit Logs", icon: FileText },
       { href: "/admin/affiliates", label: "Affiliates", icon: DollarSign },
+      { href: "/admin/iot", label: "IoT Devices", icon: Cpu },
     ]
   };
 

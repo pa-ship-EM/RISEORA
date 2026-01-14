@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
-import { insertUserSchema, insertDisputeSchema, type User, TIER_FEATURES, DISPUTE_STAGES } from "@shared/schema";
+import { insertUserSchema, insertDisputeSchema, insertIotDeviceSchema, type User, TIER_FEATURES, DISPUTE_STAGES } from "@shared/schema";
 import { z } from "zod";
 import { encryptUserData, decryptUserData } from "./encryption";
 import OpenAI from "openai";
@@ -2089,6 +2089,140 @@ Respond in JSON format with this structure:
           url: a.url
         }))
       });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // ========== IOT DEVICE ROUTES ==========
+
+  // GET /api/admin/iot-devices - Get all IoT devices
+  app.get("/api/admin/iot-devices", requireAdmin, async (req, res, next) => {
+    try {
+      const devices = await storage.getAllIotDevices();
+      res.json(devices);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // GET /api/admin/iot-devices/:id - Get single IoT device
+  app.get("/api/admin/iot-devices/:id", requireAdmin, async (req, res, next) => {
+    try {
+      const device = await storage.getIotDevice(req.params.id);
+      if (!device) {
+        return res.status(404).json({ message: "Device not found" });
+      }
+      res.json(device);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // POST /api/admin/iot-devices - Create new IoT device
+  app.post("/api/admin/iot-devices", requireAdmin, async (req, res, next) => {
+    try {
+      const validationResult = insertIotDeviceSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid device data", 
+          errors: validationResult.error.flatten().fieldErrors 
+        });
+      }
+
+      const { deviceId, deviceName, deviceType, ownerDepartment, location, macAddress, ipAddress, firmwareVersion, manufacturer, model, serialNumber, status, networkSegment, notes } = validationResult.data;
+
+      const existingDevice = await storage.getIotDeviceByDeviceId(deviceId);
+      if (existingDevice) {
+        return res.status(400).json({ message: "Device with this ID already exists" });
+      }
+
+      const device = await storage.createIotDevice({
+        deviceId,
+        deviceName,
+        deviceType,
+        ownerDepartment,
+        location,
+        macAddress: macAddress || null,
+        ipAddress: ipAddress || null,
+        firmwareVersion: firmwareVersion || null,
+        manufacturer: manufacturer || null,
+        model: model || null,
+        serialNumber: serialNumber || null,
+        status: status || "ACTIVE",
+        networkSegment: networkSegment || null,
+        notes: notes || null,
+        lastSeenAt: null
+      });
+
+      res.status(201).json(device);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Partial schema for IoT device updates
+  const updateIotDeviceSchema = insertIotDeviceSchema.partial().extend({
+    lastSeenAt: z.string().datetime().nullable().optional()
+  });
+
+  // PATCH /api/admin/iot-devices/:id - Update IoT device
+  app.patch("/api/admin/iot-devices/:id", requireAdmin, async (req, res, next) => {
+    try {
+      const device = await storage.getIotDevice(req.params.id);
+      if (!device) {
+        return res.status(404).json({ message: "Device not found" });
+      }
+
+      const validationResult = updateIotDeviceSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid device data", 
+          errors: validationResult.error.flatten().fieldErrors 
+        });
+      }
+
+      const { deviceId, deviceName, deviceType, ownerDepartment, location, macAddress, ipAddress, firmwareVersion, manufacturer, model, serialNumber, status, networkSegment, notes, lastSeenAt } = validationResult.data;
+
+      if (deviceId && deviceId !== device.deviceId) {
+        const existingDevice = await storage.getIotDeviceByDeviceId(deviceId);
+        if (existingDevice) {
+          return res.status(400).json({ message: "Device with this ID already exists" });
+        }
+      }
+
+      const updated = await storage.updateIotDevice(req.params.id, {
+        ...(deviceId !== undefined && { deviceId }),
+        ...(deviceName !== undefined && { deviceName }),
+        ...(deviceType !== undefined && { deviceType }),
+        ...(ownerDepartment !== undefined && { ownerDepartment }),
+        ...(location !== undefined && { location }),
+        ...(macAddress !== undefined && { macAddress }),
+        ...(ipAddress !== undefined && { ipAddress }),
+        ...(firmwareVersion !== undefined && { firmwareVersion }),
+        ...(manufacturer !== undefined && { manufacturer }),
+        ...(model !== undefined && { model }),
+        ...(serialNumber !== undefined && { serialNumber }),
+        ...(status !== undefined && { status }),
+        ...(networkSegment !== undefined && { networkSegment }),
+        ...(notes !== undefined && { notes }),
+        ...(lastSeenAt !== undefined && { lastSeenAt: lastSeenAt ? new Date(lastSeenAt) : null })
+      });
+
+      res.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // DELETE /api/admin/iot-devices/:id - Delete IoT device
+  app.delete("/api/admin/iot-devices/:id", requireAdmin, async (req, res, next) => {
+    try {
+      const deleted = await storage.deleteIotDevice(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Device not found" });
+      }
+      res.json({ success: true });
     } catch (error) {
       next(error);
     }
