@@ -70,7 +70,7 @@ export default function DashboardTools() {
                   </div>
                 )}
                 <Button className="w-full h-11 font-bold" variant={mod.status === 'Locked' ? 'outline' : 'default'} disabled={mod.status === 'Locked'}>
-                  {mod.status === 'Locked' ? 'Upgrade to Compliance+' : mod.status === 'Available' ? 'Start Learning' : 'Continue Learning'}
+                  {mod.status === 'Locked' ? 'Upgrade to Compliance+' : "Let's Learn"}
                 </Button>
               </CardContent>
             </Card>
