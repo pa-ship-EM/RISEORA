@@ -17,16 +17,18 @@ import { AFFILIATES, type AffiliateSurface } from "./affiliates";
 import { getEligibleAffiliates } from "./affiliateEligibility";
 import { assertAffiliateAllowed } from "./affiliateGuards";
 import { resolveAffiliatesForDispute } from "./resolveAffiliatesForDispute";
+import { supabase, VAULT_BUCKET } from "./supabase";
 
 // Configure multer for PDF uploads (in memory)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF files are allowed'));
+      cb(new Error('Only PDF, JPG, and PNG files are allowed'));
     }
   }
 });
@@ -55,28 +57,28 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  
+
   // ========== AUTH ROUTES ==========
-  
+
   // POST /api/auth/signup
   app.post("/api/auth/signup", async (req, res, next) => {
     try {
       const { email, password, firstName, lastName } = req.body;
-      
+
       // Validate input
       if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({ message: "Missing required fields" });
       }
-      
+
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
-      
+
       // Hash password
       const passwordHash = await bcrypt.hash(password, 10);
-      
+
       // Create user
       const user = await storage.createUser({
         email,
@@ -85,14 +87,14 @@ export async function registerRoutes(
         lastName,
         role: "CLIENT",
       });
-      
+
       // Regenerate session to prevent session fixation
       req.session.regenerate((err: any) => {
         if (err) {
           return next(err);
         }
         req.session.userId = user.id;
-        
+
         // Return user (without password)
         const { passwordHash: _, ...userWithoutPassword } = user;
         res.json(userWithoutPassword);
@@ -101,35 +103,35 @@ export async function registerRoutes(
       next(error);
     }
   });
-  
+
   // POST /api/auth/login
   app.post("/api/auth/login", async (req, res, next) => {
     try {
       const { email, password } = req.body;
-      
+
       if (!email || !password) {
         return res.status(400).json({ message: "Missing email or password" });
       }
-      
+
       // Find user
       const user = await storage.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       // Check password
       const validPassword = await bcrypt.compare(password, user.passwordHash);
       if (!validPassword) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       // Regenerate session to prevent session fixation
       req.session.regenerate((err: any) => {
         if (err) {
           return next(err);
         }
         req.session.userId = user.id;
-        
+
         // Return user (without password)
         const { passwordHash: _, ...userWithoutPassword } = user;
         res.json(userWithoutPassword);
@@ -138,7 +140,7 @@ export async function registerRoutes(
       next(error);
     }
   });
-  
+
   // POST /api/auth/logout
   app.post("/api/auth/logout", (req, res) => {
     req.session.destroy((err) => {
@@ -148,7 +150,7 @@ export async function registerRoutes(
       res.json({ message: "Logged out successfully" });
     });
   });
-  
+
   // GET /api/auth/me
   app.get("/api/auth/me", requireAuth, async (req, res, next) => {
     try {
@@ -156,57 +158,57 @@ export async function registerRoutes(
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Decrypt sensitive fields
       const decryptedData = decryptUserData(user);
-      
+
       const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, birthYearEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
       res.json({ ...userWithoutSensitive, ...decryptedData });
     } catch (error) {
       next(error);
     }
   });
-  
+
   // ========== USER PROFILE ROUTES ==========
-  
+
   // POST /api/user/password - Change password
   app.post("/api/user/password", requireAuth, async (req, res, next) => {
     try {
       const { currentPassword, newPassword } = req.body;
-      
+
       if (!currentPassword || !newPassword) {
         return res.status(400).json({ message: "Current password and new password are required" });
       }
-      
+
       if (newPassword.length < 8) {
         return res.status(400).json({ message: "New password must be at least 8 characters" });
       }
-      
+
       const user = await storage.getUser(req.session.userId!);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       const validPassword = await bcrypt.compare(currentPassword, user.passwordHash);
       if (!validPassword) {
         return res.status(401).json({ message: "Current password is incorrect" });
       }
-      
+
       const newPasswordHash = await bcrypt.hash(newPassword, 10);
       await storage.updateUserProfile(req.session.userId!, { passwordHash: newPasswordHash });
-      
+
       res.json({ message: "Password changed successfully" });
     } catch (error) {
       next(error);
     }
   });
-  
+
   // PATCH /api/user/profile
   app.patch("/api/user/profile", requireAuth, async (req, res, next) => {
     try {
-      const { 
-        firstName, 
-        lastName, 
+      const {
+        firstName,
+        lastName,
         address,
         city,
         state,
@@ -214,37 +216,37 @@ export async function registerRoutes(
         birthYear,
         ssnLast4
       } = req.body;
-      
+
       const updateData: Partial<User> = {};
       if (firstName) updateData.firstName = firstName;
       if (lastName) updateData.lastName = lastName;
-      
+
       // Encrypt sensitive fields if provided (only birth year, not full DOB for compliance)
       const encryptedData = encryptUserData({ address, city, state, zip, birthYear, ssnLast4 });
       Object.assign(updateData, encryptedData);
-      
+
       const user = await storage.updateUserProfile(req.session.userId!, updateData);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Decrypt sensitive fields for response
       const decryptedData = decryptUserData(user);
-      
+
       const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, birthYearEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
       res.json({ ...userWithoutSensitive, ...decryptedData });
     } catch (error) {
       next(error);
     }
   });
-  
+
   // ========== SUBSCRIPTION ROUTES ==========
-  
+
   // GET /api/subscription
   app.get("/api/subscription", requireAuth, async (req, res, next) => {
     try {
       let subscription = await storage.getSubscriptionForUser(req.session.userId!);
-      
+
       // Create a free subscription if none exists
       if (!subscription) {
         subscription = await storage.createSubscription({
@@ -253,31 +255,31 @@ export async function registerRoutes(
           status: "ACTIVE",
         });
       }
-      
+
       // Add tier features to response
       const tier = subscription.tier as keyof typeof TIER_FEATURES;
       const features = TIER_FEATURES[tier] || TIER_FEATURES.FREE;
-      
+
       res.json({ ...subscription, features });
     } catch (error) {
       next(error);
     }
   });
-  
+
   // POST /api/subscription/upgrade - Upgrade subscription tier (for testing)
   app.post("/api/subscription/upgrade", requireAuth, async (req, res, next) => {
     try {
       const { tier } = req.body;
-      
+
       // Validate tier
       if (!["FREE", "SELF_STARTER", "GROWTH", "COMPLIANCE_PLUS"].includes(tier)) {
         return res.status(400).json({ message: "Invalid subscription tier" });
       }
-      
+
       let subscription = await storage.getSubscriptionForUser(req.session.userId!);
-      
+
       if (subscription) {
-        subscription = await storage.updateSubscription(req.session.userId!, { 
+        subscription = await storage.updateSubscription(req.session.userId!, {
           tier,
           status: "ACTIVE",
           currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
@@ -290,39 +292,39 @@ export async function registerRoutes(
           currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         });
       }
-      
+
       const features = TIER_FEATURES[tier as keyof typeof TIER_FEATURES];
       res.json({ ...subscription, features });
     } catch (error) {
       next(error);
     }
   });
-  
+
   // ========== DISPUTE ROUTES ==========
-  
+
   // GET /api/disputes/analytics - Get dispute analytics data
   app.get("/api/disputes/analytics", requireAuth, async (req, res, next) => {
     try {
       const disputes = await storage.getDisputesForUser(req.session.userId!);
-      
+
       // Calculate status breakdown
       const statusCounts: Record<string, number> = {};
       disputes.forEach(d => {
         statusCounts[d.status] = (statusCounts[d.status] || 0) + 1;
       });
-      
+
       // Calculate bureau breakdown
       const bureauCounts: Record<string, number> = {};
       disputes.forEach(d => {
         bureauCounts[d.bureau] = (bureauCounts[d.bureau] || 0) + 1;
       });
-      
+
       // Calculate success metrics
       const resolved = disputes.filter(d => d.status === 'REMOVED' || d.status === 'CLOSED');
       const removed = disputes.filter(d => d.status === 'REMOVED');
       const verified = disputes.filter(d => d.status === 'VERIFIED');
       const inProgress = disputes.filter(d => !['REMOVED', 'VERIFIED', 'CLOSED', 'NO_RESPONSE'].includes(d.status));
-      
+
       // Calculate average resolution time (for resolved disputes)
       let avgResolutionDays = 0;
       const resolvedWithDates = resolved.filter(d => d.mailedAt);
@@ -334,7 +336,7 @@ export async function registerRoutes(
         }, 0);
         avgResolutionDays = Math.round(totalDays / resolvedWithDates.length);
       }
-      
+
       // Monthly trend data (last 6 months)
       const monthlyTrend: Array<{ month: string; created: number; resolved: number }> = [];
       const now = new Date();
@@ -342,27 +344,27 @@ export async function registerRoutes(
         const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
         const monthName = monthStart.toLocaleDateString('en-US', { month: 'short' });
-        
+
         const created = disputes.filter(d => {
           const date = new Date(d.createdAt);
           return date >= monthStart && date <= monthEnd;
         }).length;
-        
+
         const resolvedInMonth = resolved.filter(d => {
           const date = d.responseReceivedAt ? new Date(d.responseReceivedAt) : null;
           return date && date >= monthStart && date <= monthEnd;
         }).length;
-        
+
         monthlyTrend.push({ month: monthName, created, resolved: resolvedInMonth });
       }
-      
+
       // Dispute reason breakdown
       const reasonCounts: Record<string, number> = {};
       disputes.forEach(d => {
         const reason = d.disputeReason || 'Other';
         reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
       });
-      
+
       res.json({
         summary: {
           total: disputes.length,
@@ -390,7 +392,7 @@ export async function registerRoutes(
       next(error);
     }
   });
-  
+
   // GET /api/disputes
   app.get("/api/disputes", requireAuth, async (req, res, next) => {
     try {
@@ -400,7 +402,7 @@ export async function registerRoutes(
       next(error);
     }
   });
-  
+
   // GET /api/disputes/:id
   app.get("/api/disputes/:id", requireAuth, async (req, res, next) => {
     try {
@@ -408,41 +410,41 @@ export async function registerRoutes(
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
-      
+
       // Verify ownership
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       res.json(dispute);
     } catch (error) {
       next(error);
     }
   });
-  
+
   // POST /api/disputes
   app.post("/api/disputes", requireAuth, async (req, res, next) => {
     try {
       const bureau = req.body.bureau;
       const userId = req.session.userId!;
-      
+
       // Check per-bureau limit (max 3 per bureau in last 30 days)
       const disputesLast30Days = await storage.countDisputesByBureauLast30Days(userId, bureau);
       if (!canCreateDispute(disputesLast30Days)) {
-        return res.status(400).json({ 
-          message: `You have reached the limit of 3 disputes per bureau in the last 30 days for ${bureau}.` 
+        return res.status(400).json({
+          message: `You have reached the limit of 3 disputes per bureau in the last 30 days for ${bureau}.`
         });
       }
-      
+
       const disputeData = {
         ...req.body,
         userId,
         status: "DRAFT",
       };
-      
+
       // Validate with schema
       const validatedData = insertDisputeSchema.parse(disputeData);
-      
+
       const dispute = await storage.createDispute(validatedData);
       res.json(dispute);
     } catch (error) {
@@ -452,22 +454,22 @@ export async function registerRoutes(
       next(error);
     }
   });
-  
+
   // POST /api/disputes/bulk - Create multiple disputes at once
   app.post("/api/disputes/bulk", requireAuth, async (req, res, next) => {
     try {
       const { disputes: disputesArray } = req.body;
-      
+
       if (!Array.isArray(disputesArray) || disputesArray.length === 0) {
         return res.status(400).json({ message: "Disputes array is required" });
       }
-      
+
       if (disputesArray.length > 20) {
         return res.status(400).json({ message: "Maximum 20 disputes allowed per request" });
       }
-      
+
       const userId = req.session.userId!;
-      
+
       // Check per-bureau limits (max 3 per bureau in last 30 days)
       const bureauCounts: Record<string, number> = {};
       for (const d of disputesArray) {
@@ -475,43 +477,43 @@ export async function registerRoutes(
           bureauCounts[d.bureau] = await storage.countDisputesByBureauLast30Days(userId, d.bureau);
         }
       }
-      
+
       // Count how many new disputes per bureau in this request
       const newPerBureau: Record<string, number> = {};
       for (const d of disputesArray) {
         newPerBureau[d.bureau] = (newPerBureau[d.bureau] || 0) + 1;
       }
-      
+
       // Check if any bureau would exceed the limit
       for (const bureau of Object.keys(newPerBureau)) {
         const existing = bureauCounts[bureau] || 0;
         const newCount = newPerBureau[bureau];
         if (existing + newCount > 3) {
-          return res.status(400).json({ 
-            message: `Creating these disputes would exceed the limit of 3 per bureau in 30 days for ${bureau}.` 
+          return res.status(400).json({
+            message: `Creating these disputes would exceed the limit of 3 per bureau in 30 days for ${bureau}.`
           });
         }
       }
-      
+
       // Validate each dispute has required fields
       for (const d of disputesArray) {
         if (!d.creditorName || !d.bureau || !d.disputeReason) {
-          return res.status(400).json({ 
-            message: "Each dispute must have creditorName, bureau, and disputeReason" 
+          return res.status(400).json({
+            message: "Each dispute must have creditorName, bureau, and disputeReason"
           });
         }
         if (d.disputeReason === "other" && !d.customReason) {
-          return res.status(400).json({ 
-            message: "Custom reason required when dispute reason is 'other'" 
+          return res.status(400).json({
+            message: "Custom reason required when dispute reason is 'other'"
           });
         }
         if (!d.letterContent) {
-          return res.status(400).json({ 
-            message: "Letter content is required for each dispute" 
+          return res.status(400).json({
+            message: "Letter content is required for each dispute"
           });
         }
       }
-      
+
       // Validate and add userId to each dispute, forcing DRAFT status
       const validatedDisputes = disputesArray.map((d: any) => {
         const disputeData = {
@@ -521,7 +523,7 @@ export async function registerRoutes(
         };
         return insertDisputeSchema.parse(disputeData);
       });
-      
+
       const createdDisputes = await storage.createDisputesBulk(validatedDisputes);
       res.json({ disputes: createdDisputes, count: createdDisputes.length });
     } catch (error) {
@@ -531,7 +533,7 @@ export async function registerRoutes(
       next(error);
     }
   });
-  
+
   // PATCH /api/disputes/:id
   app.patch("/api/disputes/:id", requireAuth, async (req, res, next) => {
     try {
@@ -539,12 +541,12 @@ export async function registerRoutes(
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
-      
+
       // Verify ownership
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       // Only allow DRAFT → READY_TO_MAIL transition via this endpoint (for wizard)
       // All other status changes must use /progress endpoint
       const { status, mailedAt, deliveredAt, responseDeadline, responseReceivedAt, ...safeUpdates } = req.body;
@@ -552,19 +554,19 @@ export async function registerRoutes(
         if (status === "READY_TO_MAIL" && dispute.status === "DRAFT") {
           safeUpdates.status = "READY_TO_MAIL";
         } else {
-          return res.status(400).json({ 
-            message: "Status cannot be changed directly. Use the progress actions to update dispute status." 
+          return res.status(400).json({
+            message: "Status cannot be changed directly. Use the progress actions to update dispute status."
           });
         }
       }
-      
+
       const updatedDispute = await storage.updateDispute(req.params.id, safeUpdates);
       res.json(updatedDispute);
     } catch (error) {
       next(error);
     }
   });
-  
+
   // DELETE /api/disputes/:id
   app.delete("/api/disputes/:id", requireAuth, async (req, res, next) => {
     try {
@@ -572,12 +574,12 @@ export async function registerRoutes(
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
-      
+
       // Verify ownership
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       const deleted = await storage.deleteDispute(req.params.id);
       if (deleted) {
         res.json({ message: "Dispute deleted successfully" });
@@ -588,14 +590,14 @@ export async function registerRoutes(
       next(error);
     }
   });
-  
+
   // ========== DISPUTE TEMPLATE ROUTES ==========
-  
+
   // GET /api/dispute-templates - Get template stage info
   app.get("/api/dispute-templates", requireAuth, async (req, res) => {
     res.json(TEMPLATE_DESCRIPTIONS);
   });
-  
+
   // POST /api/disputes/:id/generate-letter - Generate letter from current template stage
   app.post("/api/disputes/:id/generate-letter", requireAuth, async (req, res, next) => {
     try {
@@ -606,16 +608,16 @@ export async function registerRoutes(
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       // Get user info for letter
       const user = await storage.getUser(req.session.userId!);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Decrypt user data for letter
       const decryptedUser = decryptUserData(user);
-      
+
       // Build template data
       const templateData: DisputeTemplateData = {
         fullName: `${user.firstName} ${user.lastName}`,
@@ -631,45 +633,47 @@ export async function registerRoutes(
         disputeReason: dispute.disputeReason,
         customReason: dispute.customReason || undefined,
       };
-      
+
       // Get current template stage
       const currentStage = (dispute.templateStage as DisputeTemplateStage) || 'INVESTIGATION_REQUEST';
-      
+
       // Generate letter using template
       let letterContent: string;
-      
+
       if (currentStage === 'AI_ESCALATION') {
         // Use AI for escalation
         const systemPrompt = `You are a credit dispute expert. Generate an escalation letter for a consumer dispute based on the dispute history and current status. The letter should be professional, cite FCRA rights, and demand resolution. Do not guarantee outcomes.`;
-        
+
         const response = await openai.chat.completions.create({
           model: "gpt-4o",
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: `Generate an escalation dispute letter for:
+            {
+              role: "user", content: `Generate an escalation dispute letter for:
 Creditor: ${dispute.creditorName}
 Account: ${dispute.accountNumber || 'Unknown'}
 Bureau: ${dispute.bureau}
 Dispute Reason: ${dispute.disputeReason}
 Additional Details: ${dispute.customReason || 'None'}
 User Name: ${templateData.fullName}
-Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${templateData.zip}` }
+Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${templateData.zip}`
+            }
           ],
           max_tokens: 1500,
         });
-        
+
         letterContent = response.choices[0]?.message?.content || '';
       } else {
         letterContent = generateDisputeLetter(currentStage, templateData);
       }
-      
+
       // Update dispute with generated letter
-      await storage.updateDispute(dispute.id, { 
+      await storage.updateDispute(dispute.id, {
         letterContent,
         templateStageStartedAt: new Date(),
       });
-      
-      res.json({ 
+
+      res.json({
         letterContent,
         templateStage: currentStage,
         templateInfo: TEMPLATE_DESCRIPTIONS[currentStage],
@@ -678,7 +682,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // POST /api/disputes/:id/advance-stage - Advance to next template stage
   app.post("/api/disputes/:id/advance-stage", requireAuth, async (req, res, next) => {
     try {
@@ -689,23 +693,23 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       const currentStage = (dispute.templateStage as DisputeTemplateStage) || 'INVESTIGATION_REQUEST';
       const nextStage = getNextTemplateStage(currentStage);
-      
+
       if (!nextStage) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Already at final stage. Consider escalating or closing the dispute.",
           currentStage,
         });
       }
-      
+
       const updated = await storage.updateDispute(dispute.id, {
         templateStage: nextStage,
         templateStageStartedAt: new Date(),
         // Keep existing letter content - user can regenerate with new template when ready
       });
-      
+
       res.json({
         dispute: updated,
         previousStage: currentStage,
@@ -716,9 +720,9 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // ========== DISPUTE PROGRESS TRACKING ROUTES ==========
-  
+
   // GET /api/disputes/:id/checklist - Get checklist for a dispute
   app.get("/api/disputes/:id/checklist", requireAuth, async (req, res, next) => {
     try {
@@ -729,20 +733,20 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       let checklist = await storage.getChecklistForDispute(req.params.id);
-      
+
       // Create default checklist if none exists
       if (checklist.length === 0) {
         checklist = await storage.createDefaultChecklistForDispute(req.params.id);
       }
-      
+
       res.json(checklist);
     } catch (error) {
       next(error);
     }
   });
-  
+
   // PATCH /api/checklist/:id - Update a checklist item
   app.patch("/api/checklist/:id", requireAuth, async (req, res, next) => {
     try {
@@ -756,7 +760,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // PATCH /api/disputes/:id/progress - Update dispute progress (mailed, tracking, etc.)
   app.patch("/api/disputes/:id/progress", requireAuth, async (req, res, next) => {
     try {
@@ -767,22 +771,22 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       const { action, trackingNumber } = req.body;
       const updateData: any = {};
       const currentStatus = dispute.status;
-      
+
       if (!isValidTransition(currentStatus, action as DisputeAction)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: `Cannot perform '${action}' when dispute is in '${currentStatus}' status`
         });
       }
-      
+
       const targetStatus = getTargetStatus(action as DisputeAction);
       if (targetStatus) {
         updateData.status = targetStatus;
       }
-      
+
       switch (action) {
         case "mark_ready":
           break;
@@ -813,8 +817,8 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
           break;
         case "mark_escalation":
           if (!escalationAllowed(currentStatus)) {
-            return res.status(400).json({ 
-              message: "Escalation is only available after VERIFIED or NO_RESPONSE status" 
+            return res.status(400).json({
+              message: "Escalation is only available after VERIFIED or NO_RESPONSE status"
             });
           }
           break;
@@ -823,9 +827,9 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
         default:
           return res.status(400).json({ message: "Invalid action" });
       }
-      
+
       const updatedDispute = await storage.updateDispute(req.params.id, updateData);
-      
+
       // Create notification for status update
       await storage.createNotification({
         userId: req.session.userId!,
@@ -834,15 +838,15 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
         title: "Dispute Status Updated",
         message: `Your dispute with ${dispute.creditorName} has been updated to "${updateData.status || action}".`,
       });
-      
+
       res.json(updatedDispute);
     } catch (error) {
       next(error);
     }
   });
-  
+
   // ========== NOTIFICATION ROUTES ==========
-  
+
   // GET /api/notifications - Get all notifications for user
   app.get("/api/notifications", requireAuth, async (req, res, next) => {
     try {
@@ -852,7 +856,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // GET /api/notifications/unread - Get unread notifications count
   app.get("/api/notifications/unread", requireAuth, async (req, res, next) => {
     try {
@@ -862,7 +866,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // PATCH /api/notifications/:id/read - Mark notification as read
   app.patch("/api/notifications/:id/read", requireAuth, async (req, res, next) => {
     try {
@@ -875,7 +879,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // POST /api/notifications/read-all - Mark all notifications as read
   app.post("/api/notifications/read-all", requireAuth, async (req, res, next) => {
     try {
@@ -885,7 +889,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // GET /api/notification-settings - Get user notification settings
   app.get("/api/notification-settings", requireAuth, async (req, res, next) => {
     try {
@@ -903,7 +907,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // PATCH /api/notification-settings - Update notification settings
   app.patch("/api/notification-settings", requireAuth, async (req, res, next) => {
     try {
@@ -918,14 +922,14 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // GET /api/dispute-stages - Get dispute stage definitions
   app.get("/api/dispute-stages", requireAuth, (req, res) => {
     res.json(DISPUTE_STAGES);
   });
-  
+
   // ========== AI ESCALATION GUIDANCE ROUTES ==========
-  
+
   // GET /api/disputes/:id/guidance - Get AI guidance for a dispute
   app.get("/api/disputes/:id/guidance", requireAuth, async (req, res, next) => {
     try {
@@ -936,17 +940,17 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       // Check subscription tier - only GROWTH and COMPLIANCE_PLUS can access AI guidance
       const subscription = await storage.getSubscriptionForUser(req.session.userId!);
       const tier = subscription?.tier || "FREE";
       if (!["GROWTH", "COMPLIANCE_PLUS"].includes(tier)) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: "AI escalation guidance requires Growth or Compliance+ subscription",
           requiredTier: "GROWTH"
         });
       }
-      
+
       const guidance = await storage.getGuidanceForDispute(req.params.id);
       if (guidance) {
         // Filter out internal notes before sending to customer
@@ -959,7 +963,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       next(error);
     }
   });
-  
+
   // POST /api/disputes/:id/generate-guidance - Generate AI guidance for escalated dispute
   app.post("/api/disputes/:id/generate-guidance", requireAuth, async (req, res, next) => {
     try {
@@ -970,55 +974,55 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       // Check subscription tier - only GROWTH and COMPLIANCE_PLUS can use AI guidance
       const subscription = await storage.getSubscriptionForUser(req.session.userId!);
       const tier = subscription?.tier || "FREE";
       if (!["GROWTH", "COMPLIANCE_PLUS"].includes(tier)) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: "AI escalation guidance requires Growth or Compliance+ subscription",
           requiredTier: "GROWTH"
         });
       }
-      
+
       // === STATE VALIDATION (CRITICAL FAILSAFE) ===
       // AI guidance is ONLY available when ALL conditions are met:
       // 1. Tier is GROWTH or COMPLIANCE_PLUS (checked above)
       // 2. Status is ESCALATION_AVAILABLE
       // 3. DV sent = true
       // 4. DV response received = true
-      
+
       if (dispute.status !== "ESCALATION_AVAILABLE") {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "AI guidance is only available for disputes in escalation state"
         });
       }
-      
+
       if (!dispute.dvSent || !dispute.dvResponseReceived) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "We need more information to determine the appropriate next step. Please update your dispute status to indicate that a debt validation request was sent and a response was received."
         });
       }
-      
+
       // Check for missing required state data
       if (dispute.dvResponseQuality === "unknown" && dispute.disputeType === "inaccurate_reporting") {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Please update the quality of the validation response received (deficient or sufficient) before generating guidance."
         });
       }
-      
+
       // Determine which letter is allowed based on state
       // Following the canonical state logic map exactly
       let allowedLetterType = "";
       let letterContext = "";
-      
+
       // First check if dispute is resolved
       if (!dispute.inaccuracyPersists || dispute.craResponseResult === "deleted" || dispute.craResponseResult === "corrected") {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "This dispute has been resolved. No further guidance is needed."
         });
       }
-      
+
       // Case A: DV sent, response received, CRA not yet disputed
       // This is the ONLY letter allowed at this stage
       if (dispute.dvSent && dispute.dvResponseReceived && !dispute.craDisputeSent) {
@@ -1027,7 +1031,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       }
       // CRA dispute sent but no response yet - need to wait
       else if (dispute.craDisputeSent && !dispute.craResponseReceived) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Your CRA dispute has been sent but no response has been recorded yet. Please update the dispute once you receive a response from the credit bureau."
         });
       }
@@ -1053,11 +1057,11 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       }
       // Fallback - should not happen if state is properly tracked
       else {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Unable to determine the appropriate next step. Please review your dispute status and ensure all fields are updated correctly."
         });
       }
-      
+
       // Generate AI guidance based on dispute context
       const systemPrompt = `You are an educational credit rights advisor. Your role is to provide EDUCATIONAL INFORMATION ONLY about credit dispute processes.
 
@@ -1272,7 +1276,7 @@ Please provide educational guidance in this JSON format:
       }
 
       const guidanceData = JSON.parse(content);
-      
+
       // Save guidance to database (internalNotes stored but not returned to frontend)
       const guidance = await storage.createGuidance({
         disputeId: dispute.id,
@@ -1284,7 +1288,7 @@ Please provide educational guidance in this JSON format:
         timeline: guidanceData.timeline,
         internalNotes: guidanceData.internalNotes || null,
       });
-      
+
       // Return guidance without internal notes to customer
       const { internalNotes: _, ...customerGuidance } = guidance;
 
@@ -1303,9 +1307,9 @@ Please provide educational guidance in this JSON format:
       next(error);
     }
   });
-  
+
   // ========== AI CREDIT REPORT PARSING ROUTES ==========
-  
+
   // POST /api/upload-credit-report - Upload PDF credit report for AI parsing
   app.post("/api/upload-credit-report", requireAuth, (req, res, next) => {
     upload.single('file')(req, res, async (err: any) => {
@@ -1320,34 +1324,34 @@ Please provide educational guidance in this JSON format:
           }
           return res.status(400).json({ message: "File upload error: " + err.message });
         }
-        
+
         if (!req.file) {
           return res.status(400).json({ message: "No PDF file uploaded" });
         }
-        
+
         // Verify PDF magic bytes (PDF files start with %PDF-)
         const pdfMagic = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2D]); // %PDF-
         if (!req.file.buffer.subarray(0, 5).equals(pdfMagic)) {
           return res.status(400).json({ message: "Invalid PDF file. Please upload a valid PDF document." });
         }
-        
+
         const bureau = req.body.bureau;
         if (!bureau) {
           return res.status(400).json({ message: "Bureau is required" });
         }
-        
+
         // Parse PDF to extract text using pdf-parse v2
         const parser = new PDFParse({ data: req.file.buffer });
         const pdfData = await parser.getText();
         const reportText = pdfData.text;
         await parser.destroy();
-      
-      if (!reportText || reportText.trim().length < 50) {
-        return res.status(400).json({ message: "Could not extract text from PDF. Please ensure the file is not password-protected or image-based." });
-      }
-      
-      // Use OpenAI to analyze the extracted text
-      const systemPrompt = `You are an expert credit report analyst specializing in FCRA compliance and Metro 2 data formats. 
+
+        if (!reportText || reportText.trim().length < 50) {
+          return res.status(400).json({ message: "Could not extract text from PDF. Please ensure the file is not password-protected or image-based." });
+        }
+
+        // Use OpenAI to analyze the extracted text
+        const systemPrompt = `You are an expert credit report analyst specializing in FCRA compliance and Metro 2 data formats. 
 Your task is to analyze credit report text and extract account information that may contain errors or inaccuracies.
 
 For each account found, extract:
@@ -1384,89 +1388,110 @@ Respond in JSON format with this structure:
   "summary": "Brief summary of what was found"
 }`;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Analyze this ${bureau} credit report and extract account information with potential dispute reasons:\n\n${reportText.substring(0, 15000)}` }
-        ],
-        response_format: { type: "json_object" },
-        max_tokens: 2000,
-      });
-      
-      const content = response.choices[0]?.message?.content;
-      if (!content) {
-        return res.status(500).json({ message: "Failed to analyze credit report" });
-      }
-      
-      const parsed = JSON.parse(content);
-      
-      // Save credit report to database
-      const creditReport = await storage.createCreditReport({
-        userId: req.session.userId!,
-        fileName: req.file.originalname,
-        fileSize: req.file.size,
-        bureau: bureau,
-        status: "COMPLETED",
-        totalAccounts: parsed.accounts?.length || 0,
-        negativeAccounts: parsed.accounts?.filter((a: any) => 
-          a.status?.toLowerCase().includes('collection') || 
-          a.status?.toLowerCase().includes('charged') ||
-          a.status?.toLowerCase().includes('delinquent')
-        ).length || 0,
-      });
-      
-      // Update with processed timestamp
-      await storage.updateCreditReport(creditReport.id, {
-        processedAt: new Date(),
-      });
-      
-      // Helper function to parse currency strings to cents
-      const parseCurrencyToCents = (str: string | null | undefined): number | null => {
-        if (!str) return null;
-        const cleaned = str.replace(/[$,\s]/g, '');
-        const match = cleaned.match(/^-?([\d]+)(?:\.([\d]{1,2}))?/);
-        if (!match) return null;
-        const dollars = parseInt(match[1], 10);
-        const cents = match[2] ? parseInt(match[2].padEnd(2, '0'), 10) : 0;
-        return dollars * 100 + cents;
-      };
-      
-      // Save extracted accounts to database
-      if (parsed.accounts && parsed.accounts.length > 0) {
-        const accountsToCreate = parsed.accounts.map((account: any) => ({
-          reportId: creditReport.id,
-          userId: req.session.userId!,
-          creditorName: account.creditorName || "Unknown Creditor",
-          accountNumber: account.accountNumber || null,
-          accountType: account.accountType?.toUpperCase().replace(/\s+/g, '_') || null,
-          accountStatus: account.status || null,
-          isNegative: account.status?.toLowerCase().includes('collection') || 
-                     account.status?.toLowerCase().includes('charged') ||
-                     account.status?.toLowerCase().includes('delinquent') || false,
-          balance: parseCurrencyToCents(account.balance),
-          rawText: JSON.stringify(account.recommendedReasons || []),
-        }));
-        
-        try {
-          await storage.createCreditReportAccounts(accountsToCreate);
-        } catch (accountError) {
-          console.error("Error saving accounts:", accountError);
-          // Don't fail the whole request if accounts fail to save
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Analyze this ${bureau} credit report and extract account information with potential dispute reasons:\n\n${reportText.substring(0, 15000)}` }
+          ],
+          response_format: { type: "json_object" },
+          max_tokens: 2000,
+        });
+
+        const content = response.choices[0]?.message?.content;
+        if (!content) {
+          return res.status(500).json({ message: "Failed to analyze credit report" });
         }
-      }
-      
-      res.json({
-        ...parsed,
-        reportId: creditReport.id,
-      });
-    } catch (error: any) {
+
+        const parsed = JSON.parse(content);
+
+        // Upload to Supabase
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileName = `${uniqueSuffix}-${req.file.originalname}`;
+        const filePath = `user_${req.session.userId}/reports/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(VAULT_BUCKET)
+          .upload(filePath, req.file.buffer, {
+            contentType: req.file.mimetype,
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error("Supabase report upload error:", uploadError);
+          // We continue with parsing even if upload fails, or should we fail?
+          // User said "Document Vault" is non-negotiable, so let's fail.
+          return res.status(500).json({ message: "Failed to store report in secure vault." });
+        }
+
+        // Save credit report to database
+        const creditReport = await storage.createCreditReport({
+          userId: req.session.userId!,
+          fileName: req.file.originalname,
+          fileSize: req.file.size,
+          bureau: bureau,
+          status: "COMPLETED",
+          storagePath: filePath,
+          totalAccounts: parsed.accounts?.length || 0,
+          negativeAccounts: parsed.accounts?.filter((a: any) =>
+            a.status?.toLowerCase().includes('collection') ||
+            a.status?.toLowerCase().includes('charged') ||
+            a.status?.toLowerCase().includes('delinquent')
+          ).length || 0,
+        });
+
+        // Update with processed timestamp
+        await storage.updateCreditReport(creditReport.id, {
+          processedAt: new Date(),
+        });
+
+        // Helper function to parse currency strings to cents
+        const parseCurrencyToCents = (str: string | null | undefined): number | null => {
+          if (!str) return null;
+          const cleaned = str.replace(/[$,\s]/g, '');
+          const match = cleaned.match(/^-?([\d]+)(?:\.([\d]{1,2}))?/);
+          if (!match) return null;
+          const dollars = parseInt(match[1], 10);
+          const cents = match[2] ? parseInt(match[2].padEnd(2, '0'), 10) : 0;
+          return dollars * 100 + cents;
+        };
+
+        // Save extracted accounts to database
+        if (parsed.accounts && parsed.accounts.length > 0) {
+          const accountsToCreate = parsed.accounts.map((account: any) => ({
+            reportId: creditReport.id,
+            userId: req.session.userId!,
+            creditorName: account.creditorName || "Unknown Creditor",
+            accountNumber: account.accountNumber || null,
+            accountType: account.accountType?.toUpperCase().replace(/\s+/g, '_') || null,
+            accountStatus: account.status || null,
+            isNegative: account.status?.toLowerCase().includes('collection') ||
+              account.status?.toLowerCase().includes('charged') ||
+              account.status?.toLowerCase().includes('delinquent') || false,
+            balance: parseCurrencyToCents(account.balance),
+            rawText: JSON.stringify(account.recommendedReasons || []),
+          }));
+
+          try {
+            await storage.createCreditReportAccounts(accountsToCreate);
+          } catch (accountError) {
+            console.error("Error saving accounts:", accountError);
+            // Don't fail the whole request if accounts fail to save
+          }
+        }
+
+        res.json({
+          ...parsed,
+          reportId: creditReport.id,
+        });
+      } catch (error: any) {
         console.error("Error processing PDF:", error);
         next(error);
       }
     });
   });
-  
+
   // GET /api/credit-reports - Get all credit reports for user
   app.get("/api/credit-reports", requireAuth, async (req, res, next) => {
     try {
@@ -1476,7 +1501,7 @@ Respond in JSON format with this structure:
       next(error);
     }
   });
-  
+
   // GET /api/credit-reports/:id - Get single credit report with accounts
   app.get("/api/credit-reports/:id", requireAuth, async (req, res, next) => {
     try {
@@ -1487,14 +1512,14 @@ Respond in JSON format with this structure:
       if (report.userId !== req.session.userId) {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const accounts = await storage.getAccountsForReport(report.id);
       res.json({ report, accounts });
     } catch (error) {
       next(error);
     }
   });
-  
+
   // GET /api/credit-report-accounts - Get all extracted accounts for user
   app.get("/api/credit-report-accounts", requireAuth, async (req, res, next) => {
     try {
@@ -1504,7 +1529,7 @@ Respond in JSON format with this structure:
       next(error);
     }
   });
-  
+
   // DELETE /api/credit-reports/:id - Delete a credit report
   app.delete("/api/credit-reports/:id", requireAuth, async (req, res, next) => {
     try {
@@ -1515,23 +1540,23 @@ Respond in JSON format with this structure:
       if (report.userId !== req.session.userId) {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       await storage.deleteCreditReport(report.id);
       res.json({ success: true });
     } catch (error) {
       next(error);
     }
   });
-  
+
   // POST /api/parse-credit-report - Parse credit report text and extract account info
   app.post("/api/parse-credit-report", requireAuth, async (req, res, next) => {
     try {
       const { reportText, bureau } = req.body;
-      
+
       if (!reportText || !bureau) {
         return res.status(400).json({ message: "Report text and bureau are required" });
       }
-      
+
       const systemPrompt = `You are an expert credit report analyst specializing in FCRA compliance and Metro 2 data formats. 
 Your task is to analyze credit report text and extract account information that may contain errors or inaccuracies.
 
@@ -1578,12 +1603,12 @@ Respond in JSON format with this structure:
         response_format: { type: "json_object" },
         max_tokens: 2000,
       });
-      
+
       const content = response.choices[0]?.message?.content;
       if (!content) {
         return res.status(500).json({ message: "Failed to parse credit report" });
       }
-      
+
       const parsed = JSON.parse(content);
       res.json(parsed);
     } catch (error) {
@@ -1593,13 +1618,13 @@ Respond in JSON format with this structure:
   });
 
   // ========== ADMIN ROUTES ==========
-  
+
   // Middleware to check admin role with proper async error handling
   function requireAdmin(req: any, res: any, next: any) {
     if (!req.session?.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
+
     storage.getUser(req.session.userId)
       .then(user => {
         if (!user || user.role !== "ADMIN") {
@@ -1611,7 +1636,7 @@ Respond in JSON format with this structure:
         next(err);
       });
   }
-  
+
   // GET /api/admin/users - Get all users
   app.get("/api/admin/users", requireAdmin, async (req, res, next) => {
     try {
@@ -1622,7 +1647,7 @@ Respond in JSON format with this structure:
       next(error);
     }
   });
-  
+
   // GET /api/admin/clients - Get all clients
   app.get("/api/admin/clients", requireAdmin, async (req, res, next) => {
     try {
@@ -1633,7 +1658,7 @@ Respond in JSON format with this structure:
       next(error);
     }
   });
-  
+
   // GET /api/admin/affiliates - Get all affiliates
   app.get("/api/admin/affiliates", requireAdmin, async (req, res, next) => {
     try {
@@ -1644,21 +1669,21 @@ Respond in JSON format with this structure:
       next(error);
     }
   });
-  
+
   // POST /api/admin/affiliates - Create new affiliate
   app.post("/api/admin/affiliates", requireAdmin, async (req, res, next) => {
     try {
       const { email, password, firstName, lastName } = req.body;
-      
+
       if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({ message: "Missing required fields" });
       }
-      
+
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "User with this email already exists" });
       }
-      
+
       const passwordHash = await bcrypt.hash(password, 10);
       const affiliate = await storage.createUser({
         email,
@@ -1667,50 +1692,50 @@ Respond in JSON format with this structure:
         lastName,
         role: "AFFILIATE",
       });
-      
+
       const { passwordHash: _, ...affiliateWithoutPassword } = affiliate;
       res.json(affiliateWithoutPassword);
     } catch (error) {
       next(error);
     }
   });
-  
+
   // DELETE /api/admin/users/:id - Delete a user
   app.delete("/api/admin/users/:id", requireAdmin, async (req, res, next) => {
     try {
       const { id } = req.params;
-      
+
       if (id === req.session.userId) {
         return res.status(400).json({ message: "Cannot delete your own account" });
       }
-      
+
       const deleted = await storage.deleteUser(id);
       if (!deleted) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       next(error);
     }
   });
-  
+
   // GET /api/admin/users/:id - Get user details with subscription and disputes
   app.get("/api/admin/users/:id", requireAdmin, async (req, res, next) => {
     try {
       const { id } = req.params;
       const user = await storage.getUser(id);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       const subscription = await storage.getSubscriptionForUser(id);
       const disputes = await storage.getDisputesForUser(id);
       const auditLogs = await storage.getAuditLogsForUser(id);
-      
+
       const { passwordHash: _, ...userWithoutPassword } = user;
-      
+
       res.json({
         ...userWithoutPassword,
         subscription,
@@ -1727,19 +1752,19 @@ Respond in JSON format with this structure:
     try {
       const { id } = req.params;
       const { tier } = req.body;
-      
+
       const validTiers = ['FREE', 'SELF_STARTER', 'GROWTH', 'COMPLIANCE_PLUS'];
       if (!tier || !validTiers.includes(tier)) {
         return res.status(400).json({ message: `Invalid tier. Must be one of: ${validTiers.join(', ')}` });
       }
-      
+
       const user = await storage.getUser(id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       let subscription = await storage.getSubscriptionForUser(id);
-      
+
       if (subscription) {
         subscription = await storage.updateSubscription(id, { tier });
       } else {
@@ -1749,7 +1774,7 @@ Respond in JSON format with this structure:
           status: 'ACTIVE',
         });
       }
-      
+
       await storage.createAuditLog({
         userId: req.session.userId!,
         action: 'PROFILE_UPDATED',
@@ -1759,7 +1784,7 @@ Respond in JSON format with this structure:
         ipAddress: req.ip,
         userAgent: req.get('user-agent'),
       });
-      
+
       res.json(subscription);
     } catch (error) {
       next(error);
@@ -1771,15 +1796,15 @@ Respond in JSON format with this structure:
     try {
       const { id } = req.params;
       const dispute = await storage.getDispute(id);
-      
+
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
-      
+
       const user = await storage.getUser(dispute.userId);
       const evidence = await storage.getEvidenceForDispute(id);
       const checklist = await storage.getChecklistForDispute(id);
-      
+
       res.json({
         ...dispute,
         user: user ? { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } : null,
@@ -1800,18 +1825,18 @@ Respond in JSON format with this structure:
       next(error);
     }
   });
-  
+
   // GET /api/admin/stats - Get admin statistics
   app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
     try {
       const allUsers = await storage.getAllUsers();
       const allDisputes = await storage.getAllDisputes();
-      
+
       const clients = allUsers.filter(u => u.role === "CLIENT");
       const affiliates = allUsers.filter(u => u.role === "AFFILIATE");
       const pendingDisputes = allDisputes.filter(d => d.status === "GENERATED");
       const resolvedDisputes = allDisputes.filter(d => d.status === "RESOLVED");
-      
+
       res.json({
         totalClients: clients.length,
         totalAffiliates: affiliates.length,
@@ -1825,27 +1850,17 @@ Respond in JSON format with this structure:
   });
 
   // ========== EVIDENCE MANAGEMENT ROUTES ==========
-  
-  // Configure multer for evidence uploads (save to disk)
+
+  // Configure multer for evidence uploads (in memory, then to Supabase)
   const evidenceUpload = multer({
-    storage: multer.diskStorage({
-      destination: (req, file, cb) => {
-        const uploadDir = path.join(process.cwd(), 'uploads', 'evidence');
-        fs.mkdirSync(uploadDir, { recursive: true });
-        cb(null, uploadDir);
-      },
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + '-' + file.originalname);
-      }
-    }),
+    storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
-        cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and PDF files are allowed.'));
+        cb(new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.'));
       }
     }
   });
@@ -1854,13 +1869,13 @@ Respond in JSON format with this structure:
   app.get("/api/disputes/:id/evidence", requireAuth, async (req, res, next) => {
     try {
       const { id } = req.params;
-      
+
       // Verify user owns this dispute
       const dispute = await storage.getDispute(id);
       if (!dispute || dispute.userId !== req.session.userId) {
         return res.status(404).json({ message: "Dispute not found" });
       }
-      
+
       const evidence = await storage.getEvidenceForDispute(id);
       res.json(evidence);
     } catch (error) {
@@ -1878,20 +1893,38 @@ Respond in JSON format with this structure:
           }
           return res.status(400).json({ message: err.message });
         }
-        
+
         if (!req.file) {
           return res.status(400).json({ message: "No file uploaded" });
         }
-        
+
         const { id } = req.params;
         const { documentType, description, bureau } = req.body;
-        
+
         // Verify user owns this dispute
         const dispute = await storage.getDispute(id);
         if (!dispute || dispute.userId !== req.session.userId) {
           return res.status(404).json({ message: "Dispute not found" });
         }
-        
+
+        // Upload to Supabase
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileName = `${uniqueSuffix}-${req.file.originalname}`;
+        const filePath = `user_${req.session.userId}/evidence/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(VAULT_BUCKET)
+          .upload(filePath, req.file.buffer, {
+            contentType: req.file.mimetype,
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error("Supabase upload error:", uploadError);
+          return res.status(500).json({ message: "Failed to upload to secure vault." });
+        }
+
         // Create evidence record
         const evidence = await storage.createEvidence({
           disputeId: id,
@@ -1900,11 +1933,11 @@ Respond in JSON format with this structure:
           fileName: req.file.originalname,
           fileSize: req.file.size,
           mimeType: req.file.mimetype,
-          storagePath: req.file.path,
+          storagePath: filePath,
           description: description || null,
           bureau: bureau || null,
         });
-        
+
         // Log the action
         await storage.createAuditLog({
           userId: req.session.userId!,
@@ -1915,12 +1948,58 @@ Respond in JSON format with this structure:
           ipAddress: req.ip,
           userAgent: req.get('user-agent'),
         });
-        
+
         res.json(evidence);
       } catch (error) {
         next(error);
       }
     });
+  });
+
+  // GET /api/vault/signed-url/:type/:id - Get a signed URL for a document
+  app.get("/api/vault/signed-url/:type/:id", requireAuth, async (req, res, next) => {
+    try {
+      const { type, id } = req.params;
+      let storagePath: string | undefined;
+
+      if (type === 'evidence') {
+        const evidence = await storage.getEvidenceById(id);
+        if (evidence && evidence.userId === req.session.userId) {
+          storagePath = evidence.storagePath;
+        }
+      } else if (type === 'report') {
+        const report = await storage.getCreditReport(id);
+        if (report && report.userId === req.session.userId) {
+          // Note: If reports also have storage paths, use them. 
+          // Currently, reports might only be parsed data, but if we save the PDF:
+          // storagePath = report.storagePath;
+        }
+      }
+
+      if (!storagePath) {
+        return res.status(404).json({ message: "Document not found or access denied." });
+      }
+
+      const signedUrl = await storage.getSignedUrl(storagePath);
+      if (!signedUrl) {
+        return res.status(500).json({ message: "Failed to generate access link." });
+      }
+
+      // Log the access for audit trail (especially important if admin/unusual access occurs)
+      await storage.createAuditLog({
+        userId: req.session.userId!,
+        action: 'FILE_VIEWED',
+        resourceType: 'DOCUMENT',
+        resourceId: id,
+        details: JSON.stringify({ type, status: 'SUCCESS' }),
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.json({ url: signedUrl });
+    } catch (error) {
+      next(error);
+    }
   });
 
   // GET /api/evidence - Get all evidence for current user
@@ -1937,16 +2016,16 @@ Respond in JSON format with this structure:
   app.get("/api/evidence/:id/thumbnail", requireAuth, async (req, res, next) => {
     try {
       const { id } = req.params;
-      
+
       const evidence = await storage.getEvidenceById(id);
       if (!evidence || evidence.userId !== req.session.userId) {
         return res.status(404).json({ message: "Evidence not found" });
       }
-      
+
       if (!evidence.mimeType.startsWith('image/')) {
         return res.status(400).json({ message: "Not an image file" });
       }
-      
+
       res.sendFile(evidence.storagePath, { root: '.' });
     } catch (error) {
       next(error);
@@ -1957,18 +2036,18 @@ Respond in JSON format with this structure:
   app.delete("/api/evidence/:id", requireAuth, async (req, res, next) => {
     try {
       const { id } = req.params;
-      
+
       const evidence = await storage.getEvidenceById(id);
       if (!evidence || evidence.userId !== req.session.userId) {
         return res.status(404).json({ message: "Evidence not found" });
       }
-      
+
       const deleted = await storage.deleteEvidence(id);
-      
+
       if (!deleted) {
         return res.status(404).json({ message: "Evidence not found" });
       }
-      
+
       // Log the action
       await storage.createAuditLog({
         userId: req.session.userId!,
@@ -1979,7 +2058,7 @@ Respond in JSON format with this structure:
         ipAddress: req.ip,
         userAgent: req.get('user-agent'),
       });
-      
+
       res.json({ message: "Evidence deleted successfully" });
     } catch (error) {
       next(error);
@@ -2025,7 +2104,7 @@ Respond in JSON format with this structure:
         const user = await storage.getUser(req.session.userId);
         const subscription = user ? await storage.getSubscriptionForUser(user.id) : null;
         const disputes = user ? await storage.getDisputesForUser(user.id) : [];
-        const hasActiveDispute = disputes.some((d: { status: string }) => 
+        const hasActiveDispute = disputes.some((d: { status: string }) =>
           !["RESOLVED", "ESCALATED", "WITHDRAWN"].includes(d.status)
         );
 
@@ -2059,19 +2138,19 @@ Respond in JSON format with this structure:
   app.get("/api/affiliates/dispute/:disputeId", requireAuth, async (req, res, next) => {
     try {
       const { disputeId } = req.params;
-      
+
       const dispute = await storage.getDispute(disputeId);
       if (!dispute) {
         return res.status(404).json({ error: "Dispute not found" });
       }
-      
+
       if (dispute.userId !== req.session.userId) {
         return res.status(403).json({ error: "Access denied" });
       }
 
       const { DisputeStatus } = await import("@shared/disputeStates");
       const disputeStatus = dispute.status as keyof typeof DisputeStatus;
-      
+
       if (!Object.values(DisputeStatus).includes(disputeStatus as any)) {
         return res.status(400).json({ error: "Invalid dispute status" });
       }
@@ -2124,9 +2203,9 @@ Respond in JSON format with this structure:
     try {
       const validationResult = insertIotDeviceSchema.safeParse(req.body);
       if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Invalid device data", 
-          errors: validationResult.error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Invalid device data",
+          errors: validationResult.error.flatten().fieldErrors
         });
       }
 
@@ -2176,9 +2255,9 @@ Respond in JSON format with this structure:
 
       const validationResult = updateIotDeviceSchema.safeParse(req.body);
       if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Invalid device data", 
-          errors: validationResult.error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Invalid device data",
+          errors: validationResult.error.flatten().fieldErrors
         });
       }
 

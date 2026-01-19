@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import { 
-  Upload, FileText, AlertCircle, CheckCircle2, Trash2, 
-  ChevronRight, Loader2, X, FileWarning, Eye
+import {
+  Upload, FileText, AlertCircle, CheckCircle2, Trash2,
+  ChevronRight, Loader2, X, FileWarning, Eye, FolderOpen
 } from "lucide-react";
 import type { CreditReport, CreditReportAccount } from "@shared/schema";
 
@@ -38,23 +38,23 @@ const BUREAUS = [
 export default function CreditReportsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [selectedBureau, setSelectedBureau] = useState<string>("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [parsedResult, setParsedResult] = useState<ParsedResult | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-  
+
   const { data: reports = [], isLoading } = useQuery<CreditReport[]>({
     queryKey: ["/api/credit-reports"],
   });
-  
+
   const { data: reportDetail } = useQuery<{ report: CreditReport; accounts: CreditReportAccount[] }>({
     queryKey: ["/api/credit-reports", selectedReportId],
     enabled: !!selectedReportId,
   });
-  
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/credit-reports/${id}`, { method: "DELETE" });
@@ -65,11 +65,11 @@ export default function CreditReportsPage() {
       toast({ title: "Report deleted", description: "Credit report has been removed." });
     },
   });
-  
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file && file.type === "application/pdf") {
       handleUpload(file);
@@ -77,38 +77,38 @@ export default function CreditReportsPage() {
       toast({ title: "Invalid file", description: "Please upload a PDF file.", variant: "destructive" });
     }
   }, [selectedBureau]);
-  
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       handleUpload(file);
     }
   };
-  
+
   const handleUpload = async (file: File) => {
     if (!selectedBureau) {
       toast({ title: "Select bureau", description: "Please select which credit bureau this report is from.", variant: "destructive" });
       return;
     }
-    
+
     setIsUploading(true);
     setUploadProgress(0);
     setParsedResult(null);
-    
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("bureau", selectedBureau);
-    
+
     try {
       const xhr = new XMLHttpRequest();
-      
+
       xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable) {
           const percent = Math.round((e.loaded / e.total) * 50);
           setUploadProgress(percent);
         }
       });
-      
+
       xhr.addEventListener("load", () => {
         if (xhr.status === 200) {
           setUploadProgress(100);
@@ -122,23 +122,23 @@ export default function CreditReportsPage() {
         }
         setIsUploading(false);
       });
-      
+
       xhr.addEventListener("error", () => {
         toast({ title: "Upload failed", description: "Network error occurred.", variant: "destructive" });
         setIsUploading(false);
       });
-      
+
       xhr.open("POST", "/api/upload-credit-report");
       xhr.withCredentials = true;
       xhr.send(formData);
-      
+
       setUploadProgress(50);
     } catch (error) {
       toast({ title: "Upload failed", description: "An error occurred while uploading.", variant: "destructive" });
       setIsUploading(false);
     }
   };
-  
+
   const getConfidenceBadge = (confidence: string) => {
     switch (confidence) {
       case "HIGH":
@@ -150,18 +150,37 @@ export default function CreditReportsPage() {
     }
   };
 
+  const handleViewReport = async (reportId: string) => {
+    try {
+      const res = await fetch(`/api/vault/signed-url/report/${reportId}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to get signed URL');
+      const { url } = await res.json();
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Access Denied', description: 'Could not generate a secure access link.' });
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-primary" data-testid="page-title">
-            Credit Report Upload
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Upload your credit report PDF to extract account information for dispute preparation.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-primary" data-testid="page-title">
+              RiseOra Secure Vault
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Upload and manage your credit reports securely. All documents are stored with end-to-end encryption.
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-3">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1 px-3 py-1">
+              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+              Vault Secure
+            </Badge>
+          </div>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Upload Credit Report</CardTitle>
@@ -182,11 +201,10 @@ export default function CreditReportsPage() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div
-              className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-                isDragOver ? "border-primary bg-primary/5" : "border-slate-200 hover:border-slate-300"
-              } ${!selectedBureau ? "opacity-50 pointer-events-none" : ""}`}
+              className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${isDragOver ? "border-primary bg-primary/5" : "border-slate-200 hover:border-slate-300"
+                } ${!selectedBureau ? "opacity-50 pointer-events-none" : ""}`}
               onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
               onDragLeave={() => setIsDragOver(false)}
               onDrop={handleDrop}
@@ -197,7 +215,7 @@ export default function CreditReportsPage() {
                   <Loader2 className="h-12 w-12 mx-auto animate-spin text-primary" />
                   <div className="space-y-2">
                     <p className="font-medium">
-                      {uploadProgress < 50 ? "Uploading..." : "Analyzing your report..."}
+                      {uploadProgress < 50 ? "Uploading to Vault..." : "Analyzing your report..."}
                     </p>
                     <Progress value={uploadProgress} className="max-w-xs mx-auto" />
                     <p className="text-sm text-muted-foreground">
@@ -207,7 +225,9 @@ export default function CreditReportsPage() {
                 </div>
               ) : (
                 <>
-                  <Upload className="h-12 w-12 mx-auto text-slate-400 mb-4" />
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Upload className="h-8 w-8 text-primary" />
+                  </div>
                   <p className="font-medium mb-2">Drag & drop your credit report PDF here</p>
                   <p className="text-sm text-muted-foreground mb-4">or click to browse files</p>
                   <input
@@ -224,17 +244,17 @@ export default function CreditReportsPage() {
                 </>
               )}
             </div>
-            
-            <div className="flex items-start gap-2 p-4 bg-amber-50 rounded-lg border border-amber-200">
-              <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-amber-900">
-                <p className="font-medium">Privacy Notice</p>
-                <p>Your credit report data is encrypted and processed securely. We do not share your information with third parties.</p>
+
+            <div className="flex items-start gap-2 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-emerald-900">
+                <p className="font-medium">Vault Protection Enabled</p>
+                <p>Your data is processed in a secure environment. We do not store unencrypted copies of your sensitive information.</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         {parsedResult && (
           <Card className="border-primary/20 bg-primary/5">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -245,9 +265,14 @@ export default function CreditReportsPage() {
                 </CardTitle>
                 <CardDescription>{parsedResult.summary}</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setParsedResult(null)}>
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => handleViewReport(parsedResult.reportId)}>
+                  <FileText className="h-4 w-4" /> View Original
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setParsedResult(null)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -291,11 +316,11 @@ export default function CreditReportsPage() {
             </CardContent>
           </Card>
         )}
-        
+
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Your Credit Reports</CardTitle>
-            <CardDescription>Previously uploaded credit reports and their extracted accounts.</CardDescription>
+            <CardTitle className="text-lg">Your Vault Storage</CardTitle>
+            <CardDescription>Securely stored credit reports and extracted metadata.</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -304,31 +329,37 @@ export default function CreditReportsPage() {
               </div>
             ) : reports.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <FileWarning className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                <p>No credit reports uploaded yet.</p>
-                <p className="text-sm">Upload your first report above to get started.</p>
+                <FolderOpen className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                <p>No documents in your vault yet.</p>
+                <p className="text-sm">Upload your first report above to secure it.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {reports.map((report) => (
-                  <div key={report.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg" data-testid={`report-${report.id}`}>
+                  <div key={report.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border" data-testid={`report-${report.id}`}>
                     <div className="flex items-center gap-3">
-                      <FileText className="h-8 w-8 text-primary" />
+                      <div className="w-10 h-10 rounded bg-blue-100 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                      </div>
                       <div>
                         <p className="font-medium">{report.fileName}</p>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Badge variant="outline">{report.bureau}</Badge>
+                          <Badge variant="outline" className="bg-white">{report.bureau}</Badge>
                           <span>{report.totalAccounts} accounts</span>
                           {report.negativeAccounts ? (
-                            <span className="text-amber-600">{report.negativeAccounts} negative</span>
+                            <span className="text-red-600 font-medium">{report.negativeAccounts} negative</span>
                           ) : null}
                           <span>{formatDistanceToNow(new Date(report.createdAt), { addSuffix: true })}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => setSelectedReportId(report.id)} data-testid={`button-view-${report.id}`}>
+                      <Button variant="outline" size="sm" className="gap-2" onClick={() => handleViewReport(report.id)} data-testid={`button-view-${report.id}`}>
                         <Eye className="h-4 w-4" />
+                        <span className="hidden sm:inline">View Securely</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setSelectedReportId(report.id)}>
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(report.id)} data-testid={`button-delete-${report.id}`}>
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -341,7 +372,7 @@ export default function CreditReportsPage() {
           </CardContent>
         </Card>
       </div>
-      
+
       <Dialog open={!!selectedReportId} onOpenChange={(open) => !open && setSelectedReportId(null)}>
         <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>

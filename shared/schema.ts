@@ -11,7 +11,7 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("CLIENT"), // CLIENT, AFFILIATE, ADMIN
-  
+
   // Encrypted sensitive fields (stored encrypted at rest)
   addressEncrypted: text("address_encrypted"), // Full address
   cityEncrypted: text("city_encrypted"),
@@ -19,7 +19,7 @@ export const users = pgTable("users", {
   zipEncrypted: text("zip_encrypted"),
   birthYearEncrypted: text("birth_year_encrypted"), // Birth year only (not full DOB) for compliance
   ssnLast4Encrypted: text("ssn_last4_encrypted"), // Last 4 SSN digits only
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -28,17 +28,17 @@ export const users = pgTable("users", {
 export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
-  
+
   tier: text("tier").notNull().default("FREE"), // FREE, SELF_STARTER, GROWTH, COMPLIANCE_PLUS
   status: text("status").notNull().default("ACTIVE"), // ACTIVE, CANCELED, PAST_DUE
-  
+
   // Stripe integration (for future use)
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
-  
+
   currentPeriodEnd: timestamp("current_period_end"),
   cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -47,7 +47,7 @@ export const subscriptions = pgTable("subscriptions", {
 export const disputes = pgTable("disputes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  
+
   // Dispute details
   creditorName: text("creditor_name").notNull(),
   accountNumber: text("account_number"),
@@ -55,24 +55,24 @@ export const disputes = pgTable("disputes", {
   status: text("status").notNull().default("DRAFT"), // DRAFT, READY_TO_MAIL, MAILED, DELIVERED, IN_INVESTIGATION, RESPONSE_RECEIVED, REMOVED, VERIFIED, NO_RESPONSE, ESCALATION_AVAILABLE, CLOSED
   disputeReason: text("dispute_reason").notNull(),
   customReason: text("custom_reason"),
-  
+
   // Metro 2 compliance
   metro2Compliant: boolean("metro2_compliant").notNull().default(true),
-  
+
   // 5-Step Template Tracking
   templateStage: text("template_stage").notNull().default("INVESTIGATION_REQUEST"), // INVESTIGATION_REQUEST, PERSONAL_INFO_REMOVER, VALIDATION_OF_DEBT, FACTUAL_LETTER, TERMINATION_LETTER, AI_ESCALATION
   templateStageStartedAt: timestamp("template_stage_started_at"),
-  
+
   // Generated letter content
   letterContent: text("letter_content"),
-  
+
   // Progress tracking
   mailedAt: timestamp("mailed_at"),
   trackingNumber: text("tracking_number"),
   deliveredAt: timestamp("delivered_at"),
   responseDeadline: timestamp("response_deadline"), // 30 days from mailed date
   responseReceivedAt: timestamp("response_received_at"),
-  
+
   // Dispute workflow state fields (required for AI guidance)
   disputeType: text("dispute_type").notNull().default("inaccurate_reporting"), // inaccurate_reporting, identity_theft, mixed_file, etc.
   dvSent: boolean("dv_sent").notNull().default(false),
@@ -84,7 +84,7 @@ export const disputes = pgTable("disputes", {
   movSent: boolean("mov_sent").notNull().default(false),
   directDisputeSent: boolean("direct_dispute_sent").notNull().default(false),
   inaccuracyPersists: boolean("inaccuracy_persists").notNull().default(true),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -93,13 +93,13 @@ export const disputes = pgTable("disputes", {
 export const disputeChecklists = pgTable("dispute_checklists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   disputeId: varchar("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
-  
+
   label: text("label").notNull(),
   description: text("description"),
   orderIndex: integer("order_index").notNull().default(0),
   completed: boolean("completed").notNull().default(false),
   completedAt: timestamp("completed_at"),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -107,11 +107,11 @@ export const disputeChecklists = pgTable("dispute_checklists", {
 export const userNotificationSettings = pgTable("user_notification_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
-  
+
   emailEnabled: boolean("email_enabled").notNull().default(true),
   inAppEnabled: boolean("in_app_enabled").notNull().default(true),
   reminderLeadDays: integer("reminder_lead_days").notNull().default(5), // Days before deadline to remind
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -121,17 +121,17 @@ export const notifications = pgTable("notifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   disputeId: varchar("dispute_id").references(() => disputes.id, { onDelete: "cascade" }),
-  
+
   type: text("type").notNull(), // DEADLINE_APPROACHING, NO_RESPONSE, FOLLOW_UP, STATUS_UPDATE
   title: text("title").notNull(),
   message: text("message").notNull(),
-  
+
   read: boolean("read").notNull().default(false),
   readAt: timestamp("read_at"),
-  
+
   scheduledFor: timestamp("scheduled_for"),
   deliveredAt: timestamp("delivered_at"),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -139,7 +139,7 @@ export const notifications = pgTable("notifications", {
 export const disputeAiGuidance = pgTable("dispute_ai_guidance", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   disputeId: varchar("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
-  
+
   guidanceType: text("guidance_type").notNull().default("ESCALATION"), // ESCALATION, FOLLOW_UP, etc.
   summary: text("summary").notNull(), // Customer-facing educational summary (no internal notes)
   nextSteps: text("next_steps").array().notNull(), // Array of action steps
@@ -147,9 +147,9 @@ export const disputeAiGuidance = pgTable("dispute_ai_guidance", {
   followUpTemplate: text("follow_up_template").notNull(), // Template for follow-up letter
   timeline: text("timeline").notNull(), // Suggested timeline for actions
   internalNotes: text("internal_notes"), // Backend-only notes (not shown to customer)
-  
+
   aiModel: text("ai_model").default("gpt-4o-mini"),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -158,16 +158,16 @@ export const disputeEvidence = pgTable("dispute_evidence", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   disputeId: varchar("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
   userId: varchar("user_id").notNull().references(() => users.id),
-  
+
   documentType: text("document_type").notNull(), // ID, PROOF_OF_ADDRESS, SSN_CARD, UTILITY_BILL, FTC_REPORT, CREDIT_REPORT, OTHER
   fileName: text("file_name").notNull(),
   fileSize: integer("file_size").notNull(), // bytes
   mimeType: text("mime_type").notNull(),
   storagePath: text("storage_path").notNull(), // path to file in storage
-  
+
   description: text("description"), // optional user note
   bureau: text("bureau"), // optional: attach to specific bureau (EXPERIAN, TRANSUNION, EQUIFAX)
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -175,15 +175,15 @@ export const disputeEvidence = pgTable("dispute_evidence", {
 export const auditLog = pgTable("audit_log", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  
+
   action: text("action").notNull(), // LETTER_GENERATED, DISPUTE_CREATED, FILE_UPLOADED, STATUS_UPDATED, etc.
   resourceType: text("resource_type").notNull(), // DISPUTE, DOCUMENT, PROFILE, etc.
   resourceId: varchar("resource_id"), // ID of the affected resource
-  
+
   details: text("details"), // JSON string with action-specific details
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -246,12 +246,12 @@ export const insertDisputeEvidenceSchema = createInsertSchema(disputeEvidence, {
 
 export const insertAuditLogSchema = createInsertSchema(auditLog, {
   action: z.enum([
-    "LETTER_GENERATED", 
-    "DISPUTE_CREATED", 
+    "LETTER_GENERATED",
+    "DISPUTE_CREATED",
     "DISPUTE_UPDATED",
-    "FILE_UPLOADED", 
+    "FILE_UPLOADED",
     "FILE_DELETED",
-    "STATUS_UPDATED", 
+    "STATUS_UPDATED",
     "PROFILE_UPDATED",
     "PASSWORD_CHANGED",
     "LOGIN",
@@ -403,20 +403,22 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export const creditReports = pgTable("credit_reports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  
+
   fileName: text("file_name").notNull(),
   fileSize: integer("file_size").notNull(),
   bureau: text("bureau"), // EXPERIAN, TRANSUNION, EQUIFAX, or null if unknown
   reportDate: timestamp("report_date"), // Date the report was generated
-  
+
   // Processing status
   status: text("status").notNull().default("PENDING"), // PENDING, PROCESSING, COMPLETED, FAILED
   errorMessage: text("error_message"),
-  
+
   // Extracted summary (high-level stats)
   totalAccounts: integer("total_accounts"),
   negativeAccounts: integer("negative_accounts"),
-  
+
+  storagePath: text("storage_path"), // path to file in secure storage
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   processedAt: timestamp("processed_at"),
 });
@@ -426,33 +428,33 @@ export const creditReportAccounts = pgTable("credit_report_accounts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   reportId: varchar("report_id").notNull().references(() => creditReports.id, { onDelete: "cascade" }),
   userId: varchar("user_id").notNull().references(() => users.id),
-  
+
   // Account details
   creditorName: text("creditor_name").notNull(),
   accountNumber: text("account_number"), // Last 4 or masked
   accountType: text("account_type"), // CREDIT_CARD, MORTGAGE, AUTO_LOAN, COLLECTION, etc.
-  
+
   // Status indicators
   accountStatus: text("account_status"), // OPEN, CLOSED, COLLECTION, CHARGE_OFF, etc.
   paymentStatus: text("payment_status"), // CURRENT, LATE_30, LATE_60, LATE_90, LATE_120+
   isNegative: boolean("is_negative").notNull().default(false),
-  
+
   // Financial details
   balance: integer("balance"), // Current balance in cents
   creditLimit: integer("credit_limit"), // Credit limit in cents
   highBalance: integer("high_balance"), // Highest balance in cents
   monthlyPayment: integer("monthly_payment"), // Monthly payment in cents
-  
+
   // Dates
   dateOpened: timestamp("date_opened"),
   lastReportedDate: timestamp("last_reported_date"),
-  
+
   // Raw extracted text for reference
   rawText: text("raw_text"),
-  
+
   // Dispute linkage
   disputeId: varchar("dispute_id").references(() => disputes.id),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -475,16 +477,16 @@ export type InsertCreditReportAccount = z.infer<typeof insertCreditReportAccount
 // IoT Devices table for inventory management
 export const iotDevices = pgTable("iot_devices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  
+
   // Device identification
   deviceId: text("device_id").notNull().unique(), // Custom device identifier
   deviceName: text("device_name").notNull(),
   deviceType: text("device_type").notNull(), // SENSOR, CAMERA, GATEWAY, CONTROLLER, OTHER
-  
+
   // Ownership and location
   ownerDepartment: text("owner_department").notNull(),
   location: text("location").notNull(),
-  
+
   // Technical details
   macAddress: text("mac_address"),
   ipAddress: text("ip_address"),
@@ -492,15 +494,15 @@ export const iotDevices = pgTable("iot_devices", {
   manufacturer: text("manufacturer"),
   model: text("model"),
   serialNumber: text("serial_number"),
-  
+
   // Status and network
   status: text("status").notNull().default("ACTIVE"), // ACTIVE, INACTIVE, MAINTENANCE, RETIRED
   networkSegment: text("network_segment"),
-  
+
   // Audit fields
   lastSeenAt: timestamp("last_seen_at"),
   notes: text("notes"),
-  
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

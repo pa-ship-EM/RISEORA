@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, FolderOpen, Image, Trash2, Loader2, ExternalLink } from "lucide-react";
+import { FileText, Download, FolderOpen, Image, Trash2, Loader2, ExternalLink, Eye } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { DisputeEvidence, DocumentType } from "@/lib/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -55,6 +55,17 @@ export default function DocumentsPage() {
     },
   });
 
+  const handleViewDocument = async (type: 'evidence' | 'report', id: string) => {
+    try {
+      const res = await fetch(`/api/vault/signed-url/${type}/${id}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to get signed URL');
+      const { url } = await res.json();
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Access Denied', description: 'Could not generate a secure access link.' });
+    }
+  };
+
   const documentsByType = documents.reduce((acc, doc) => {
     const type = doc.documentType as DocumentType;
     if (!acc[type]) acc[type] = [];
@@ -67,12 +78,18 @@ export default function DocumentsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-serif font-bold text-primary">My Documents</h1>
-            <p className="text-muted-foreground">View and manage your uploaded documents and evidence.</p>
+            <h1 className="text-2xl font-serif font-bold text-primary">RiseOra Document Vault</h1>
+            <p className="text-muted-foreground">Secure, encrypted storage for your credit education materials and evidence.</p>
           </div>
-          <Badge variant="secondary" className="text-sm" data-testid="badge-doc-count">
-            {documents.length} document{documents.length !== 1 ? 's' : ''}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 px-3 py-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Encrypted Storage
+            </Badge>
+            <Badge variant="secondary" className="text-sm" data-testid="badge-doc-count">
+              {documents.length} document{documents.length !== 1 ? 's' : ''}
+            </Badge>
+          </div>
         </div>
 
         {isLoading ? (
@@ -87,9 +104,9 @@ export default function DocumentsPage() {
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                 <FolderOpen className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-primary mb-2">No Documents Yet</h3>
+              <h3 className="text-xl font-semibold text-primary mb-2">Your Vault is Empty</h3>
               <p className="text-muted-foreground text-center max-w-md mb-6">
-                Documents you upload when creating or managing disputes will appear here. 
+                Documents you upload when creating or managing disputes will appear here.
                 Start by creating a dispute and uploading your supporting evidence.
               </p>
               <Link href="/dashboard/disputes">
@@ -105,7 +122,7 @@ export default function DocumentsPage() {
               const typeInfo = DOCUMENT_TYPES[type as DocumentType] || DOCUMENT_TYPES.OTHER;
               return (
                 <Card key={type}>
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-3 border-b">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Badge className={`${typeInfo.color} border-0`}>{typeInfo.label}</Badge>
@@ -113,32 +130,22 @@ export default function DocumentsPage() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-4">
                     <div className="grid gap-3">
                       {docs.map((doc) => (
-                        <div 
-                          key={doc.id} 
+                        <div
+                          key={doc.id}
                           className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
                           data-testid={`document-${doc.id}`}
                         >
                           <div className="flex items-center gap-3">
-                            {doc.mimeType.startsWith('image/') ? (
-                              <div className="w-12 h-12 rounded bg-muted flex items-center justify-center overflow-hidden">
-                                <img 
-                                  src={`/api/evidence/${doc.id}/thumbnail`} 
-                                  alt={doc.fileName}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                    (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg class="h-6 w-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
-                                <FileText className="h-6 w-6 text-muted-foreground" />
-                              </div>
-                            )}
+                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center border shadow-sm">
+                              {doc.mimeType.startsWith('image/') ? (
+                                <Image className="h-6 w-6 text-primary" />
+                              ) : (
+                                <FileText className="h-6 w-6 text-primary" />
+                              )}
+                            </div>
                             <div>
                               <p className="font-medium truncate max-w-[200px] sm:max-w-[300px]">{doc.fileName}</p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -154,11 +161,22 @@ export default function DocumentsPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-2 h-9"
+                              onClick={() => handleViewDocument('evidence', doc.id)}
+                              data-testid={`button-view-${doc.id}`}
+                            >
+                              <Eye className="h-4 w-4" />
+                              <span className="hidden sm:inline">View Securely</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
                               onClick={() => deleteMutation.mutate(doc.id)}
                               disabled={deleteMutation.isPending}
+                              className="h-9 w-9 p-0"
                               data-testid={`button-delete-doc-${doc.id}`}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />

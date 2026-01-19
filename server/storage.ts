@@ -1,6 +1,4 @@
-import { 
-  users, disputes, subscriptions, disputeChecklists, notifications, userNotificationSettings, disputeAiGuidance,
-  disputeEvidence, auditLog, creditReports, creditReportAccounts, iotDevices,
+import {
   type User, type InsertUser, type Dispute, type InsertDispute, type Subscription, type InsertSubscription,
   type DisputeChecklist, type InsertDisputeChecklist, type Notification, type InsertNotification,
   type UserNotificationSettings, type InsertUserNotificationSettings,
@@ -10,10 +8,13 @@ import {
   type CreditReport, type InsertCreditReport,
   type CreditReportAccount, type InsertCreditReportAccount,
   type IotDevice, type InsertIotDevice,
-  DEFAULT_DISPUTE_CHECKLIST
+  DEFAULT_DISPUTE_CHECKLIST,
+  users, disputes, subscriptions, disputeChecklists, notifications, userNotificationSettings, disputeAiGuidance,
+  disputeEvidence, auditLog, creditReports, creditReportAccounts, iotDevices
 } from "@shared/schema";
 import { db, withRetry } from "./db";
 import { eq, and, lt, isNull, desc } from "drizzle-orm";
+import { supabase, VAULT_BUCKET } from "./supabase";
 
 export interface IStorage {
   // User methods
@@ -21,12 +22,12 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserProfile(id: string, data: Partial<User>): Promise<User | undefined>;
-  
+
   // Subscription methods
   getSubscriptionForUser(userId: string): Promise<Subscription | undefined>;
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
   updateSubscription(userId: string, data: Partial<Subscription>): Promise<Subscription | undefined>;
-  
+
   // Dispute methods
   getDisputesForUser(userId: string): Promise<Dispute[]>;
   getDispute(id: string): Promise<Dispute | undefined>;
@@ -36,61 +37,61 @@ export interface IStorage {
   deleteDispute(id: string): Promise<boolean>;
   countDisputesForUser(userId: string): Promise<number>;
   countDisputesByBureauLast30Days(userId: string, bureau: string): Promise<number>;
-  
+
   // Dispute checklist methods
   getChecklistForDispute(disputeId: string): Promise<DisputeChecklist[]>;
   createChecklistItems(items: InsertDisputeChecklist[]): Promise<DisputeChecklist[]>;
   updateChecklistItem(id: string, data: Partial<DisputeChecklist>): Promise<DisputeChecklist | undefined>;
   createDefaultChecklistForDispute(disputeId: string): Promise<DisputeChecklist[]>;
-  
+
   // Notification methods
   getNotificationsForUser(userId: string): Promise<Notification[]>;
   getUnreadNotificationsForUser(userId: string): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationRead(id: string): Promise<Notification | undefined>;
   markAllNotificationsRead(userId: string): Promise<void>;
-  
+
   // Notification settings methods
   getNotificationSettings(userId: string): Promise<UserNotificationSettings | undefined>;
   upsertNotificationSettings(userId: string, data: Partial<InsertUserNotificationSettings>): Promise<UserNotificationSettings>;
-  
+
   // Get disputes needing deadline reminders
   getDisputesNeedingReminders(): Promise<Dispute[]>;
-  
+
   // Admin methods
   getAllUsers(): Promise<User[]>;
   getAllUsersByRole(role: string): Promise<User[]>;
   getAllDisputes(): Promise<Dispute[]>;
   deleteUser(id: string): Promise<boolean>;
-  
+
   // AI Guidance methods
   getGuidanceForDispute(disputeId: string): Promise<DisputeAiGuidance | undefined>;
   createGuidance(guidance: InsertDisputeAiGuidance): Promise<DisputeAiGuidance>;
-  
+
   // Evidence methods
   getEvidenceForDispute(disputeId: string): Promise<DisputeEvidence[]>;
   createEvidence(evidence: InsertDisputeEvidence): Promise<DisputeEvidence>;
   deleteEvidence(id: string): Promise<boolean>;
   getEvidenceById(id: string): Promise<DisputeEvidence | undefined>;
   getAllEvidenceForUser(userId: string): Promise<DisputeEvidence[]>;
-  
+
   // Audit log methods
   getAuditLogsForUser(userId: string): Promise<AuditLog[]>;
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
-  
+
   // Credit report methods
   getCreditReportsForUser(userId: string): Promise<CreditReport[]>;
   getCreditReport(id: string): Promise<CreditReport | undefined>;
   createCreditReport(report: InsertCreditReport): Promise<CreditReport>;
   updateCreditReport(id: string, data: Partial<CreditReport>): Promise<CreditReport | undefined>;
   deleteCreditReport(id: string): Promise<boolean>;
-  
+
   // Credit report account methods
   getAccountsForReport(reportId: string): Promise<CreditReportAccount[]>;
   getAccountsForUser(userId: string): Promise<CreditReportAccount[]>;
   createCreditReportAccounts(accounts: InsertCreditReportAccount[]): Promise<CreditReportAccount[]>;
   linkAccountToDispute(accountId: string, disputeId: string): Promise<CreditReportAccount | undefined>;
-  
+
   // IoT device methods
   getAllIotDevices(): Promise<IotDevice[]>;
   getIotDevice(id: string): Promise<IotDevice | undefined>;
@@ -98,6 +99,9 @@ export interface IStorage {
   createIotDevice(device: InsertIotDevice): Promise<IotDevice>;
   updateIotDevice(id: string, data: Partial<IotDevice>): Promise<IotDevice | undefined>;
   deleteIotDevice(id: string): Promise<boolean>;
+
+  // Signed URL methods
+  getSignedUrl(path: string): Promise<string | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -319,7 +323,7 @@ export class DatabaseStorage implements IStorage {
   async getDisputesNeedingReminders(): Promise<Dispute[]> {
     const fiveDaysFromNow = new Date();
     fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
-    
+
     return await db.select().from(disputes)
       .where(and(
         lt(disputes.responseDeadline, fiveDaysFromNow),
@@ -512,6 +516,19 @@ export class DatabaseStorage implements IStorage {
       .where(eq(iotDevices.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  async getSignedUrl(path: string): Promise<string | undefined> {
+    const { data, error } = await supabase.storage
+      .from(VAULT_BUCKET)
+      .createSignedUrl(path, 3600); // 1 hour expiration
+
+    if (error || !data) {
+      console.error("Error creating signed URL:", error);
+      return undefined;
+    }
+
+    return data.signedUrl;
   }
 }
 
