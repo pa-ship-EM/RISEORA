@@ -38,7 +38,7 @@ npm-debug.log*
 
 # Uploaded files (if storing locally)
 uploads/
-attached_assets/
+# attached_assets/ is now un-ignored to support Vercel build
 
 # Database files (if using SQLite locally)
 *.sqlite

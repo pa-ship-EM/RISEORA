@@ -13,20 +13,29 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
+      {/* Compliance Header Banner */}
+      <div className="bg-[#FEF3C7] border-b border-[#F59E0B]/20 py-2">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-[12px] md:text-sm font-medium text-[#92400E]">
+            ⚖️ <span className="font-bold">Educational Information Only:</span> RiseOra is a credit education and financial literacy platform. <span className="hidden md:inline">We do not provide credit repair services, and we do not dispute items on your behalf.</span>
+          </p>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative pt-20 pb-32 md:pt-32 md:pb-48 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img 
-            src={heroImage} 
-            alt="Office background" 
+          <img
+            src={heroImage}
+            alt="Office background"
             className="w-full h-full object-cover opacity-10"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -68,17 +77,17 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard 
+            <FeatureCard
               icon={<Shield className="h-10 w-10 text-secondary" />}
               title="Metro 2® Standards"
               description="Metro 2® is an industry reporting standard. RiseOra provides educational tools that help users understand how information is typically formatted."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={<Wand2 className="h-10 w-10 text-secondary" />}
               title="Guided Dispute Drafting"
               description="Our Dispute Wizard™ helps identify potential errors and generates dispute letter drafts based on consumer reporting standards."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={<Users className="h-10 w-10 text-secondary" />}
               title="Quality Checks"
               description="System checks for completeness and formatting consistency before document finalization."
@@ -103,9 +112,9 @@ export default function Home() {
       <section className="py-24 bg-white relative overflow-hidden">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-        
+
         <div className="container mx-auto px-4 relative z-10">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -158,7 +167,7 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            
+
             <div className="md:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-6 relative">
               <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
                 <div className="w-14 h-14 rounded-xl bg-white shadow-sm flex items-center justify-center mb-6 text-secondary">
@@ -190,6 +199,69 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Legal Compliance & Best Practices Section */}
+      <section className="py-24 bg-white border-y border-slate-100">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row gap-12 items-start">
+              <div className="md:w-1/3">
+                <div className="sticky top-24">
+                  <div className="w-12 h-12 rounded-lg bg-[#FEF3C7] flex items-center justify-center text-[#B45309] mb-6">
+                    <Shield className="h-6 w-6" />
+                  </div>
+                  <h2 className="text-3xl font-serif font-bold text-primary mb-4">Legal Compliance & Best Practices</h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    RiseOra is positioned as a credit education, financial literacy, and self-empowerment platform — NOT a credit repair agency.
+                  </p>
+                </div>
+              </div>
+
+              <div className="md:w-2/3 space-y-8">
+                <div className="p-6 rounded-xl bg-slate-50 border border-slate-100">
+                  <h3 className="font-bold text-lg text-primary mb-3">Safe Business Structure</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Our model is designed for the smart consumer. We focus on education and technical software to help you manage your own journey.
+                  </p>
+                  <ul className="space-y-2">
+                    {[
+                      "We teach credit basics and technical reporting standards.",
+                      "We explain FCRA + Metro 2® guidelines.",
+                      "We provide software-driven self-help tools.",
+                      "We provide fillable dispute letter templates.",
+                      "CONSUMERS send disputes themselves—we don't act as your agent."
+                    ].map((item, i) => (
+                      <li key={i} className="flex gap-3 text-sm text-primary/80">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="p-5 rounded-xl border border-slate-100 bg-white shadow-sm">
+                    <h4 className="font-bold text-sm text-primary mb-2">Key Principles</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      📌 We are NOT acting on your behalf.<br />
+                      📌 we are selling education + software.<br />
+                      📌 CROA usually does not apply to this education-first model.
+                    </p>
+                  </div>
+                  <div className="p-5 rounded-xl border border-slate-100 bg-white shadow-sm">
+                    <h4 className="font-bold text-sm text-primary mb-2">Our commitment</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      "Educational information only"<br />
+                      "We do not dispute on your behalf"<br />
+                      "Results vary; no guarantees"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

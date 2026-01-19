@@ -83,29 +83,52 @@ export function Footer() {
               </Link>
             </div>
             <div className="flex gap-4">
-               {/* Social placeholders */}
-               <Facebook className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
-               <Twitter className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
-               <Instagram className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
-               <Linkedin className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
+              {/* Social placeholders */}
+              <Facebook className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
+              <Twitter className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
+              <Instagram className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
+              <Linkedin className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
             </div>
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-primary-foreground/60">
-          <div className="max-w-md text-center md:text-left space-y-2">
-            <p>&copy; {new Date().getFullYear()} RiseOra Financial. All rights reserved.</p>
-            <p className="italic opacity-80">
-              RiseOra provides educational tools and guided support only. We do not submit disputes on behalf of consumers. Results vary. No guarantees are made.
-            </p>
+        <div className="border-t border-primary-foreground/10 pt-8 mt-12">
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="p-6 rounded-xl bg-white/5 border border-white/10 text-primary-foreground/80">
+              <h4 className="font-bold text-sm text-secondary mb-3 uppercase tracking-wider">Critical Platform Disclosures</h4>
+              <div className="grid md:grid-cols-2 gap-6 text-[11px] leading-relaxed opacity-90">
+                <div className="space-y-2">
+                  <p>
+                    <strong>Educational Model:</strong> RiseOra is a credit education and financial literacy platform. We provide software-driven self-help tools and information regarding credit reporting standards. We do NOT provide credit repair services.
+                  </p>
+                  <p>
+                    <strong>No Agency:</strong> We do not act on your behalf or as your agent. We do not submit, transmit, or mail disputes to credit bureaus or data furnishers. All document submission is the sole responsibility of the consumer.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p>
+                    <strong>No Guarantees:</strong> We make no specific promises or guarantees regarding credit score improvements, the removal of any items from a credit report, or any specific financial outcome. Results vary significantly by individual case.
+                  </p>
+                  <p>
+                    <strong>Professional Advice:</strong> Content provided is for informational purposes only and does not constitute legal, financial, or tax advice. Please consult with qualified professionals for specific advice.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-4 md:gap-6 justify-center md:justify-end">
-            <Link href="/legal" className="hover:text-white transition-colors">Terms of Service</Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link>
-            <Link href="/ai-disclosure" className="hover:text-white transition-colors">AI Disclosure</Link>
-            <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
-            <Link href="/security" className="hover:text-white transition-colors">Security</Link>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-primary-foreground/60">
+            <div className="text-center md:text-left">
+              <p>&copy; {new Date().getFullYear()} RiseOra Financial. All rights reserved.</p>
+            </div>
+            <div className="flex flex-wrap gap-4 md:gap-6 justify-center md:justify-end">
+              <Link href="/legal" className="hover:text-white transition-colors">Terms of Service</Link>
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link>
+              <Link href="/ai-disclosure" className="hover:text-white transition-colors">AI Disclosure</Link>
+              <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
+              <Link href="/security" className="hover:text-white transition-colors">Security</Link>
+            </div>
           </div>
         </div>
       </div>
