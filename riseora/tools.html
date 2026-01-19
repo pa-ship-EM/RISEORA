@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self-Help Tools | RiseOra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <style>
+        .tools-content {
+            padding: 150px 5% 100px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .tool-generator {
+            padding: 3rem;
+            margin-top: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+        }
+
+        .preview-area {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: white;
+            color: #333;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        .preview-area.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="glow-bg"></div>
+    <nav class="glass">
+        <div class="logo">RiseOra</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="education.html">Education</a>
+            <a href="tools.html">Self-Help Tools</a>
+            <a href="index.html#about">About</a>
+        </div>
+        <div>
+            <a href="tools.html" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <main class="tools-content">
+        <h1>Self-Help Dispute Tools</h1>
+        <p>Use our professional templates to communicate with credit bureaus yourself. We provide the structure; you
+            provide the details.</p>
+
+        <section class="tool-generator glass">
+            <h2>Dispute Letter Generator</h2>
+            <div class="compliance-banner" style="margin-top: 1rem;">
+                📌 You are generating this letter for yourself. RiseOra does not send this on your behalf.
+            </div>
+
+            <form id="letterForm" style="margin-top: 2rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="userName" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last 4 of SSN</label>
+                        <input type="text" id="ssn" placeholder="1234" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Current Address</label>
+                    <textarea id="address" rows="2" placeholder="123 Main St, City, State, ZIP"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Bureau Address</label>
+                    <select id="bureau">
+                        <option value="Experian\nP.O. Box 4500\nAllen, TX 75013">Experian</option>
+                        <option value="Equifax Information Services LLC\nP.O. Box 740256\nAtlanta, GA 30374">Equifax
+                        </option>
+                        <option value="TransUnion LLC\nConsumer Dispute Center\nP.O. Box 2000\nChester, PA 19016">
+                            TransUnion</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Inaccurate Account & Reason</label>
+                    <textarea id="reason" rows="4"
+                        placeholder="e.g., Account #123 is not mine. Please verify or delete."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Generate Letter Preview</button>
+            </form>
+
+            <div id="preview" class="preview-area"></div>
+            <button id="downloadBtn" class="btn glass"
+                style="margin-top: 1rem; width: 100%; display: none; color: #333; border-color: #333;">Copy to
+                Clipboard</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 RiseOra. All rights reserved.</p>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
