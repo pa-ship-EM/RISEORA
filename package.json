@@ -114,7 +114,9 @@
   },
   "scripts": {
     "dev": "tsx server/index.ts",
-    "build": "vite build",
-    "start": "NODE_ENV=production tsx server/index.ts"
+    "build:client": "vite build",
+    "build:server": "esbuild server/index.ts --bundle --platform=node --packages=external --outfile=dist/index.js --format=esm",
+    "build": "npm run build:client && npm run build:server",
+    "start": "NODE_ENV=production node dist/index.js"
   }
 }
