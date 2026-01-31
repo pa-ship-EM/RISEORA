@@ -1,13 +1,13 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Link, useLocation } from "wouter";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Settings, 
-  LogOut, 
-  ShieldCheck, 
-  Users, 
+import {
+  LayoutDashboard,
+  FileText,
+  Settings,
+  LogOut,
+  ShieldCheck,
+  Users,
   DollarSign,
   Menu,
   X,
@@ -16,13 +16,14 @@ import {
   Activity,
   Upload,
   BarChart3,
-  Cpu
+  Cpu,
+  Mail
 } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -40,7 +41,7 @@ interface DashboardLayoutProps {
 
 function NotificationBell() {
   const { unreadCount, unreadNotifications, markRead, markAllRead } = useNotifications();
-  
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -57,9 +58,9 @@ function NotificationBell() {
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>Notifications</span>
           {unreadCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-6 text-xs"
               onClick={() => markAllRead()}
               data-testid="button-mark-all-read"
@@ -76,8 +77,8 @@ function NotificationBell() {
           </div>
         ) : (
           unreadNotifications.slice(0, 5).map((notification) => (
-            <DropdownMenuItem 
-              key={notification.id} 
+            <DropdownMenuItem
+              key={notification.id}
               className="flex flex-col items-start gap-1 p-3 cursor-pointer"
               onClick={() => markRead(notification.id)}
               data-testid={`notification-${notification.id}`}
@@ -123,12 +124,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       { href: "/dashboard/documents", label: "Documents", icon: FileText },
       { href: "/dashboard/activity", label: "Activity Log", icon: Activity },
       { href: "/dashboard/settings", label: "Settings", icon: Settings },
+      { href: "/contact", label: "Contact Support", icon: Mail },
     ],
     AFFILIATE: [
       { href: "/affiliate", label: "Overview", icon: LayoutDashboard },
       { href: "/affiliate/referrals", label: "My Referrals", icon: Users },
       { href: "/affiliate/payouts", label: "Payouts", icon: DollarSign },
       { href: "/affiliate/settings", label: "Settings", icon: Settings },
+      { href: "/contact", label: "Contact Support", icon: Mail },
     ],
     ADMIN: [
       { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -137,6 +140,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       { href: "/admin/compliance", label: "Audit Logs", icon: FileText },
       { href: "/admin/affiliates", label: "Affiliates", icon: DollarSign },
       { href: "/admin/iot", label: "IoT Devices", icon: Cpu },
+      { href: "/contact", label: "Contact Support", icon: Mail },
     ]
   };
 
@@ -150,7 +154,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <img src={logoImage} alt="RiseOra" className="h-10 w-10 object-contain" />
           <span className="font-serif font-bold text-xl text-primary">RiseOra</span>
         </div>
-        
+
         <nav className="flex-grow p-4 space-y-1">
           {currentNav.map((item) => {
             const Icon = item.icon;
@@ -197,9 +201,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
         <div className="flex items-center gap-1">
           <NotificationBell />
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="h-11 w-11"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             data-testid="button-mobile-menu"
@@ -211,7 +215,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="md:hidden fixed inset-0 z-20 bg-background pt-14 animate-in slide-in-from-top-5 duration-200"
           onClick={(e) => e.target === e.currentTarget && setIsMobileMenuOpen(false)}
         >
@@ -222,11 +226,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 const isActive = location === item.href;
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
-                    <div className={`flex items-center gap-4 px-4 py-4 rounded-xl text-base font-medium transition-colors active:scale-[0.98] ${
-                      isActive 
-                        ? "bg-primary text-white shadow-md" 
+                    <div className={`flex items-center gap-4 px-4 py-4 rounded-xl text-base font-medium transition-colors active:scale-[0.98] ${isActive
+                        ? "bg-primary text-white shadow-md"
                         : "bg-slate-50 text-slate-900 active:bg-slate-100"
-                    }`}>
+                      }`}>
                       <Icon className={`h-5 w-5 ${isActive ? "text-white" : "text-primary"}`} />
                       {item.label}
                     </div>
@@ -234,7 +237,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 );
               })}
             </div>
-            
+
             <div className="pt-4 pb-6 border-t border-slate-200 space-y-3">
               <div className="flex items-center gap-3 px-4 py-2">
                 <Avatar className="h-10 w-10 border border-slate-200">
@@ -248,9 +251,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <p className="text-xs text-slate-500 truncate capitalize">{user?.role?.toLowerCase()}</p>
                 </div>
               </div>
-              <Button 
-                variant="destructive" 
-                className="w-full h-12 text-base" 
+              <Button
+                variant="destructive"
+                className="w-full h-12 text-base"
                 onClick={() => { logout(); setIsMobileMenuOpen(false); }}
               >
                 <LogOut className="mr-2 h-5 w-5" />

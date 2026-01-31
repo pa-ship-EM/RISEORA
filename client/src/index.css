@@ -55,7 +55,7 @@
 
   /* Warm Neutral Backgrounds */
   --background: 45 40% 96%; 
-  --foreground: 215 70% 15%;
+  --foreground: 215 25% 10%;
 
   --card: 0 0% 100%; 
   --card-foreground: 215 70% 15%;
@@ -171,6 +171,196 @@
   }
 }
 
+/* Modern UI/UX Pro Max Enhancements */
+@layer utilities {
+  /* Glassmorphism Effects */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  }
+  
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .glass-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Gradient Text */
+  .gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .gradient-text-vibrant {
+    background: linear-gradient(135deg, #667eea 0%, #00d4ff 50%, #ff7eb3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Gradient Backgrounds */
+  .gradient-mesh {
+    background: 
+      radial-gradient(at 40% 20%, hsla(265, 70%, 65%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.2) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsla(340, 100%, 76%, 0.2) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, hsla(200, 100%, 70%, 0.15) 0px, transparent 50%);
+  }
+  
+  .gradient-purple-cyan {
+    background: linear-gradient(135deg, #667eea 0%, #00d4ff 100%);
+  }
+  
+  .gradient-purple-pink {
+    background: linear-gradient(135deg, #764ba2 0%, #ff7eb3 100%);
+  }
+  
+  /* Glow Effects */
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+  }
+  
+  .glow-purple-lg {
+    box-shadow: 0 0 40px rgba(102, 126, 234, 0.7);
+  }
+  
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  }
+  
+  /* Gradient Borders */
+  .gradient-border {
+    position: relative;
+    background: white;
+    border-radius: 1rem;
+  }
+  
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    padding: 2px;
+    background: linear-gradient(135deg, #667eea, #00d4ff);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+}
+
+/* Micro-animations */
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  50% { 
+    transform: translateY(-20px) rotate(3deg); 
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  50% { 
+    transform: translateY(-15px) rotate(-2deg); 
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); 
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(102, 126, 234, 0.6); 
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { 
+    opacity: 0.8; 
+  }
+  50% { 
+    opacity: 1; 
+  }
+}
+
+@keyframes shimmer {
+  0% { 
+    background-position: -1000px 0; 
+  }
+  100% { 
+    background-position: 1000px 0; 
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { 
+    background-position: 0% 50%; 
+  }
+  50% { 
+    background-position: 100% 50%; 
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Animation Utilities */
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-float-delayed {
+    animation: float-delayed 8s ease-in-out infinite;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse-slow 4s ease-in-out infinite;
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 3s linear infinite;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    background-size: 200% 100%;
+  }
+  
+  .animate-gradient {
+    animation: gradient-shift 8s ease infinite;
+    background-size: 200% 200%;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.5s ease-out;
+  }
+}
+
 /* Improve form inputs on mobile */
 @media (max-width: 640px) {
   input, select, textarea, button {
@@ -186,5 +376,18 @@
   /* Better spacing for mobile cards */
   .card {
     --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+  
+  /* Reduce animation intensity on mobile for performance */
+  .animate-float,
+  .animate-float-delayed {
+    animation-duration: 8s;
+  }
+  
+  /* Simplify glassmorphism on mobile */
+  .glass,
+  .glass-card {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 }

@@ -57,11 +57,11 @@ export const Guardrails = {
    */
   scanForPII(text) {
     if (!text) return { safe: true, detected: [] };
-    
+
     const detected = [];
     if (SENSITIVE_PATTERNS.SSN.test(text)) detected.push("Possible SSN");
     if (SENSITIVE_PATTERNS.CREDIT_CARD.test(text)) detected.push("Possible Credit Card Number");
-    
+
     return {
       safe: detected.length === 0,
       detected
@@ -85,7 +85,7 @@ export const Guardrails = {
   validatePrompt(prompt) {
     if (!prompt || prompt.length < 5) return { valid: false, reason: "Prompt too short" };
     if (prompt.length > AI_GUARDRAILS.maxLength) return { valid: false, reason: `Prompt exceeds maximum length of ${AI_GUARDRAILS.maxLength} characters` };
-    
+
     const lowerPrompt = prompt.toLowerCase();
 
     // Check for forbidden terms
@@ -94,7 +94,7 @@ export const Guardrails = {
         return { valid: false, reason: `Policy violation: Use of forbidden term "${term}"` };
       }
     }
-    
+
     // Add specific keyword blocks if necessary (system level overrides)
     const blockedKeywords = ["jailbreak", "ignore previous instructions", "system prompt"];
     for (const keyword of blockedKeywords) {
@@ -106,5 +106,17 @@ export const Guardrails = {
     return { valid: true };
   }
 };
+
+
+/**
+ * Checks if a file path is in the "no-edit zone" for AI agents.
+ */
+export function isProtectedFile(path) {
+  if (!path) return false;
+  return (
+    path.includes("server/routes.ts") ||
+    path.includes("server/index.ts")
+  );
+}
 
 export default Guardrails;

@@ -25,6 +25,7 @@ const signupSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  betaAccessCode: z.string().min(1, "Beta access code is required"),
   consent: z.boolean().refine(val => val === true, {
     message: "You must agree to the Terms of Service and Privacy Policy",
   }),
@@ -47,7 +48,7 @@ export default function AuthPage() {
 
   const signupForm = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", consent: false },
+    defaultValues: { firstName: "", lastName: "", email: "", password: "", betaAccessCode: "", consent: false },
   });
 
   const onLoginError = () => {
@@ -78,7 +79,7 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       await login(values.email, values.password);
-      
+
       toast({
         title: "Welcome back!",
         description: "Securely logging you in...",
@@ -98,7 +99,7 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       await signup(values.email, values.password, values.firstName, values.lastName);
-      
+
       toast({
         title: "Account created!",
         description: "Welcome to RiseOra. Let's get started!",
@@ -130,7 +131,7 @@ export default function AuthPage() {
             <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger>
             <TabsTrigger value="signup" data-testid="tab-signup">Sign Up</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="login">
             <CardHeader>
               <CardTitle>Welcome Back</CardTitle>
@@ -140,12 +141,12 @@ export default function AuthPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="you@example.com" 
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
                     data-testid="input-email-login"
-                    {...loginForm.register("email")} 
+                    {...loginForm.register("email")}
                   />
                   {loginForm.formState.errors.email && (
                     <p className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>
@@ -153,11 +154,11 @@ export default function AuthPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
+                  <Input
+                    id="password"
+                    type="password"
                     data-testid="input-password-login"
-                    {...loginForm.register("password")} 
+                    {...loginForm.register("password")}
                   />
                   {loginForm.formState.errors.password && (
                     <p className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>
@@ -165,9 +166,9 @@ export default function AuthPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button 
-                  type="submit" 
-                  className="w-full bg-primary hover:bg-primary/90" 
+                <Button
+                  type="submit"
+                  className="w-full bg-primary hover:bg-primary/90"
                   disabled={isLoading}
                   data-testid="button-login"
                 >
@@ -187,11 +188,11 @@ export default function AuthPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input 
-                      id="firstName" 
-                      placeholder="John" 
+                    <Input
+                      id="firstName"
+                      placeholder="John"
                       data-testid="input-firstname"
-                      {...signupForm.register("firstName")} 
+                      {...signupForm.register("firstName")}
                     />
                     {signupForm.formState.errors.firstName && (
                       <p className="text-xs text-destructive">{signupForm.formState.errors.firstName.message}</p>
@@ -199,11 +200,11 @@ export default function AuthPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input 
-                      id="lastName" 
-                      placeholder="Doe" 
+                    <Input
+                      id="lastName"
+                      placeholder="Doe"
                       data-testid="input-lastname"
-                      {...signupForm.register("lastName")} 
+                      {...signupForm.register("lastName")}
                     />
                     {signupForm.formState.errors.lastName && (
                       <p className="text-xs text-destructive">{signupForm.formState.errors.lastName.message}</p>
@@ -212,12 +213,12 @@ export default function AuthPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
-                  <Input 
-                    id="signup-email" 
-                    type="email" 
-                    placeholder="you@example.com" 
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="you@example.com"
                     data-testid="input-email-signup"
-                    {...signupForm.register("email")} 
+                    {...signupForm.register("email")}
                   />
                   {signupForm.formState.errors.email && (
                     <p className="text-xs text-destructive">{signupForm.formState.errors.email.message}</p>
@@ -225,16 +226,28 @@ export default function AuthPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input 
-                    id="signup-password" 
-                    type="password" 
+                  <Input
+                    id="signup-password"
+                    type="password"
                     placeholder="Min. 8 characters"
                     data-testid="input-password-signup"
-                    {...signupForm.register("password")} 
+                    {...signupForm.register("password")}
                   />
                   <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
                   {signupForm.formState.errors.password && (
                     <p className="text-xs text-destructive font-medium">{signupForm.formState.errors.password.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="betaAccessCode">Beta Access Code *</Label>
+                  <Input
+                    id="betaAccessCode"
+                    placeholder="Enter your invitation code"
+                    data-testid="input-beta-code"
+                    {...signupForm.register("betaAccessCode")}
+                  />
+                  {signupForm.formState.errors.betaAccessCode && (
+                    <p className="text-xs text-destructive">{signupForm.formState.errors.betaAccessCode.message}</p>
                   )}
                 </div>
                 <div className="flex items-start space-x-3 mt-4">
@@ -268,9 +281,9 @@ export default function AuthPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button 
-                  type="submit" 
-                  className="w-full bg-primary hover:bg-primary/90" 
+                <Button
+                  type="submit"
+                  className="w-full bg-primary hover:bg-primary/90"
                   disabled={isLoading}
                   data-testid="button-signup"
                 >
@@ -281,7 +294,7 @@ export default function AuthPage() {
           </TabsContent>
         </Tabs>
       </Card>
-      
+
       <p className="mt-8 text-xs text-center text-muted-foreground max-w-sm">
         By continuing, you agree to our <Link href="/legal" className="text-secondary hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-secondary hover:underline">Privacy Policy</Link>.
       </p>

@@ -2,17 +2,20 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
-import logoIcon from "@assets/Screenshot_2025-12-30_at_3.40.28_PM_1767131437717.png";
+import logoIcon from "@assets/logo.png";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
+  const { user, logout } = useAuth();
 
   const links = [
     { href: "/", label: "Home" },
     { href: "/services", label: "Services & Pricing" },
     { href: "/resources", label: "Info & Resources" },
     { href: "/about", label: "About Us" },
+    { href: "/contact", label: "Contact" },
   ];
 
   const isActive = (path: string) => location === path;
@@ -31,30 +34,40 @@ export function Navbar() {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
           {links.map((link) => (
-            <Link 
-              key={link.href} 
+            <Link
+              key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive(link.href) ? "text-primary font-bold" : "text-muted-foreground"
-              }`}
+              className={`text-sm font-medium transition-colors hover:text-primary ${isActive(link.href) ? "text-primary font-bold" : "text-muted-foreground"
+                }`}
             >
               {link.label}
             </Link>
           ))}
           <div className="flex items-center gap-4">
-            <Link href="/auth">
-              <Button variant="ghost" className="font-semibold">Log In</Button>
-            </Link>
-            <Link href="/auth?tab=signup">
-              <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
-                Get Started
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard">
+                  <Button variant="ghost" className="font-semibold">Dashboard</Button>
+                </Link>
+                <Button variant="outline" onClick={() => logout()} className="font-semibold">Log Out</Button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth">
+                  <Button variant="ghost" className="font-semibold">Log In</Button>
+                </Link>
+                <Link href="/auth?tab=signup">
+                  <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
         {/* Mobile Menu Button */}
-        <button 
+        <button
           className="md:hidden p-2 text-primary"
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -67,24 +80,34 @@ export function Navbar() {
         <div className="md:hidden absolute top-16 left-0 w-full bg-background border-b shadow-lg animate-in slide-in-from-top-5">
           <div className="flex flex-col p-4 gap-4">
             {links.map((link) => (
-              <Link 
-                key={link.href} 
+              <Link
+                key={link.href}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
-                className={`text-lg font-medium p-2 rounded-md hover:bg-muted ${
-                  isActive(link.href) ? "bg-muted text-primary" : "text-muted-foreground"
-                }`}
+                className={`text-lg font-medium p-2 rounded-md hover:bg-muted ${isActive(link.href) ? "bg-muted text-primary" : "text-muted-foreground"
+                  }`}
               >
                 {link.label}
               </Link>
             ))}
             <div className="h-px bg-border my-2" />
-            <Link href="/auth" onClick={() => setIsOpen(false)}>
-              <Button variant="outline" className="w-full justify-start">Log In</Button>
-            </Link>
-            <Link href="/auth?tab=signup" onClick={() => setIsOpen(false)}>
-              <Button className="w-full justify-start">Get Started</Button>
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full justify-start">Dashboard</Button>
+                </Link>
+                <Button variant="ghost" onClick={() => { logout(); setIsOpen(false); }} className="w-full justify-start text-destructive">Log Out</Button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full justify-start">Log In</Button>
+                </Link>
+                <Link href="/auth?tab=signup" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full justify-start">Get Started</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

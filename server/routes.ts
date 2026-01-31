@@ -1,12 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { log } from "./index";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import { insertUserSchema, insertDisputeSchema, insertIotDeviceSchema, type User, TIER_FEATURES, DISPUTE_STAGES } from "@shared/schema";
 import { z } from "zod";
-import { encryptUserData, decryptUserData } from "./encryption";
+import { encryptUserData, decryptUserData, maskSensitiveData, maskAccountNumber } from "./encryption";
 import OpenAI from "openai";
 import multer from "multer";
 import { PDFParse } from "pdf-parse";
@@ -18,6 +19,7 @@ import { getEligibleAffiliates } from "./affiliateEligibility";
 import { assertAffiliateAllowed } from "./affiliateGuards";
 import { resolveAffiliatesForDispute } from "./resolveAffiliatesForDispute";
 import { supabase, VAULT_BUCKET } from "./supabase";
+import { registerReplitIntegrations } from "./replit_integrations";
 
 // Configure multer for PDF uploads (in memory)
 const upload = multer({
@@ -63,11 +65,17 @@ export async function registerRoutes(
   // POST /api/auth/signup
   app.post("/api/auth/signup", async (req, res, next) => {
     try {
-      const { email, password, firstName, lastName } = req.body;
+      const { email, password, firstName, lastName, betaAccessCode } = req.body;
 
       // Validate input
-      if (!email || !password || !firstName || !lastName) {
+      if (!email || !password || !firstName || !lastName || !betaAccessCode) {
         return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Beta Access Code Validation
+      const VALID_BETA_CODE = process.env.BETA_ACCESS_CODE || "RISEORA2026";
+      if (betaAccessCode !== VALID_BETA_CODE) {
+        return res.status(403).json({ message: "Invalid Beta Access Code. This platform is currently invite-only." });
       }
 
       // Check if user already exists
@@ -113,15 +121,29 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Missing email or password" });
       }
 
+      const ipAddress = req.ip;
+      const userAgent = req.get("user-agent") || null;
+
       // Find user
       const user = await storage.getUserByEmail(email);
       if (!user) {
+        // Log failed login attempt (email not found)
+        log(`Failed login attempt for email: ${email}`, "auth");
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // Check password
       const validPassword = await bcrypt.compare(password, user.passwordHash);
       if (!validPassword) {
+        // Log failed login attempt (invalid password)
+        await storage.createAuditLog({
+          userId: user.id,
+          action: "LOGIN",
+          resourceType: "SESSION",
+          resourceId: null,
+          details: JSON.stringify({ status: "FAILURE", reason: "INVALID_PASSWORD" }),
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+        });
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
@@ -131,6 +153,17 @@ export async function registerRoutes(
           return next(err);
         }
         req.session.userId = user.id;
+
+        // Log successful login
+        storage.createAuditLog({
+          userId: user.id,
+          action: "LOGIN",
+          resourceType: "SESSION",
+          resourceId: req.sessionID,
+          details: JSON.stringify({ status: "SUCCESS" }),
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+        }).catch(err => console.error("Failed to log login success:", err));
 
         // Return user (without password)
         const { passwordHash: _, ...userWithoutPassword } = user;
@@ -143,10 +176,24 @@ export async function registerRoutes(
 
   // POST /api/auth/logout
   app.post("/api/auth/logout", (req, res) => {
+    const userId = req.session.userId;
     req.session.destroy((err) => {
       if (err) {
         return res.status(500).json({ message: "Failed to logout" });
       }
+
+      if (userId) {
+        storage.createAuditLog({
+          userId,
+          action: "LOGOUT",
+          resourceType: "SESSION",
+          resourceId: null,
+          details: JSON.stringify({ status: "SUCCESS" }),
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+        }).catch(err => console.error("Failed to log logout:", err));
+      }
+
       res.json({ message: "Logged out successfully" });
     });
   });
@@ -1405,6 +1452,14 @@ Respond in JSON format with this structure:
 
         const parsed = JSON.parse(content);
 
+        // Mask account numbers in parsed data before any storage or response
+        if (parsed.accounts && Array.isArray(parsed.accounts)) {
+          parsed.accounts = parsed.accounts.map((acc: any) => ({
+            ...acc,
+            accountNumber: maskAccountNumber(acc.accountNumber)
+          }));
+        }
+
         // Upload to Supabase
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const fileName = `${uniqueSuffix}-${req.file.originalname}`;
@@ -1463,7 +1518,7 @@ Respond in JSON format with this structure:
             reportId: creditReport.id,
             userId: req.session.userId!,
             creditorName: account.creditorName || "Unknown Creditor",
-            accountNumber: account.accountNumber || null,
+            accountNumber: account.accountNumber || null, // Already masked above
             accountType: account.accountType?.toUpperCase().replace(/\s+/g, '_') || null,
             accountStatus: account.status || null,
             isNegative: account.status?.toLowerCase().includes('collection') ||
@@ -1628,6 +1683,18 @@ Respond in JSON format with this structure:
     storage.getUser(req.session.userId)
       .then(user => {
         if (!user || user.role !== "ADMIN") {
+          // Log unauthorized admin access attempt
+          if (req.session.userId) {
+            storage.createAuditLog({
+              userId: req.session.userId,
+              action: "LOGIN", // Or a new UNAUTHORIZED_ACCESS action if we add it
+              resourceType: "PROFILE",
+              resourceId: null,
+              details: JSON.stringify({ status: "FAILURE", reason: "ADMIN_REQUIRED", path: req.path }),
+              ipAddress: req.ip,
+              userAgent: req.get("user-agent"),
+            });
+          }
           return res.status(403).json({ message: "Admin access required" });
         }
         next();
@@ -1641,8 +1708,8 @@ Respond in JSON format with this structure:
   app.get("/api/admin/users", requireAdmin, async (req, res, next) => {
     try {
       const allUsers = await storage.getAllUsers();
-      const usersWithoutPassword = allUsers.map(({ passwordHash, ...user }) => user);
-      res.json(usersWithoutPassword);
+      const sanitizedUsers = allUsers.map(({ passwordHash, ...user }) => maskSensitiveData(user));
+      res.json(sanitizedUsers);
     } catch (error) {
       next(error);
     }
@@ -1652,8 +1719,8 @@ Respond in JSON format with this structure:
   app.get("/api/admin/clients", requireAdmin, async (req, res, next) => {
     try {
       const clients = await storage.getAllUsersByRole("CLIENT");
-      const clientsWithoutPassword = clients.map(({ passwordHash, ...user }) => user);
-      res.json(clientsWithoutPassword);
+      const sanitizedClients = clients.map(({ passwordHash, ...user }) => maskSensitiveData(user));
+      res.json(sanitizedClients);
     } catch (error) {
       next(error);
     }
@@ -1736,12 +1803,12 @@ Respond in JSON format with this structure:
 
       const { passwordHash: _, ...userWithoutPassword } = user;
 
-      res.json({
+      res.json(maskSensitiveData({
         ...userWithoutPassword,
         subscription,
         disputes,
         recentActivity: auditLogs.slice(0, 10),
-      });
+      }));
     } catch (error) {
       next(error);
     }
@@ -1820,7 +1887,7 @@ Respond in JSON format with this structure:
   app.get("/api/admin/disputes", requireAdmin, async (req, res, next) => {
     try {
       const allDisputes = await storage.getAllDisputes();
-      res.json(allDisputes);
+      res.json(maskSensitiveData(allDisputes));
     } catch (error) {
       next(error);
     }
@@ -2160,7 +2227,7 @@ Respond in JSON format with this structure:
       res.json({
         disputeId,
         disputeStatus: dispute.status,
-        affiliates: affiliates.map(a => ({
+        affiliates: affiliates.map((a: any) => ({
           id: a.id,
           name: a.name,
           category: a.category,
@@ -2306,6 +2373,9 @@ Respond in JSON format with this structure:
       next(error);
     }
   });
+
+  // ========== REPLIT AI INTEGRATIONS ==========
+  registerReplitIntegrations(app);
 
   return httpServer;
 }

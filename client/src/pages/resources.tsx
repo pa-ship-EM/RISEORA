@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, BookOpen, CreditCard, Home, Loader2 } from "lucide-react";
+import { ExternalLink, BookOpen, CreditCard, Home, Loader2, ShieldCheck } from "lucide-react";
 import { useAffiliates } from "@/hooks/use-affiliates";
 
 export default function Resources() {
@@ -10,7 +10,7 @@ export default function Resources() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <main className="flex-grow py-16 bg-slate-50">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -21,26 +21,26 @@ export default function Resources() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            <ResourceCard 
+            <ResourceCard
               icon={<BookOpen className="h-8 w-8 text-secondary" />}
               title="Understand Your Credit"
               description="Learn how credit scores are calculated and what factors impact your financial reputation. Source: Consumer Advice | Federal Trade Commission (.gov)"
               link="https://consumer.ftc.gov/articles/understanding-your-credit"
               linkText="View FTC Guide"
             />
-            <ResourceCard 
-              icon={<CreditCard className="h-8 w-8 text-secondary" />}
-              title="Secured Credit Cards"
-              description="A secured credit card requires a cash deposit that serves as your credit limit. This is one of the most effective ways to build or rebuild credit because it reports to all three major bureaus with minimal risk."
-              link="/resources/secured-cards"
-              linkText="Top Recommendations"
-            />
-            <ResourceCard 
+            <ResourceCard
               icon={<Home className="h-8 w-8 text-secondary" />}
               title="Mortgage Readiness"
-              description="Lenders look for a steady income, a low debt-to-income ratio (DTI), and a FICO score typically above 620. Preparing 6-12 months in advance by optimizing your credit profile is key to securing lower interest rates."
-              link="/resources/mortgage-checklist"
-              linkText="Read Checklist"
+              description="Information regarding lender requirements (DTI, income, FICO 620+) and preparing for homeownership. Source: HUD.gov"
+              link="https://www.hud.gov/helping-americans/buying-a-home"
+              linkText="View HUD Guide"
+            />
+            <ResourceCard
+              icon={<ShieldCheck className="h-8 w-8 text-secondary" />}
+              title="Identity Theft Protocol"
+              description="Step-by-step guidance on what to do if you suspect your identity has been stolen. Source: IdentityTheft.gov"
+              link="https://www.identitytheft.gov/"
+              linkText="Recovery Steps"
             />
           </div>
 
@@ -50,7 +50,26 @@ export default function Resources() {
               <p className="text-center text-muted-foreground mb-12">
                 Explore our curated collection of credit tools, financial resources, and recommended products. Some links are affiliate links — we may earn a commission at no extra cost to you.
               </p>
-              
+
+              <div className="grid md:grid-cols-2 gap-6 mb-12">
+                <AffiliateLink
+                  partner="IDIQ FICO Score Monitoring"
+                  description="Get your real FICO scores from all 3 bureaus with identity theft protection and credit monitoring alerts."
+                  title="FICO Score Monitoring"
+                  url="https://member.myscoreiq.com/get-fico-preferred.aspx?offercode=432142BC"
+                  isFeatured
+                />
+                <AffiliateLink
+                  partner="SmartCredit"
+                  description="Monitor your credit with 3-bureau reports, score tracking, and identity theft protection tools."
+                  title="Credit Monitoring & Reports"
+                  url="https://www.smartcredit.com/join/?pid=82067&cid=RISORAQ1"
+                  isFeatured
+                />
+              </div>
+
+              <h3 className="text-xl font-bold text-primary mb-6 text-center">Additional Tools & Partners</h3>
+
               <div className="grid md:grid-cols-2 gap-6">
                 {isLoading ? (
                   <div className="col-span-2 flex justify-center py-8">
@@ -62,7 +81,7 @@ export default function Resources() {
                   </div>
                 ) : (
                   affiliates.map((affiliate) => (
-                    <AffiliateLink 
+                    <AffiliateLink
                       key={affiliate.id}
                       title={affiliate.category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       description={affiliate.description}
@@ -105,10 +124,10 @@ function ResourceCard({ icon, title, description, link, linkText }: { icon: Reac
   );
 }
 
-function AffiliateLink({ title, description, partner, url = "#" }: { title: string, description: string, partner: string, url?: string }) {
+function AffiliateLink({ title, description, partner, url = "#", isFeatured }: { title: string, description: string, partner: string, url?: string, isFeatured?: boolean }) {
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-secondary/50 hover:bg-secondary/5 transition-all group">
-      <div className="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-primary group-hover:bg-white group-hover:shadow-sm shrink-0">
+    <a href={url} target="_blank" rel="noopener noreferrer" className={`flex items-start gap-4 p-6 rounded-xl border transition-all group ${isFeatured ? 'border-secondary/30 bg-secondary/5 hover:bg-secondary/10 shadow-sm' : 'border-slate-100 hover:border-secondary/50 hover:bg-secondary/5'}`}>
+      <div className={`h-12 w-12 rounded-lg flex items-center justify-center font-bold text-primary shrink-0 ${isFeatured ? 'bg-white shadow-sm' : 'bg-slate-100 group-hover:bg-white group-hover:shadow-sm'}`}>
         {partner[0]}
       </div>
       <div className="flex-1">
@@ -117,7 +136,7 @@ function AffiliateLink({ title, description, partner, url = "#" }: { title: stri
           <ExternalLink className="h-4 w-4 text-slate-400 group-hover:text-secondary" />
         </div>
         <p className="text-sm font-medium text-slate-700 mb-1">{title}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
       </div>
     </a>
   );

@@ -48,6 +48,7 @@ const allowedOrigins = [
 const trustedDomainSuffixes = [
   ".replit.dev",
   ".replit.app",
+  ".vercel.app",
 ];
 
 function isAllowedOrigin(origin: string): boolean {
@@ -55,17 +56,17 @@ function isAllowedOrigin(origin: string): boolean {
   if (allowedOrigins.includes(origin)) {
     return true;
   }
-  
+
   // Parse origin to validate domain properly
   try {
     const url = new URL(origin);
     const hostname = url.hostname;
-    
+
     // Allow localhost for development
     if (hostname === "localhost" || hostname === "127.0.0.1") {
       return true;
     }
-    
+
     // Check trusted domain suffixes using proper endsWith validation
     for (const suffix of trustedDomainSuffixes) {
       if (hostname.endsWith(suffix) || hostname === suffix.slice(1)) {
@@ -76,7 +77,7 @@ function isAllowedOrigin(origin: string): boolean {
     // Invalid URL, reject
     return false;
   }
-  
+
   return false;
 }
 
@@ -85,11 +86,11 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, Postman, same-origin requests)
       if (!origin) return callback(null, true);
-      
+
       if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-      
+
       // Reject unknown origins
       callback(new Error("Not allowed by CORS"));
     },
@@ -190,7 +191,7 @@ app.use((req, res, next) => {
 
   // Non-negotiable port binding
   const PORT = Number(process.env.PORT) || 5000;
-  
+
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Listening on ${PORT}`);
     // Start the notification scheduler for AI-powered reminders

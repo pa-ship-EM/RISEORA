@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 
-import wizardLogo from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_14_PM_1767131297375.png";
+import wizardLogo from "@assets/dispute_wizard_logo.png";
 
 interface DisputeWizardProps {
   onComplete?: () => void;
@@ -65,7 +65,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     customReason: "",
     metro2Check: false
   });
-  
+
   const [reportText, setReportText] = useState("");
   const [parsedAccounts, setParsedAccounts] = useState<ParsedAccount[]>([]);
   const [selectedAccountIndex, setSelectedAccountIndex] = useState<number | null>(null);
@@ -75,7 +75,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const [uploadMode, setUploadMode] = useState<"pdf" | "paste">("pdf");
   const [selectedAccounts, setSelectedAccounts] = useState<SelectedAccount[]>([]);
   const [currentReasonIndex, setCurrentReasonIndex] = useState(0);
-  const [generatedLetters, setGeneratedLetters] = useState<{creditorName: string; letterContent: string}[]>([]);
+  const [generatedLetters, setGeneratedLetters] = useState<{ creditorName: string; letterContent: string }[]>([]);
 
   const handleNext = async () => {
     if (step === "safety-check") setStep("personal-info");
@@ -114,18 +114,18 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
           const formDataUpload = new FormData();
           formDataUpload.append('file', selectedFile);
           formDataUpload.append('bureau', formData.bureau);
-          
+
           const response = await fetch('/api/upload-credit-report', {
             method: 'POST',
             body: formDataUpload,
             credentials: 'include',
           });
-          
+
           if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Failed to upload file');
           }
-          
+
           const data = await response.json();
           setParsedAccounts(data.accounts || []);
           setIsParsing(false);
@@ -165,7 +165,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     else if (step === "identify-item") {
       // Check if we have multi-select accounts or single manual entry
       const hasAISelections = selectedAccounts.length > 0 && selectedAccounts.some(a => a.index >= 0);
-      
+
       if (hasAISelections) {
         // Rebuild selectedAccounts from current state to ensure freshness
         // Keep only the currently selected AI accounts
@@ -219,7 +219,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
           creditorName: acc.creditorName,
           letterContent: generateLetterForAccount(acc),
         }));
-        
+
         // Create disputes in bulk
         const disputes = selectedAccounts.map(acc => ({
           creditorName: acc.creditorName,
@@ -231,10 +231,10 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
           metro2Compliant: true,
           letterContent: generateLetterForAccount(acc),
         }));
-        
+
         const response = await apiRequest("POST", "/api/disputes/bulk", { disputes });
         await response.json();
-        
+
         setGeneratedLetters(letters);
         setIsLoading(false);
         setStep("success");
@@ -264,7 +264,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     }
     else if (step === "review") setStep("reason");
   };
-  
+
   const toggleAccountSelection = (index: number) => {
     const account = parsedAccounts[index];
     setSelectedAccounts(prev => {
@@ -286,7 +286,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
     // Clear manual entry fields when selecting AI accounts
     setFormData(prev => ({ ...prev, creditorName: "", accountNumber: "" }));
   };
-  
+
   const selectAllAccounts = () => {
     const aiSelections = selectedAccounts.filter(a => a.index >= 0);
     if (aiSelections.length === parsedAccounts.length) {
@@ -303,15 +303,15 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
       setFormData(prev => ({ ...prev, creditorName: "", accountNumber: "" }));
     }
   };
-  
+
   const updateAccountReason = (index: number, reason: string, customReason?: string) => {
-    setSelectedAccounts(prev => prev.map(acc => 
-      acc.index === index 
+    setSelectedAccounts(prev => prev.map(acc =>
+      acc.index === index
         ? { ...acc, disputeReason: reason, customReason: customReason || acc.customReason }
         : acc
     ));
   };
-  
+
   const applyReasonToAll = (reason: string) => {
     setSelectedAccounts(prev => prev.map(acc => ({
       ...acc,
@@ -340,7 +340,7 @@ export function DisputeWizard({ onComplete, onCancel }: DisputeWizardProps) {
   const generateLetterForAccount = (account: SelectedAccount) => {
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const reasonText = account.disputeReason === "other" ? account.customReason : account.disputeReason;
-    
+
     return `${formData.firstName} ${formData.lastName}
 ${formData.address}
 ${formData.city}, ${formData.state} ${formData.zip}
@@ -384,11 +384,11 @@ ${formData.firstName} ${formData.lastName}`;
             <CheckCircle2 className="h-10 w-10 text-emerald-600" />
           </div>
           <h2 className="text-3xl font-serif font-bold text-primary mb-4">
-            {generatedLetters.length > 1 
-              ? `${generatedLetters.length} Dispute Letters Ready!` 
+            {generatedLetters.length > 1
+              ? `${generatedLetters.length} Dispute Letters Ready!`
               : "Your dispute letter is ready"}
           </h2>
-          
+
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 text-left w-full max-w-md">
             <h3 className="font-bold text-primary mb-4 flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-secondary" />
@@ -425,8 +425,8 @@ ${formData.firstName} ${formData.lastName}`;
                     <Label className="font-bold text-primary">{letter.creditorName}</Label>
                     <span className="text-xs text-muted-foreground">• {formData.bureau}</span>
                   </div>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => {
                       navigator.clipboard.writeText(letter.letterContent);
@@ -436,9 +436,9 @@ ${formData.firstName} ${formData.lastName}`;
                     Copy Letter
                   </Button>
                 </div>
-                <Textarea 
-                  readOnly 
-                  value={letter.letterContent} 
+                <Textarea
+                  readOnly
+                  value={letter.letterContent}
                   className="h-[200px] font-mono text-sm border-0 rounded-none p-4"
                   data-testid={`textarea-letter-${i}`}
                 />
@@ -477,8 +477,8 @@ ${formData.firstName} ${formData.lastName}`;
           <span className="text-sm font-medium text-muted-foreground">Step {Object.keys(progress).indexOf(step) + 1} of 5</span>
         </div>
         <div className="h-2 w-full bg-secondary/10 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-secondary transition-all duration-500 ease-out" 
+          <div
+            className="h-full bg-secondary transition-all duration-500 ease-out"
             style={{ width: `${progress[step]}%` }}
           />
         </div>
@@ -510,19 +510,19 @@ ${formData.firstName} ${formData.lastName}`;
               </div>
             </div>
 
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className={`w-full h-14 text-lg font-bold transition-all ${safetyAgreed ? 'bg-primary shadow-lg' : 'bg-slate-200 text-slate-400'}`}
               disabled={!safetyAgreed}
               onClick={handleNext}
             >
               I Understand & Proceed
             </Button>
-            
+
             <div className="flex items-center gap-2 justify-center">
-              <input 
-                type="checkbox" 
-                id="safety-agree" 
+              <input
+                type="checkbox"
+                id="safety-agree"
                 className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
                 checked={safetyAgreed}
                 onChange={(e) => setSafetyAgreed(e.target.checked)}
@@ -550,19 +550,19 @@ ${formData.firstName} ${formData.lastName}`;
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
-                <Input 
-                  id="firstName" 
+                <Input
+                  id="firstName"
                   value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   className="bg-white"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
-                <Input 
-                  id="lastName" 
+                <Input
+                  id="lastName"
                   value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   className="bg-white"
                 />
               </div>
@@ -570,11 +570,11 @@ ${formData.firstName} ${formData.lastName}`;
 
             <div className="space-y-2">
               <Label htmlFor="address">Street Address</Label>
-              <Input 
-                id="address" 
+              <Input
+                id="address"
                 placeholder="123 Main St, Apt 4B"
                 value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 className="bg-white"
               />
             </div>
@@ -582,31 +582,31 @@ ${formData.firstName} ${formData.lastName}`;
             <div className="grid grid-cols-6 gap-4">
               <div className="col-span-3 space-y-2">
                 <Label htmlFor="city">City</Label>
-                <Input 
-                  id="city" 
+                <Input
+                  id="city"
                   value={formData.city}
-                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   className="bg-white"
                 />
               </div>
               <div className="col-span-1 space-y-2">
                 <Label htmlFor="state">State</Label>
-                <Input 
-                  id="state" 
+                <Input
+                  id="state"
                   maxLength={2}
                   placeholder="NC"
                   value={formData.state}
-                  onChange={(e) => setFormData({...formData, state: e.target.value.toUpperCase()})}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
                   className="bg-white"
                 />
               </div>
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="zip">Zip Code</Label>
-                <Input 
-                  id="zip" 
+                <Input
+                  id="zip"
                   maxLength={5}
                   value={formData.zip}
-                  onChange={(e) => setFormData({...formData, zip: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
                   className="bg-white"
                 />
               </div>
@@ -615,27 +615,27 @@ ${formData.firstName} ${formData.lastName}`;
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="birthYear">Birth Year</Label>
-                <Input 
-                  id="birthYear" 
+                <Input
+                  id="birthYear"
                   type="number"
                   min="1900"
                   max={new Date().getFullYear()}
                   placeholder="1985"
                   value={formData.birthYear}
-                  onChange={(e) => setFormData({...formData, birthYear: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, birthYear: e.target.value })}
                   className="bg-white"
                 />
                 <p className="text-xs text-muted-foreground">For privacy, we only collect birth year</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ssn">Last 4 SSN</Label>
-                <Input 
-                  id="ssn" 
+                <Input
+                  id="ssn"
                   maxLength={4}
                   placeholder="1234"
                   type="password"
                   value={formData.ssnLast4}
-                  onChange={(e) => setFormData({...formData, ssnLast4: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, ssnLast4: e.target.value })}
                   className="bg-white"
                 />
               </div>
@@ -650,15 +650,14 @@ ${formData.firstName} ${formData.lastName}`;
               <h3 className="text-lg font-bold text-primary mb-2">Select Reporting Bureau</h3>
               <p className="text-muted-foreground">Which bureau is reporting the item you wish to challenge?</p>
             </div>
-            
-            <RadioGroup value={formData.bureau} onValueChange={(v) => setFormData({...formData, bureau: v})}>
+
+            <RadioGroup value={formData.bureau} onValueChange={(v) => setFormData({ ...formData, bureau: v })}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['EXPERIAN', 'TRANSUNION', 'EQUIFAX'].map((bureau) => (
                   <Label
                     key={bureau}
-                    className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer hover:bg-muted/50 transition-all ${
-                      formData.bureau === bureau ? 'border-secondary bg-secondary/5' : 'border-border'
-                    }`}
+                    className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer hover:bg-muted/50 transition-all ${formData.bureau === bureau ? 'border-secondary bg-secondary/5' : 'border-border'
+                      }`}
                   >
                     <RadioGroupItem value={bureau} className="sr-only" />
                     <span className="font-bold text-lg capitalize">{bureau.toLowerCase()}</span>
@@ -688,9 +687,8 @@ ${formData.firstName} ${formData.lastName}`;
                 {/* Upload mode toggle */}
                 <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
                   <button
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                      uploadMode === "pdf" ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-primary"
-                    }`}
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${uploadMode === "pdf" ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-primary"
+                      }`}
                     onClick={() => {
                       setUploadMode("pdf");
                       setReportText(""); // Clear text when switching to PDF mode
@@ -701,9 +699,8 @@ ${formData.firstName} ${formData.lastName}`;
                     Upload PDF
                   </button>
                   <button
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                      uploadMode === "paste" ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-primary"
-                    }`}
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${uploadMode === "paste" ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-primary"
+                      }`}
                     onClick={() => {
                       setUploadMode("paste");
                       setSelectedFile(null); // Clear file when switching to paste mode
@@ -716,10 +713,9 @@ ${formData.firstName} ${formData.lastName}`;
                 </div>
 
                 {uploadMode === "pdf" ? (
-                  <div 
-                    className={`border-2 border-dashed rounded-xl p-8 bg-slate-50/50 transition-colors cursor-pointer ${
-                      selectedFile ? "border-emerald-400 bg-emerald-50/50" : "border-slate-200 hover:border-secondary/50"
-                    }`}
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-8 bg-slate-50/50 transition-colors cursor-pointer ${selectedFile ? "border-emerald-400 bg-emerald-50/50" : "border-slate-200 hover:border-secondary/50"
+                      }`}
                     onClick={() => document.getElementById('pdf-upload')?.click()}
                     onDragOver={(e) => {
                       e.preventDefault();
@@ -824,8 +820,8 @@ Payment History: 30 days late (Mar 2024)"
                 )}
 
                 <div className="text-center">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="text-sm text-muted-foreground hover:text-primary"
                     onClick={() => setUseManualEntry(true)}
                     data-testid="button-manual-entry"
@@ -840,8 +836,8 @@ Payment History: 30 days late (Mar 2024)"
                 <FileText className="h-8 w-8 text-slate-400 mx-auto mb-3" />
                 <p className="font-medium text-primary mb-2">Manual Entry Mode</p>
                 <p className="text-sm text-muted-foreground mb-4">You'll enter the account details on the next screen.</p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => setUseManualEntry(false)}
                 >
@@ -856,13 +852,13 @@ Payment History: 30 days late (Mar 2024)"
 
         {step === "identify-item" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-bold text-primary mb-2">
                   {parsedAccounts.length > 0 ? "Select Accounts to Dispute" : "Identify the Item"}
                 </h3>
                 <p className="text-muted-foreground">
-                  {parsedAccounts.length > 0 
+                  {parsedAccounts.length > 0
                     ? "Select one or more accounts to dispute. You can generate multiple letters at once."
                     : "Enter details as they appear on your educational credit report."}
                 </p>
@@ -877,9 +873,9 @@ Payment History: 30 days late (Mar 2024)"
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">AI-Detected Accounts</Label>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={selectAllAccounts}
                     className="text-xs"
                     data-testid="button-select-all"
@@ -902,17 +898,15 @@ Payment History: 30 days late (Mar 2024)"
                       <div
                         key={index}
                         onClick={() => toggleAccountSelection(index)}
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
-                          isSelected 
-                            ? 'border-secondary bg-secondary/5' 
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${isSelected
+                            ? 'border-secondary bg-secondary/5'
                             : 'border-slate-200 bg-white hover:border-slate-300'
-                        }`}
+                          }`}
                         data-testid={`card-account-${index}`}
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                            isSelected ? 'bg-secondary border-secondary' : 'border-slate-300'
-                          }`}>
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 ${isSelected ? 'bg-secondary border-secondary' : 'border-slate-300'
+                            }`}>
                             {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
                           </div>
                           <div className="flex-1">
@@ -926,11 +920,10 @@ Payment History: 30 days late (Mar 2024)"
                                   <p className="text-sm text-muted-foreground">Balance: {account.balance}</p>
                                 )}
                               </div>
-                              <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                account.confidence === 'HIGH' ? 'bg-emerald-100 text-emerald-700' :
-                                account.confidence === 'MEDIUM' ? 'bg-amber-100 text-amber-700' :
-                                'bg-slate-100 text-slate-600'
-                              }`}>
+                              <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${account.confidence === 'HIGH' ? 'bg-emerald-100 text-emerald-700' :
+                                  account.confidence === 'MEDIUM' ? 'bg-amber-100 text-amber-700' :
+                                    'bg-slate-100 text-slate-600'
+                                }`}>
                                 {account.confidence}
                               </div>
                             </div>
@@ -963,12 +956,12 @@ Payment History: 30 days late (Mar 2024)"
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="creditor">Creditor Name</Label>
-                <Input 
-                  id="creditor" 
-                  placeholder="e.g. Chase Bank, Midland Funding" 
+                <Input
+                  id="creditor"
+                  placeholder="e.g. Chase Bank, Midland Funding"
                   value={formData.creditorName}
                   onChange={(e) => {
-                    setFormData({...formData, creditorName: e.target.value});
+                    setFormData({ ...formData, creditorName: e.target.value });
                     // Clear AI-detected selections when typing manual entry
                     setSelectedAccounts(prev => prev.filter(a => a.index === -1));
                   }}
@@ -977,11 +970,11 @@ Payment History: 30 days late (Mar 2024)"
               </div>
               <div className="space-y-2">
                 <Label htmlFor="account">Account Number (Optional)</Label>
-                <Input 
-                  id="account" 
-                  placeholder="Partial number is okay (e.g. XXXX-1234)" 
+                <Input
+                  id="account"
+                  placeholder="Partial number is okay (e.g. XXXX-1234)"
                   value={formData.accountNumber}
-                  onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
                   className="h-12 text-lg bg-white"
                 />
               </div>
@@ -992,14 +985,14 @@ Payment History: 30 days late (Mar 2024)"
 
         {step === "reason" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div>
+            <div>
               <h3 className="text-lg font-bold text-primary mb-2">
-                {selectedAccounts.length > 1 
+                {selectedAccounts.length > 1
                   ? `Set Dispute Reasons (${selectedAccounts.filter(a => a.disputeReason).length}/${selectedAccounts.length} complete)`
                   : "Educational Reason for Challenge"}
               </h3>
               <p className="text-muted-foreground">
-                {selectedAccounts.length > 1 
+                {selectedAccounts.length > 1
                   ? "Set a reason for each account, or apply one reason to all."
                   : "Why do you believe this item is inaccurate or unverifiable?"}
               </p>
@@ -1025,7 +1018,7 @@ Payment History: 30 days late (Mar 2024)"
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
                   {selectedAccounts.map((acc, i) => (
                     <div key={acc.index} className="p-4 bg-white rounded-xl border border-slate-200">
@@ -1038,8 +1031,8 @@ Payment History: 30 days late (Mar 2024)"
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         )}
                       </div>
-                      <Select 
-                        value={acc.disputeReason} 
+                      <Select
+                        value={acc.disputeReason}
                         onValueChange={(v) => updateAccountReason(acc.index, v)}
                       >
                         <SelectTrigger className="h-10 bg-slate-50">
@@ -1089,11 +1082,10 @@ Payment History: 30 days late (Mar 2024)"
                         <Button
                           key={i}
                           variant="outline"
-                          className={`justify-start h-auto py-3 px-4 text-left ${
-                            selectedAccounts[0].disputeReason === reason 
-                              ? 'border-secondary bg-secondary/10 text-primary' 
+                          className={`justify-start h-auto py-3 px-4 text-left ${selectedAccounts[0].disputeReason === reason
+                              ? 'border-secondary bg-secondary/10 text-primary'
                               : 'hover:border-secondary/50'
-                          }`}
+                            }`}
                           onClick={() => updateAccountReason(selectedAccounts[0].index, reason)}
                           data-testid={`button-reason-${i}`}
                         >
@@ -1108,8 +1100,8 @@ Payment History: 30 days late (Mar 2024)"
                   </div>
                 )}
 
-                <Select 
-                  value={selectedAccounts[0]?.disputeReason || ""} 
+                <Select
+                  value={selectedAccounts[0]?.disputeReason || ""}
                   onValueChange={(v) => updateAccountReason(selectedAccounts[0].index, v)}
                 >
                   <SelectTrigger className="h-12 text-lg bg-white">
@@ -1126,7 +1118,7 @@ Payment History: 30 days late (Mar 2024)"
                 </Select>
 
                 {selectedAccounts[0]?.disputeReason === "other" && (
-                  <Textarea 
+                  <Textarea
                     placeholder="Describe the inaccuracy in your own words..."
                     value={selectedAccounts[0]?.customReason || ""}
                     onChange={(e) => updateAccountReason(selectedAccounts[0].index, "other", e.target.value)}
@@ -1135,7 +1127,7 @@ Payment History: 30 days late (Mar 2024)"
                 )}
               </>
             )}
-            
+
             <div className="bg-secondary/10 p-4 rounded-lg flex gap-3 items-start">
               <CheckCircle2 className="h-5 w-5 text-secondary mt-0.5" />
               <p className="text-sm text-primary/80">
@@ -1150,7 +1142,7 @@ Payment History: 30 days late (Mar 2024)"
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div>
               <h3 className="text-lg font-bold text-primary mb-2">
-                {selectedAccounts.length > 1 
+                {selectedAccounts.length > 1
                   ? `Review ${selectedAccounts.length} Dispute Letters`
                   : "Review Your Draft"}
               </h3>
@@ -1166,7 +1158,7 @@ Payment History: 30 days late (Mar 2024)"
                 <span className="text-muted-foreground">Bureau</span>
                 <span className="font-semibold">{formData.bureau}</span>
               </div>
-              
+
               {selectedAccounts.length === 1 ? (
                 <>
                   <div className="flex justify-between border-b border-border/50 pb-2">
@@ -1199,7 +1191,7 @@ Payment History: 30 days late (Mar 2024)"
                 </div>
               )}
             </div>
-            
+
             <div className="text-center text-sm text-muted-foreground bg-amber-50 p-3 rounded border border-amber-100 italic">
               By clicking "Generate {selectedAccounts.length > 1 ? "Letters" : "Draft"}", you acknowledge this is a tool for your personal review and submission.
             </div>
@@ -1209,8 +1201,8 @@ Payment History: 30 days late (Mar 2024)"
       </CardContent>
 
       <CardFooter className="flex justify-between border-t border-border/50 pt-6">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={step === "safety-check" ? onCancel : handleBack}
           className="text-muted-foreground hover:text-primary"
         >
@@ -1219,8 +1211,8 @@ Payment History: 30 days late (Mar 2024)"
           )}
         </Button>
         {step !== "safety-check" && (
-          <Button 
-            onClick={handleNext} 
+          <Button
+            onClick={handleNext}
             disabled={
               (step === "personal-info" && (!formData.address || !formData.zip || !formData.ssnLast4)) ||
               (step === "select-bureau" && !formData.bureau) ||
@@ -1233,9 +1225,9 @@ Payment History: 30 days late (Mar 2024)"
             className="bg-primary hover:bg-primary/90 min-w-[120px]"
           >
             {isLoading || isParsing ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-              step === "review" ? (selectedAccounts.length > 1 ? `Generate ${selectedAccounts.length} Letters` : "Generate Letter") : 
-              step === "upload-report" && reportText.trim() ? <span className="flex items-center gap-1"><Sparkles className="h-4 w-4 mr-1" /> Analyze with AI</span> :
-              <span className="flex items-center gap-1">Next <ChevronRight className="h-4 w-4" /></span>
+              step === "review" ? (selectedAccounts.length > 1 ? `Generate ${selectedAccounts.length} Letters` : "Generate Letter") :
+                step === "upload-report" && reportText.trim() ? <span className="flex items-center gap-1"><Sparkles className="h-4 w-4 mr-1" /> Analyze with AI</span> :
+                  <span className="flex items-center gap-1">Next <ChevronRight className="h-4 w-4" /></span>
             )}
           </Button>
         )}

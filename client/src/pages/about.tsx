@@ -7,7 +7,7 @@ export default function About() {
   return (
     <div className="min-h-screen flex flex-col bg-[#faf9f6]">
       <Navbar />
-      
+
       <main className="flex-grow">
         {/* Header */}
         <div className="bg-primary py-24">
@@ -18,7 +18,27 @@ export default function About() {
             </p>
           </div>
         </div>
-
+        {/* Mission & Vision */}
+        <section className="bg-white border-b">
+          <div className="container mx-auto px-4 py-12">
+            <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+              <div className="space-y-4">
+                <h2 className="text-sm font-bold tracking-widest uppercase text-secondary">Our Mission</h2>
+                <p className="text-2xl font-serif font-bold text-primary">To democratize credit education by providing accessible, compliant tools.</p>
+                <p className="text-slate-600 leading-relaxed">
+                  We help every consumer understand their rights under the FCRA and prepare accurate dispute documentation—without paying thousands to third-party credit repair companies.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <h2 className="text-sm font-bold tracking-widest uppercase text-secondary">Our Vision</h2>
+                <p className="text-2xl font-serif font-bold text-primary">A world where credit literacy is universal.</p>
+                <p className="text-slate-600 leading-relaxed">
+                  Where every person has the tools to maintain accurate credit reports, and where financial empowerment starts with understanding—not expensive middlemen.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
         {/* Section 1 - Who We Are */}
         <div className="container mx-auto px-4 py-16 max-w-4xl">
           <div className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200 mb-12">
@@ -38,22 +58,22 @@ export default function About() {
 
           {/* Section 2 - Our Core Values */}
           <div className="grid md:grid-cols-2 gap-6 mb-16">
-            <ValueCard 
+            <ValueCard
               icon={<GraduationCap className="h-6 w-6 text-secondary" />}
               title="Education-First"
               text="Knowledge is power. Learn why items appear on your report and how to address them."
             />
-            <ValueCard 
+            <ValueCard
               icon={<Target className="h-6 w-6 text-secondary" />}
               title="Guided Support"
               text="We provide step-by-step workflows, templates, and checklists."
             />
-            <ValueCard 
+            <ValueCard
               icon={<Shield className="h-6 w-6 text-secondary" />}
               title="Transparency"
               text="Every feature, workflow, and subscription plan is explained upfront."
             />
-            <ValueCard 
+            <ValueCard
               icon={<Lock className="h-6 w-6 text-secondary" />}
               title="Security"
               text="All personal data is encrypted at rest and in transit, with bank-level 256-bit security."
@@ -149,6 +169,25 @@ export default function About() {
             </div>
           </div>
 
+          {/* Specialized Teams Section */}
+          <div className="mb-20">
+            <h2 className="text-3xl font-serif font-bold text-primary mb-10 text-center">Specialized Expertise</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <TeamCard
+                title="Credit Law Specialists"
+                description="Ensuring all platform templates and workflows strictly follow FCRA and CROA guidelines."
+              />
+              <TeamCard
+                title="AI & Tech Team"
+                description="Building automated credit analysis tools and secure document generation for consumers."
+              />
+              <TeamCard
+                title="Education Team"
+                description="Translating complex financial law into simple, actionable steps for regular people."
+              />
+            </div>
+          </div>
+
           {/* Section 6 - Your Rights */}
           <div className="mb-16">
             <h2 className="text-3xl font-serif font-bold text-primary mb-10 text-center">Your Rights & Disclosures</h2>
@@ -208,6 +247,15 @@ export default function About() {
       </main>
 
       <Footer />
+    </div>
+  );
+}
+
+function TeamCard({ title, description }: { title: string, description: string }) {
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow text-center">
+      <h3 className="font-bold text-primary mb-3 text-lg">{title}</h3>
+      <p className="text-sm text-slate-600 leading-relaxed">{description}</p>
     </div>
   );
 }

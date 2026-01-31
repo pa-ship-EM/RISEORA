@@ -251,6 +251,8 @@ export const insertAuditLogSchema = createInsertSchema(auditLog, {
     "DISPUTE_UPDATED",
     "FILE_UPLOADED",
     "FILE_DELETED",
+    "FILE_VIEWED",
+    "FILE_DOWNLOADED",
     "STATUS_UPDATED",
     "PROFILE_UPDATED",
     "PASSWORD_CHANGED",

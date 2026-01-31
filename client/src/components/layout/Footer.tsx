@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Briefcase, Users, Shield, Lock } from "lucide-react";
-import logoIcon from "@assets/Screenshot_2025-12-30_at_3.40.28_PM_1767131437717.png";
+import logoIcon from "@assets/logo.png";
 
 export function Footer() {
   return (
@@ -83,11 +83,18 @@ export function Footer() {
               </Link>
             </div>
             <div className="flex gap-4">
-              {/* Social placeholders */}
-              <Facebook className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
-              <Twitter className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
-              <Instagram className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
-              <Linkedin className="h-5 w-5 hover:text-secondary cursor-pointer transition-colors" />
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-primary-foreground/80 hover:text-secondary transition-colors">
+                <Facebook className="h-5 w-5" />
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="text-primary-foreground/80 hover:text-secondary transition-colors">
+                <Twitter className="h-5 w-5" />
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-primary-foreground/80 hover:text-secondary transition-colors">
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-primary-foreground/80 hover:text-secondary transition-colors">
+                <Linkedin className="h-5 w-5" />
+              </a>
             </div>
           </div>
         </div>

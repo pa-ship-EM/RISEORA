@@ -15,6 +15,7 @@ import {
 import { db, withRetry } from "./db";
 import { eq, and, lt, isNull, desc } from "drizzle-orm";
 import { supabase, VAULT_BUCKET } from "./supabase";
+import { maskSensitiveData } from "./encryption";
 
 export interface IStorage {
   // User methods
@@ -409,8 +410,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAuditLog(log: InsertAuditLog): Promise<AuditLog> {
+    // Sanitize details if present
+    const sanitizedLog = { ...log };
+    if (sanitizedLog.details) {
+      try {
+        const detailsObj = JSON.parse(sanitizedLog.details);
+        sanitizedLog.details = JSON.stringify(maskSensitiveData(detailsObj));
+      } catch (e) {
+        // Not JSON, just keep as is or log warning
+      }
+    }
     const [created] = await db.insert(auditLog)
-      .values(log)
+      .values(sanitizedLog)
       .returning();
     return created;
   }

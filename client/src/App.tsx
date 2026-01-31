@@ -13,6 +13,7 @@ import Services from "@/pages/services";
 import Resources from "@/pages/resources";
 import About from "@/pages/about";
 import AuthPage from "@/pages/auth";
+import Contact from "@/pages/contact";
 import InvestorOverview from "@/pages/investor";
 import TermsAndLegal from "@/pages/legal/terms";
 import SecurityPage from "@/pages/legal/security";
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/services" component={Services} />
       <Route path="/resources" component={Resources} />
       <Route path="/about" component={About} />
+      <Route path="/contact" component={Contact} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/investors" component={InvestorOverview} />
       <Route path="/legal" component={TermsAndLegal} />

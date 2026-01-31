@@ -5,9 +5,9 @@ import { ComplianceDisclaimer } from "@/components/ui/compliance-disclaimer";
 import { CheckCircle2, TrendingUp, Shield, ArrowRight, Users, Wand2, BookOpen } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import heroImage from "@assets/generated_images/professional_financial_freedom_hero_background.png";
+import heroImage from "@assets/hero.png";
 
-import wizardLogo from "@assets/ChatGPT_Image_Dec_30,_2025,_03_41_14_PM_1767131297375.png";
+import wizardLogo from "@assets/wizard.png";
 
 export default function Home() {
   return (
@@ -23,16 +23,22 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hero Section */}
+      {/* Hero Section - Modern UI/UX */}
       <section className="relative pt-20 pb-32 md:pt-32 md:pb-48 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img
-            src={heroImage}
-            alt="Office background"
-            className="w-full h-full object-cover opacity-10"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background" />
+        {/* Animated Gradient Mesh Background */}
+        <div className="absolute inset-0 z-0 gradient-mesh">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.3),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(255,122,127,0.2),transparent_50%)] animate-pulse-slow" />
         </div>
+
+        {/* Floating Glassmorphic Orbs - Multiple layers for depth */}
+        <div className="absolute top-20 right-10 w-72 h-72 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 left-10 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-500/20 rounded-full blur-3xl animate-float-delayed" />
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-br from-violet-400/15 to-indigo-500/15 rounded-full blur-2xl animate-pulse-slow" />
+
+        {/* Additional floating geometric shapes */}
+        <div className="absolute top-40 left-1/4 w-32 h-32 bg-gradient-to-br from-pink-300/10 to-purple-300/10 rounded-2xl blur-xl animate-float rotate-45" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-40 right-1/4 w-48 h-48 bg-gradient-to-br from-cyan-300/10 to-blue-300/10 rounded-full blur-2xl animate-float-delayed" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/3 right-1/3 w-24 h-24 bg-gradient-to-br from-violet-300/15 to-indigo-300/15 rounded-lg blur-xl animate-float" style={{ animationDelay: '0.5s' }} />
 
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
@@ -41,30 +47,69 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="max-w-3xl"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary-foreground text-sm font-semibold mb-6 border border-secondary/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-card text-secondary-foreground text-sm font-semibold mb-6 border border-white/30 shadow-lg animate-scale-in">
               <img src={wizardLogo} alt="Wizard" className="h-5 w-auto" />
               Introducing the Dispute Wizard™ (Beta)
             </div>
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-primary leading-tight mb-6">
-              Tools to Help You Prepare Your <br />
-              <span className="text-secondary">Credit Report Dispute Documents.</span>
+            <h1 className="text-5xl md:text-7xl font-serif font-bold leading-tight mb-6">
+              <span className="gradient-text-vibrant">Tools to Help You Prepare Your</span>
+              <br />
+              <span className="text-primary">Credit Report Dispute Documents.</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
               RiseOra uses intelligent workflows to assist you in identifying potential errors and preparing consumer dispute letters.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/auth?tab=signup">
-                <Button size="lg" className="text-lg px-8 h-14 bg-primary text-white shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
-                  Join Beta Program
+                <Button size="lg" className="relative overflow-hidden text-lg px-8 h-14 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-xl shadow-violet-500/30 hover:shadow-2xl hover:shadow-violet-500/50 transition-all duration-300 hover:scale-105 group animate-pulse-glow">
+                  <span className="relative z-10">Join Beta Program</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </Button>
               </Link>
               <Link href="/services">
-                <Button variant="outline" size="lg" className="text-lg px-8 h-14 border-primary/20 hover:bg-primary/5">
+                <Button variant="outline" size="lg" className="text-lg px-8 h-14 glass-card border-white/30 hover:bg-white/80 hover:scale-105 transition-all duration-300 shadow-lg">
                   Early Access Pricing
                 </Button>
               </Link>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Philosophy Section - "The Ascent" */}
+      <section className="py-24 bg-background relative overflow-hidden border-y border-primary/10">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 text-primary text-sm font-bold tracking-widest uppercase"
+            >
+              The Philosophy
+            </motion.div>
+            <h2 className="text-4xl md:text-6xl font-serif font-bold text-primary leading-tight">
+              A Bridge to Your <br />
+              <span className="italic text-secondary">Highest Potential.</span>
+            </h2>
+            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed font-light italic">
+              "True transformation doesn't come from working harder at the wrong things, but from becoming the person who handles the right things with ease."
+            </p>
+            <div className="grid md:grid-cols-2 gap-12 pt-12 text-left">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-serif font-bold text-primary">The Ascent</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  RiseOra represents the space between where you are and your ultimate potential. We believe that self-mastery is the ultimate form of creativity. By stripping away the clutter of old habits and mental limitations, we reveal the masterpiece that was always there.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-2xl font-serif font-bold text-primary">Intentional Mastery</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  We apply the principles of high-end design—clarity, minimalism, and intentionality—to the human mind. Our tools empower you to rise inward and upward, stripping away noise to focus on what truly matters.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -265,28 +310,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 bg-secondary/5">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">Ready to take control of your credit report?</h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Start with our basic plan at just $49/mo and access guided dispute preparation tools.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/auth?tab=signup">
-              <Button size="lg" className="text-lg px-10 h-14 bg-secondary hover:bg-secondary/90 text-slate-900 font-bold shadow-lg w-full sm:w-auto">
-                Get Early Access <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Link href="/resources">
-              <Button variant="outline" size="lg" className="text-lg px-10 h-14 border-primary/20 hover:bg-primary/5 w-full sm:w-auto">
-                Browse Resources <BookOpen className="ml-2 h-5 w-5 text-secondary" />
-              </Button>
-            </Link>
-          </div>
-          <div className="mt-8 max-w-xl mx-auto">
-            <ComplianceDisclaimer variant="compact" />
-          </div>
+      {/* CTA Section - Modern */}
+      <section className="relative py-24 overflow-hidden">
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-cyan-50" />
+        <div className="absolute inset-0 gradient-mesh opacity-50" />
+
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-serif font-bold mb-6">
+              <span className="gradient-text">Ready to take control of your credit report?</span>
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Start with our basic plan at just $49/mo and access guided dispute preparation tools.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link href="/auth?tab=signup">
+                <Button size="lg" className="relative overflow-hidden text-lg px-10 h-14 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold shadow-xl shadow-violet-500/30 hover:shadow-2xl hover:shadow-violet-500/50 w-full sm:w-auto transition-all duration-300 hover:scale-105 group">
+                  <span className="relative z-10 flex items-center gap-2">
+                    Get Early Access <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </Button>
+              </Link>
+              <Link href="/resources">
+                <Button variant="outline" size="lg" className="text-lg px-10 h-14 glass-card border-white/30 hover:bg-white/80 w-full sm:w-auto hover:scale-105 transition-all duration-300 shadow-lg">
+                  Browse Resources <BookOpen className="ml-2 h-5 w-5 text-secondary" />
+                </Button>
+              </Link>
+            </div>
+            <div className="mt-8 max-w-xl mx-auto">
+              <ComplianceDisclaimer variant="compact" />
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -297,12 +358,20 @@ export default function Home() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
   return (
-    <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-      <div className="mb-6 bg-white w-16 h-16 rounded-xl flex items-center justify-center shadow-sm">
-        {icon}
+    <div className="group relative p-8 rounded-2xl glass-card border-white/20 shadow-xl hover:shadow-2xl hover:-translate-y-2 hover:scale-105 transition-all duration-500 overflow-hidden">
+      {/* Gradient border glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 via-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
+
+      {/* Shimmer effect on hover */}
+      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+
+      <div className="relative z-10">
+        <div className="mb-6 bg-gradient-to-br from-violet-100 to-cyan-100 w-16 h-16 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+          {icon}
+        </div>
+        <h3 className="text-xl font-bold text-primary mb-3 group-hover:gradient-text transition-all duration-300">{title}</h3>
+        <p className="text-muted-foreground leading-relaxed">{description}</p>
       </div>
-      <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
-      <p className="text-muted-foreground leading-relaxed">{description}</p>
     </div>
   );
 }
