@@ -46,7 +46,7 @@ export function transitionDispute(
     const error = new Error(
       `Illegal transition: ${dispute.status} → ${nextStatus}`
     );
-    
+
     logSecurityEvent({
       disputeId: dispute.disputeId,
       userId: dispute.userId,
@@ -54,7 +54,7 @@ export function transitionDispute(
       attemptedTo: nextStatus,
       reason: "ILLEGAL_TRANSITION"
     });
-    
+
     throw error;
   }
 
@@ -62,7 +62,7 @@ export function transitionDispute(
   return dispute;
 }
 
-export type DisputeAction = 
+export type DisputeAction =
   | "mark_ready"
   | "mark_mailed"
   | "add_tracking"
@@ -73,7 +73,10 @@ export type DisputeAction =
   | "mark_removed"
   | "mark_verified"
   | "mark_escalation"
-  | "mark_closed";
+  | "mark_closed"
+  | "advisor_start"
+  | "advisor_finish"
+  | "client_approve";
 
 interface DisputeState {
   disputeId?: string;
@@ -86,6 +89,13 @@ interface DisputeState {
 const STATE_MACHINE: Record<DisputeStatus, Partial<Record<DisputeEvent, DisputeStatus>>> = {
   [DisputeStatus.DRAFT]: {
     "ALL_DOCS_UPLOADED": DisputeStatus.READY_TO_MAIL,
+    "ADVISOR_STARTED_PREP": DisputeStatus.ADVISOR_PENDING,
+  },
+  [DisputeStatus.ADVISOR_PENDING]: {
+    "ADVISOR_FINISHED_PREP": DisputeStatus.PENDING_CLIENT_APPROVAL,
+  },
+  [DisputeStatus.PENDING_CLIENT_APPROVAL]: {
+    "CLIENT_APPROVED": DisputeStatus.READY_TO_MAIL,
   },
   [DisputeStatus.READY_TO_MAIL]: {
     "USER_CONFIRMED_MAILING": DisputeStatus.MAILED,
@@ -128,20 +138,23 @@ const EVENT_TO_ACTION: Record<DisputeEvent, DisputeAction> = {
   "ITEM_VERIFIED": "mark_verified",
   "USER_ESCALATED": "mark_escalation",
   "USER_CLOSED": "mark_closed",
+  "ADVISOR_STARTED_PREP": "advisor_start",
+  "ADVISOR_FINISHED_PREP": "advisor_finish",
+  "CLIENT_APPROVED": "client_approve",
 };
 
 export function advanceDispute<T extends DisputeState>(dispute: T, event: DisputeEvent): T {
   const currentStatus = dispute.status;
   const transitions = STATE_MACHINE[currentStatus];
-  
+
   if (!transitions || !(event in transitions)) {
     throw new Error(`Invalid transition: cannot apply '${event}' when status is '${currentStatus}'`);
   }
-  
+
   const newStatus = transitions[event]!;
-  
+
   validateTransition(currentStatus, newStatus);
-  
+
   return { ...dispute, status: newStatus };
 }
 
@@ -161,7 +174,9 @@ export function eventToAction(event: DisputeEvent): DisputeAction {
 }
 
 export const VALID_TRANSITIONS: Record<string, DisputeAction[]> = {
-  "DRAFT": ["mark_ready"],
+  "DRAFT": ["mark_ready", "advisor_start"],
+  "ADVISOR_PENDING": ["advisor_finish"],
+  "PENDING_CLIENT_APPROVAL": ["client_approve"],
   "READY_TO_MAIL": ["mark_mailed"],
   "MAILED": ["add_tracking", "mark_delivered"],
   "DELIVERED": ["start_investigation"],
@@ -177,6 +192,12 @@ export const VALID_TRANSITIONS: Record<string, DisputeAction[]> = {
 export function getTargetStatus(action: DisputeAction): DisputeStatus | null {
   switch (action) {
     case "mark_ready":
+      return DisputeStatus.READY_TO_MAIL;
+    case "advisor_start":
+      return DisputeStatus.ADVISOR_PENDING;
+    case "advisor_finish":
+      return DisputeStatus.PENDING_CLIENT_APPROVAL;
+    case "client_approve":
       return DisputeStatus.READY_TO_MAIL;
     case "mark_mailed":
       return DisputeStatus.MAILED;
@@ -223,6 +244,8 @@ export function getInvestigationDeadlineDays(disputeType: string): number {
 export function getStatusStage(status: string): number {
   const stages: Record<string, number> = {
     "DRAFT": 0,
+    "ADVISOR_PENDING": 0,
+    "PENDING_CLIENT_APPROVAL": 0,
     "READY_TO_MAIL": 1,
     "MAILED": 2,
     "DELIVERED": 3,

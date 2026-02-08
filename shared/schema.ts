@@ -85,6 +85,13 @@ export const disputes = pgTable("disputes", {
   directDisputeSent: boolean("direct_dispute_sent").notNull().default(false),
   inaccuracyPersists: boolean("inaccuracy_persists").notNull().default(true),
 
+  // Advisor & Compliance Workflow
+  preparedBy: varchar("prepared_by").references(() => users.id), // ID of advisor who prepared the letter
+  approvedBy: varchar("approved_by").references(() => users.id), // ID of client who approved the letter
+  approvalIp: text("approval_ip"),
+  approvalUserAgent: text("approval_user_agent"),
+  approvedAt: timestamp("approved_at"),
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -257,9 +264,11 @@ export const insertAuditLogSchema = createInsertSchema(auditLog, {
     "PROFILE_UPDATED",
     "PASSWORD_CHANGED",
     "LOGIN",
-    "LOGOUT"
+    "LOGOUT",
+    "DISPUTE_APPROVED",
+    "ADVISOR_PREPARATION"
   ]),
-  resourceType: z.enum(["DISPUTE", "DOCUMENT", "PROFILE", "SESSION"]),
+  resourceType: z.enum(["DISPUTE", "DOCUMENT", "PROFILE", "SESSION", "ADVISOR"]),
 }).omit({
   id: true,
   createdAt: true,
@@ -476,44 +485,57 @@ export type InsertCreditReport = z.infer<typeof insertCreditReportSchema>;
 export type CreditReportAccount = typeof creditReportAccounts.$inferSelect;
 export type InsertCreditReportAccount = z.infer<typeof insertCreditReportAccountSchema>;
 
-// IoT Devices table for inventory management
-export const iotDevices = pgTable("iot_devices", {
+// Education Modules table for free tier
+export const educationModules = pgTable("education_modules", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-
-  // Device identification
-  deviceId: text("device_id").notNull().unique(), // Custom device identifier
-  deviceName: text("device_name").notNull(),
-  deviceType: text("device_type").notNull(), // SENSOR, CAMERA, GATEWAY, CONTROLLER, OTHER
-
-  // Ownership and location
-  ownerDepartment: text("owner_department").notNull(),
-  location: text("location").notNull(),
-
-  // Technical details
-  macAddress: text("mac_address"),
-  ipAddress: text("ip_address"),
-  firmwareVersion: text("firmware_version"),
-  manufacturer: text("manufacturer"),
-  model: text("model"),
-  serialNumber: text("serial_number"),
-
-  // Status and network
-  status: text("status").notNull().default("ACTIVE"), // ACTIVE, INACTIVE, MAINTENANCE, RETIRED
-  networkSegment: text("network_segment"),
-
-  // Audit fields
-  lastSeenAt: timestamp("last_seen_at"),
-  notes: text("notes"),
-
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  content: text("content").notNull(), // Markdown or HTML content
+  orderIndex: integer("order_index").notNull().default(0),
+  estimatedMinutes: integer("estimated_minutes").notNull().default(5),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const insertIotDeviceSchema = createInsertSchema(iotDevices).omit({
+// Quizzes for education modules
+export const quizzes = pgTable("quizzes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  moduleId: varchar("module_id").notNull().references(() => educationModules.id, { onDelete: "cascade" }),
+  questions: text("questions").notNull(), // JSON string of questions
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// User learning progress tracking
+export const userLearningProgress = pgTable("user_learning_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  moduleId: varchar("module_id").notNull().references(() => educationModules.id, { onDelete: "cascade" }),
+  completed: boolean("completed").notNull().default(false),
+  quizScore: integer("quiz_score"), // percentage or raw score
+  lastAccessedAt: timestamp("last_accessed_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Insert schemas for new tables
+export const insertEducationModuleSchema = createInsertSchema(educationModules).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export type IotDevice = typeof iotDevices.$inferSelect;
-export type InsertIotDevice = z.infer<typeof insertIotDeviceSchema>;
+export const insertQuizSchema = createInsertSchema(quizzes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserLearningProgressSchema = createInsertSchema(userLearningProgress).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type EducationModule = typeof educationModules.$inferSelect;
+export type InsertEducationModule = z.infer<typeof insertEducationModuleSchema>;
+export type Quiz = typeof quizzes.$inferSelect;
+export type InsertQuiz = z.infer<typeof insertQuizSchema>;
+export type UserLearningProgress = typeof userLearningProgress.$inferSelect;
+export type InsertUserLearningProgress = z.infer<typeof insertUserLearningProgressSchema>;

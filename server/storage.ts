@@ -7,13 +7,14 @@ import {
   type AuditLog, type InsertAuditLog,
   type CreditReport, type InsertCreditReport,
   type CreditReportAccount, type InsertCreditReportAccount,
-  type IotDevice, type InsertIotDevice,
+  type EducationModule, type InsertEducationModule, type Quiz, type InsertQuiz,
+  type UserLearningProgress, type InsertUserLearningProgress,
   DEFAULT_DISPUTE_CHECKLIST,
   users, disputes, subscriptions, disputeChecklists, notifications, userNotificationSettings, disputeAiGuidance,
-  disputeEvidence, auditLog, creditReports, creditReportAccounts, iotDevices
+  disputeEvidence, auditLog, creditReports, creditReportAccounts, educationModules, quizzes, userLearningProgress
 } from "@shared/schema";
 import { db, withRetry } from "./db";
-import { eq, and, lt, isNull, desc } from "drizzle-orm";
+import { eq, and, lt, isNull, desc, inArray } from "drizzle-orm";
 import { supabase, VAULT_BUCKET } from "./supabase";
 import { maskSensitiveData } from "./encryption";
 
@@ -32,6 +33,8 @@ export interface IStorage {
   // Dispute methods
   getDisputesForUser(userId: string): Promise<Dispute[]>;
   getDispute(id: string): Promise<Dispute | undefined>;
+  getDisputesByAdvisor(advisorId: string): Promise<Dispute[]>;
+  getAdvisorClients(advisorId: string): Promise<User[]>;
   createDispute(dispute: InsertDispute): Promise<Dispute>;
   createDisputesBulk(disputesData: InsertDispute[]): Promise<Dispute[]>;
   updateDispute(id: string, data: Partial<Dispute>): Promise<Dispute | undefined>;
@@ -93,13 +96,15 @@ export interface IStorage {
   createCreditReportAccounts(accounts: InsertCreditReportAccount[]): Promise<CreditReportAccount[]>;
   linkAccountToDispute(accountId: string, disputeId: string): Promise<CreditReportAccount | undefined>;
 
-  // IoT device methods
-  getAllIotDevices(): Promise<IotDevice[]>;
-  getIotDevice(id: string): Promise<IotDevice | undefined>;
-  getIotDeviceByDeviceId(deviceId: string): Promise<IotDevice | undefined>;
-  createIotDevice(device: InsertIotDevice): Promise<IotDevice>;
-  updateIotDevice(id: string, data: Partial<IotDevice>): Promise<IotDevice | undefined>;
-  deleteIotDevice(id: string): Promise<boolean>;
+  // Education methods
+  getAllEducationModules(): Promise<EducationModule[]>;
+  getEducationModule(id: string): Promise<EducationModule | undefined>;
+  getUserLearningProgress(userId: string): Promise<UserLearningProgress[]>;
+  getModuleProgressForUser(userId: string, moduleId: string): Promise<UserLearningProgress | undefined>;
+  updateUserLearningProgress(userId: string, moduleId: string, data: Partial<InsertUserLearningProgress>): Promise<UserLearningProgress>;
+  getQuizForModule(moduleId: string): Promise<Quiz | undefined>;
+  createEducationModule(module: InsertEducationModule): Promise<EducationModule>;
+  createQuiz(quiz: InsertQuiz): Promise<Quiz>;
 
   // Signed URL methods
   getSignedUrl(path: string): Promise<string | undefined>;
@@ -188,6 +193,19 @@ export class DatabaseStorage implements IStorage {
   async getDispute(id: string): Promise<Dispute | undefined> {
     const [dispute] = await db.select().from(disputes).where(eq(disputes.id, id));
     return dispute || undefined;
+  }
+
+  async getDisputesByAdvisor(advisorId: string): Promise<Dispute[]> {
+    return await db.select().from(disputes).where(eq(disputes.preparedBy, advisorId));
+  }
+
+  async getAdvisorClients(advisorId: string): Promise<User[]> {
+    // Get unique userIds from disputes prepared by this advisor
+    const advisorDisputes = await this.getDisputesByAdvisor(advisorId);
+    const clientIds = Array.from(new Set(advisorDisputes.map(d => d.userId)));
+    if (clientIds.length === 0) return [];
+
+    return await db.select().from(users).where(inArray(users.id, clientIds));
   }
 
   async createDispute(insertDispute: InsertDispute): Promise<Dispute> {
@@ -489,44 +507,55 @@ export class DatabaseStorage implements IStorage {
     return updated || undefined;
   }
 
-  // IoT device methods
-  async getAllIotDevices(): Promise<IotDevice[]> {
-    return await db.select().from(iotDevices)
-      .orderBy(desc(iotDevices.createdAt));
+  // Education methods
+  async getAllEducationModules(): Promise<EducationModule[]> {
+    return await db.select().from(educationModules).orderBy(educationModules.orderIndex);
   }
 
-  async getIotDevice(id: string): Promise<IotDevice | undefined> {
-    const [device] = await db.select().from(iotDevices)
-      .where(eq(iotDevices.id, id));
-    return device || undefined;
+  async getEducationModule(id: string): Promise<EducationModule | undefined> {
+    const [module] = await db.select().from(educationModules).where(eq(educationModules.id, id));
+    return module || undefined;
   }
 
-  async getIotDeviceByDeviceId(deviceId: string): Promise<IotDevice | undefined> {
-    const [device] = await db.select().from(iotDevices)
-      .where(eq(iotDevices.deviceId, deviceId));
-    return device || undefined;
+  async getUserLearningProgress(userId: string): Promise<UserLearningProgress[]> {
+    return await db.select().from(userLearningProgress).where(eq(userLearningProgress.userId, userId));
   }
 
-  async createIotDevice(device: InsertIotDevice): Promise<IotDevice> {
-    const [created] = await db.insert(iotDevices)
-      .values(device)
+  async getModuleProgressForUser(userId: string, moduleId: string): Promise<UserLearningProgress | undefined> {
+    const [progress] = await db.select()
+      .from(userLearningProgress)
+      .where(and(eq(userLearningProgress.userId, userId), eq(userLearningProgress.moduleId, moduleId)));
+    return progress || undefined;
+  }
+
+  async updateUserLearningProgress(userId: string, moduleId: string, data: Partial<InsertUserLearningProgress>): Promise<UserLearningProgress> {
+    const existing = await this.getModuleProgressForUser(userId, moduleId);
+    if (existing) {
+      const [updated] = await db.update(userLearningProgress)
+        .set({ ...data, lastAccessedAt: new Date() })
+        .where(eq(userLearningProgress.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(userLearningProgress)
+      .values({ userId, moduleId, ...data })
       .returning();
     return created;
   }
 
-  async updateIotDevice(id: string, data: Partial<IotDevice>): Promise<IotDevice | undefined> {
-    const [updated] = await db.update(iotDevices)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(iotDevices.id, id))
-      .returning();
-    return updated || undefined;
+  async getQuizForModule(moduleId: string): Promise<Quiz | undefined> {
+    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.moduleId, moduleId));
+    return quiz || undefined;
   }
 
-  async deleteIotDevice(id: string): Promise<boolean> {
-    const result = await db.delete(iotDevices)
-      .where(eq(iotDevices.id, id))
-      .returning();
-    return result.length > 0;
+  async createEducationModule(module: InsertEducationModule): Promise<EducationModule> {
+    const [created] = await db.insert(educationModules).values(module).returning();
+    return created;
+  }
+
+  async createQuiz(quiz: InsertQuiz): Promise<Quiz> {
+    const [created] = await db.insert(quizzes).values(quiz).returning();
+    return created;
   }
 
   async getSignedUrl(path: string): Promise<string | undefined> {

@@ -4,24 +4,39 @@ RiseOra is architected for scalability, maintainability, and enterprise-grade pe
 
 ## 🏛 System Design
 
-### 1. Frontend: Atomic & Type-Safe
+### 1. Frontend: Premium & Motion-Centric
 - **Framework:** React 18 with TypeScript for rigorous type safety.
+- **Styling:** Tailwind CSS 4 for modern, utility-first design with high performance.
+- **Animations:** Framer Motion for premium micro-interactions and smooth state transitions.
 - **State Management:** TanStack Query (React Query) for efficient server-state synchronization and caching.
-- **UI System:** shadcn/ui built on Radix UI primitives, ensuring accessibility (WCAG) and a premium, consistent aesthetic.
+- **UI Components:** shadcn/ui built on Radix UI primitives, ensuring accessibility (WCAG).
 
-### 2. Backend: Scalable & Modular
-- **Runtime:** Node.js with Express, optimized for I/O intensive tasks like AI document analysis.
-- **ORM:** Drizzle ORM provides a type-safe abstraction over PostgreSQL, enabling high-performance queries with zero runtime overhead.
-- **Validation:** Zod-powered schema validation at the edge and database levels.
+### 2. Backend: Scalable & Feature-Rich
+- **Runtime:** Node.js with Express, optimized for AI-driven workflows.
+- **ORM:** Drizzle ORM providing type-safe interaction with PostgreSQL.
+- **Validation:** Zod-powered schema validation for end-to-end data integrity.
+- **Integrations:** 
+  - **OpenAI:** Powering AI-driven dispute guidance and personalized recommendations.
+  - **Documint:** Enterprise-grade PDF generation for legal dispute letters.
 
-### 3. Data Strategy
-- **Relational Integrity:** PostgreSQL handles complex relationships between Users, Disputes, and Subscriptions.
-- **Encryption Layer:** Symmetrical AES-256-GCM encryption for PII (Personally Identifiable Information).
+### 3. Business Logic: Specialized Modules
+- **Free Education Tier:** Comprehensive learning management system with modules, quizzes, and progress tracking.
+- **Premium Dispute Wizard:** Multi-step guided workflow for complex credit repair scenarios.
+- **Secure Vault:** AES-256-GCM encrypted storage for PII (Personally Identifiable Information) and sensitive documents.
+
+### 4. Data Strategy
+- **Relational Integrity:** PostgreSQL handles complex relationships between Users, Disputes, Education, and Subscriptions.
 - **Storage Scoping:** Decoupled storage (Supabase) ensures that large binary files do not bloat the primary database.
 
+### 5. Legal Integrity & Compliance
+- **User-Centric Submission:** The platform enforces that only consumers can finalize and submit disputes, shielding the system from CROA requirements.
+- **Audit Traceability:** Every compliance-critical event (like dispute approval) is signed with the user's IP and User Agent.
+- **Coaching Model:** Architecture is strictly built around "Education + Document Prep," ensuring zero direct communication with credit bureaus.
+- **Refer to [SAFEGUARDS.md](file:///Users/amos/Desktop/11/SAFEGUARDS.md) for the full compliance framework.**
+
 ## 🚀 Scalability Path
-- **Stateless Design:** The API is designed to be horizontally scalable across containerized environments (Kubernetes/Docker).
-- **Vercel Optimized:** Built-in support for Edge Functions and Serverless middleware for global performance.
+- **Stateless Design:** The API is designed to be horizontally scalable across containerized environments.
+- **Vercel & Railway Deployment:** Optimized for serverless frontend (Vercel) and robust backend (Railway) communication.
 - **AI Pipelines:** Decoupled OpenAI integrations allow for easy migration to private LLM instances as the user base grows.
 
 ---

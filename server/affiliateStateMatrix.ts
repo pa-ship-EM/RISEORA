@@ -1,12 +1,14 @@
 import { DisputeStatus } from "@shared/disputeStates";
 
-export type AffiliateStateSurface = 
+export type AffiliateStateSurface =
   | "WORKFLOW_COMPLETION"
   | "EDUCATION_FOLLOWUP"
   | "RESOURCE_PAGE";
 
 export const AffiliateSurfaceByState: Record<DisputeStatus, AffiliateStateSurface[]> = {
   [DisputeStatus.DRAFT]: [],
+  [DisputeStatus.ADVISOR_PENDING]: [],
+  [DisputeStatus.PENDING_CLIENT_APPROVAL]: ["WORKFLOW_COMPLETION"],
   [DisputeStatus.READY_TO_MAIL]: ["WORKFLOW_COMPLETION"],
   [DisputeStatus.MAILED]: ["EDUCATION_FOLLOWUP"],
   [DisputeStatus.DELIVERED]: ["EDUCATION_FOLLOWUP"],

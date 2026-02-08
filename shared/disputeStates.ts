@@ -1,5 +1,7 @@
 export enum DisputeStatus {
   DRAFT = "DRAFT",
+  ADVISOR_PENDING = "ADVISOR_PENDING", // Advisor has started but not finished preparation
+  PENDING_CLIENT_APPROVAL = "PENDING_CLIENT_APPROVAL", // Advisor has finished, waiting for client
   READY_TO_MAIL = "READY_TO_MAIL",
   MAILED = "MAILED",
   DELIVERED = "DELIVERED",
@@ -22,7 +24,10 @@ export type DisputeEvent =
   | "ITEM_REMOVED"
   | "ITEM_VERIFIED"
   | "USER_ESCALATED"
-  | "USER_CLOSED";
+  | "USER_CLOSED"
+  | "ADVISOR_STARTED_PREP"
+  | "ADVISOR_FINISHED_PREP"
+  | "CLIENT_APPROVED";
 
 export const TERMINAL_STATES: DisputeStatus[] = [DisputeStatus.CLOSED];
 

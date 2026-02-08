@@ -1,7 +1,9 @@
 import { DisputeStatus } from "./disputeStates"
 
 export const allowedTransitions: Record<DisputeStatus, DisputeStatus[]> = {
-  [DisputeStatus.DRAFT]: [DisputeStatus.READY_TO_MAIL],
+  [DisputeStatus.DRAFT]: [DisputeStatus.READY_TO_MAIL, DisputeStatus.ADVISOR_PENDING],
+  [DisputeStatus.ADVISOR_PENDING]: [DisputeStatus.PENDING_CLIENT_APPROVAL, DisputeStatus.DRAFT],
+  [DisputeStatus.PENDING_CLIENT_APPROVAL]: [DisputeStatus.READY_TO_MAIL, DisputeStatus.ADVISOR_PENDING],
   [DisputeStatus.READY_TO_MAIL]: [DisputeStatus.MAILED],
   [DisputeStatus.MAILED]: [DisputeStatus.DELIVERED],
   [DisputeStatus.DELIVERED]: [DisputeStatus.IN_INVESTIGATION],

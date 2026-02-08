@@ -5,7 +5,7 @@ import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
-import { insertUserSchema, insertDisputeSchema, insertIotDeviceSchema, type User, TIER_FEATURES, DISPUTE_STAGES } from "@shared/schema";
+import { insertUserSchema, insertDisputeSchema, type User, TIER_FEATURES, DISPUTE_STAGES } from "@shared/schema";
 import { z } from "zod";
 import { encryptUserData, decryptUserData, maskSensitiveData, maskAccountNumber } from "./encryption";
 import OpenAI from "openai";
@@ -47,11 +47,42 @@ declare module "express-session" {
   }
 }
 
+import { type Request, type Response, type NextFunction } from "express";
+
 // Authentication middleware
-function requireAuth(req: any, res: any, next: any) {
+async function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session?.userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
+  const user = await storage.getUser(req.session.userId);
+  if (!user) {
+    return res.status(401).json({ message: "User not found" });
+  }
+  (req as any).user = user;
+  next();
+}
+
+async function requireAdvisor(req: Request, res: Response, next: NextFunction) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const user = await storage.getUser(req.session.userId);
+  if (!user || (user.role !== "AFFILIATE" && user.role !== "ADMIN")) {
+    return res.status(403).json({ message: "Forbidden: Advisor access required" });
+  }
+  (req as any).user = user;
+  next();
+}
+
+async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const user = await storage.getUser(req.session.userId);
+  if (!user || user.role !== "ADMIN") {
+    return res.status(403).json({ message: "Forbidden: Admin access required" });
+  }
+  (req as any).user = user;
   next();
 }
 
@@ -107,7 +138,7 @@ export async function registerRoutes(
         const { passwordHash: _, ...userWithoutPassword } = user;
         res.json(userWithoutPassword);
       });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -163,13 +194,13 @@ export async function registerRoutes(
           details: JSON.stringify({ status: "SUCCESS" }),
           ipAddress: req.ip,
           userAgent: req.get("user-agent"),
-        }).catch(err => console.error("Failed to log login success:", err));
+        }).catch((err: any) => console.error("Failed to log login success:", err));
 
         // Return user (without password)
         const { passwordHash: _, ...userWithoutPassword } = user;
         res.json(userWithoutPassword);
       });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -191,7 +222,7 @@ export async function registerRoutes(
           details: JSON.stringify({ status: "SUCCESS" }),
           ipAddress: req.ip,
           userAgent: req.get("user-agent"),
-        }).catch(err => console.error("Failed to log logout:", err));
+        }).catch((err: any) => console.error("Failed to log logout:", err));
       }
 
       res.json({ message: "Logged out successfully" });
@@ -211,7 +242,7 @@ export async function registerRoutes(
 
       const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, birthYearEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
       res.json({ ...userWithoutSensitive, ...decryptedData });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -245,7 +276,7 @@ export async function registerRoutes(
       await storage.updateUserProfile(req.session.userId!, { passwordHash: newPasswordHash });
 
       res.json({ message: "Password changed successfully" });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -282,7 +313,7 @@ export async function registerRoutes(
 
       const { passwordHash: _, addressEncrypted, cityEncrypted, stateEncrypted, zipEncrypted, birthYearEncrypted, ssnLast4Encrypted, ...userWithoutSensitive } = user;
       res.json({ ...userWithoutSensitive, ...decryptedData });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -308,7 +339,7 @@ export async function registerRoutes(
       const features = TIER_FEATURES[tier] || TIER_FEATURES.FREE;
 
       res.json({ ...subscription, features });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -342,7 +373,7 @@ export async function registerRoutes(
 
       const features = TIER_FEATURES[tier as keyof typeof TIER_FEATURES];
       res.json({ ...subscription, features });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -435,7 +466,7 @@ export async function registerRoutes(
           .slice(0, 5)
           .map(([reason, count]) => ({ reason, count })),
       });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -445,7 +476,7 @@ export async function registerRoutes(
     try {
       const disputes = await storage.getDisputesForUser(req.session.userId!);
       res.json(disputes);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -453,7 +484,7 @@ export async function registerRoutes(
   // GET /api/disputes/:id
   app.get("/api/disputes/:id", requireAuth, async (req, res, next) => {
     try {
-      const dispute = await storage.getDispute(req.params.id);
+      const dispute = await storage.getDispute(req.params.id as string);
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
@@ -464,7 +495,7 @@ export async function registerRoutes(
       }
 
       res.json(dispute);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -584,7 +615,7 @@ export async function registerRoutes(
   // PATCH /api/disputes/:id
   app.patch("/api/disputes/:id", requireAuth, async (req, res, next) => {
     try {
-      const dispute = await storage.getDispute(req.params.id);
+      const dispute = await storage.getDispute(req.params.id as string);
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
@@ -607,9 +638,9 @@ export async function registerRoutes(
         }
       }
 
-      const updatedDispute = await storage.updateDispute(req.params.id, safeUpdates);
+      const updatedDispute = await storage.updateDispute(req.params.id as string, safeUpdates);
       res.json(updatedDispute);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -617,7 +648,7 @@ export async function registerRoutes(
   // DELETE /api/disputes/:id
   app.delete("/api/disputes/:id", requireAuth, async (req, res, next) => {
     try {
-      const dispute = await storage.getDispute(req.params.id);
+      const dispute = await storage.getDispute(req.params.id as string);
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
@@ -627,13 +658,13 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const deleted = await storage.deleteDispute(req.params.id);
-      if (deleted) {
+      const success = await storage.deleteDispute(req.params.id as string);
+      if (success) {
         res.json({ message: "Dispute deleted successfully" });
       } else {
         res.status(500).json({ message: "Failed to delete dispute" });
       }
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -648,7 +679,7 @@ export async function registerRoutes(
   // POST /api/disputes/:id/generate-letter - Generate letter from current template stage
   app.post("/api/disputes/:id/generate-letter", requireAuth, async (req, res, next) => {
     try {
-      const dispute = await storage.getDispute(req.params.id);
+      const dispute = await storage.getDispute(req.params.id as string);
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
@@ -725,7 +756,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
         templateStage: currentStage,
         templateInfo: TEMPLATE_DESCRIPTIONS[currentStage],
       });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -733,7 +764,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
   // POST /api/disputes/:id/advance-stage - Advance to next template stage
   app.post("/api/disputes/:id/advance-stage", requireAuth, async (req, res, next) => {
     try {
-      const dispute = await storage.getDispute(req.params.id);
+      const dispute = await storage.getDispute(req.params.id as string);
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
@@ -763,7 +794,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
         currentStage: nextStage,
         templateInfo: TEMPLATE_DESCRIPTIONS[nextStage],
       });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -773,7 +804,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
   // GET /api/disputes/:id/checklist - Get checklist for a dispute
   app.get("/api/disputes/:id/checklist", requireAuth, async (req, res, next) => {
     try {
-      const dispute = await storage.getDispute(req.params.id);
+      const dispute = await storage.getDispute(req.params.id as string);
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
@@ -781,15 +812,15 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      let checklist = await storage.getChecklistForDispute(req.params.id);
+      let checklist = await storage.getChecklistForDispute(req.params.id as string);
 
       // Create default checklist if none exists
       if (checklist.length === 0) {
-        checklist = await storage.createDefaultChecklistForDispute(req.params.id);
+        checklist = await storage.createDefaultChecklistForDispute(req.params.id as string);
       }
 
       res.json(checklist);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -798,12 +829,12 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
   app.patch("/api/checklist/:id", requireAuth, async (req, res, next) => {
     try {
       const { completed } = req.body;
-      const item = await storage.updateChecklistItem(req.params.id, { completed });
+      const item = await storage.updateChecklistItem(req.params.id as string, { completed });
       if (!item) {
         return res.status(404).json({ message: "Checklist item not found" });
       }
       res.json(item);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -811,7 +842,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
   // PATCH /api/disputes/:id/progress - Update dispute progress (mailed, tracking, etc.)
   app.patch("/api/disputes/:id/progress", requireAuth, async (req, res, next) => {
     try {
-      const dispute = await storage.getDispute(req.params.id);
+      const dispute = await storage.getDispute(req.params.id as string);
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
@@ -875,19 +906,19 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
           return res.status(400).json({ message: "Invalid action" });
       }
 
-      const updatedDispute = await storage.updateDispute(req.params.id, updateData);
+      const updatedDispute = await storage.updateDispute(req.params.id as string, updateData);
 
       // Create notification for status update
       await storage.createNotification({
         userId: req.session.userId!,
-        disputeId: req.params.id,
+        disputeId: req.params.id as string,
         type: "STATUS_UPDATE",
         title: "Dispute Status Updated",
         message: `Your dispute with ${dispute.creditorName} has been updated to "${updateData.status || action}".`,
       });
 
       res.json(updatedDispute);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -899,7 +930,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
     try {
       const notifications = await storage.getNotificationsForUser(req.session.userId!);
       res.json(notifications);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -909,7 +940,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
     try {
       const notifications = await storage.getUnreadNotificationsForUser(req.session.userId!);
       res.json({ count: notifications.length, notifications });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -917,12 +948,12 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
   // PATCH /api/notifications/:id/read - Mark notification as read
   app.patch("/api/notifications/:id/read", requireAuth, async (req, res, next) => {
     try {
-      const notification = await storage.markNotificationRead(req.params.id);
+      const notification = await storage.markNotificationRead(req.params.id as string);
       if (!notification) {
         return res.status(404).json({ message: "Notification not found" });
       }
       res.json(notification);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -932,7 +963,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
     try {
       await storage.markAllNotificationsRead(req.session.userId!);
       res.json({ message: "All notifications marked as read" });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -950,7 +981,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
         });
       }
       res.json(settings);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -965,7 +996,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
         reminderLeadDays,
       });
       res.json(settings);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -980,7 +1011,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
   // GET /api/disputes/:id/guidance - Get AI guidance for a dispute
   app.get("/api/disputes/:id/guidance", requireAuth, async (req, res, next) => {
     try {
-      const dispute = await storage.getDispute(req.params.id);
+      const dispute = await storage.getDispute(req.params.id as string);
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
@@ -998,7 +1029,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
         });
       }
 
-      const guidance = await storage.getGuidanceForDispute(req.params.id);
+      const guidance = await storage.getGuidanceForDispute(req.params.id as string);
       if (guidance) {
         // Filter out internal notes before sending to customer
         const { internalNotes: _, ...customerGuidance } = guidance;
@@ -1006,7 +1037,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
       } else {
         res.json(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1014,7 +1045,7 @@ Address: ${templateData.address}, ${templateData.city}, ${templateData.state} ${
   // POST /api/disputes/:id/generate-guidance - Generate AI guidance for escalated dispute
   app.post("/api/disputes/:id/generate-guidance", requireAuth, async (req, res, next) => {
     try {
-      const dispute = await storage.getDispute(req.params.id);
+      const dispute = await storage.getDispute(req.params.id as string);
       if (!dispute) {
         return res.status(404).json({ message: "Dispute not found" });
       }
@@ -1552,7 +1583,7 @@ Respond in JSON format with this structure:
     try {
       const reports = await storage.getCreditReportsForUser(req.session.userId!);
       res.json(reports);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1560,7 +1591,7 @@ Respond in JSON format with this structure:
   // GET /api/credit-reports/:id - Get single credit report with accounts
   app.get("/api/credit-reports/:id", requireAuth, async (req, res, next) => {
     try {
-      const report = await storage.getCreditReport(req.params.id);
+      const report = await storage.getCreditReport(req.params.id as string);
       if (!report) {
         return res.status(404).json({ message: "Credit report not found" });
       }
@@ -1568,9 +1599,9 @@ Respond in JSON format with this structure:
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const accounts = await storage.getAccountsForReport(report.id);
+      const accounts = await storage.getAccountsForReport(report.id as string);
       res.json({ report, accounts });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1580,7 +1611,7 @@ Respond in JSON format with this structure:
     try {
       const accounts = await storage.getAccountsForUser(req.session.userId!);
       res.json(accounts);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1588,7 +1619,7 @@ Respond in JSON format with this structure:
   // DELETE /api/credit-reports/:id - Delete a credit report
   app.delete("/api/credit-reports/:id", requireAuth, async (req, res, next) => {
     try {
-      const report = await storage.getCreditReport(req.params.id);
+      const report = await storage.getCreditReport(req.params.id as string);
       if (!report) {
         return res.status(404).json({ message: "Credit report not found" });
       }
@@ -1596,9 +1627,9 @@ Respond in JSON format with this structure:
         return res.status(403).json({ message: "Access denied" });
       }
 
-      await storage.deleteCreditReport(report.id);
+      await storage.deleteCreditReport(report.id as string);
       res.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1710,7 +1741,7 @@ Respond in JSON format with this structure:
       const allUsers = await storage.getAllUsers();
       const sanitizedUsers = allUsers.map(({ passwordHash, ...user }) => maskSensitiveData(user));
       res.json(sanitizedUsers);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1721,7 +1752,7 @@ Respond in JSON format with this structure:
       const clients = await storage.getAllUsersByRole("CLIENT");
       const sanitizedClients = clients.map(({ passwordHash, ...user }) => maskSensitiveData(user));
       res.json(sanitizedClients);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1732,7 +1763,7 @@ Respond in JSON format with this structure:
       const affiliates = await storage.getAllUsersByRole("AFFILIATE");
       const affiliatesWithoutPassword = affiliates.map(({ passwordHash, ...user }) => user);
       res.json(affiliatesWithoutPassword);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1762,7 +1793,7 @@ Respond in JSON format with this structure:
 
       const { passwordHash: _, ...affiliateWithoutPassword } = affiliate;
       res.json(affiliateWithoutPassword);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1782,7 +1813,7 @@ Respond in JSON format with this structure:
       }
 
       res.json({ message: "User deleted successfully" });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1809,7 +1840,7 @@ Respond in JSON format with this structure:
         disputes,
         recentActivity: auditLogs.slice(0, 10),
       }));
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1853,7 +1884,7 @@ Respond in JSON format with this structure:
       });
 
       res.json(subscription);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1878,7 +1909,7 @@ Respond in JSON format with this structure:
         evidence,
         checklist,
       });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1888,7 +1919,7 @@ Respond in JSON format with this structure:
     try {
       const allDisputes = await storage.getAllDisputes();
       res.json(maskSensitiveData(allDisputes));
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1911,7 +1942,7 @@ Respond in JSON format with this structure:
         pendingDisputes: pendingDisputes.length,
         resolvedDisputes: resolvedDisputes.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1938,14 +1969,14 @@ Respond in JSON format with this structure:
       const { id } = req.params;
 
       // Verify user owns this dispute
-      const dispute = await storage.getDispute(id);
+      const dispute = await storage.getDispute(id as string);
       if (!dispute || dispute.userId !== req.session.userId) {
         return res.status(404).json({ message: "Dispute not found" });
       }
 
-      const evidence = await storage.getEvidenceForDispute(id);
+      const evidence = await storage.getEvidenceForDispute(id as string);
       res.json(evidence);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -1969,7 +2000,7 @@ Respond in JSON format with this structure:
         const { documentType, description, bureau } = req.body;
 
         // Verify user owns this dispute
-        const dispute = await storage.getDispute(id);
+        const dispute = await storage.getDispute(id as string);
         if (!dispute || dispute.userId !== req.session.userId) {
           return res.status(404).json({ message: "Dispute not found" });
         }
@@ -1994,7 +2025,7 @@ Respond in JSON format with this structure:
 
         // Create evidence record
         const evidence = await storage.createEvidence({
-          disputeId: id,
+          disputeId: id as string,
           userId: req.session.userId!,
           documentType: documentType || 'OTHER',
           fileName: req.file.originalname,
@@ -2011,7 +2042,7 @@ Respond in JSON format with this structure:
           action: 'FILE_UPLOADED',
           resourceType: 'DOCUMENT',
           resourceId: evidence.id,
-          details: JSON.stringify({ fileName: req.file.originalname, documentType, disputeId: id }),
+          details: JSON.stringify({ fileName: req.file.originalname, documentType, disputeId: id as string }),
           ipAddress: req.ip,
           userAgent: req.get('user-agent'),
         });
@@ -2030,12 +2061,12 @@ Respond in JSON format with this structure:
       let storagePath: string | undefined;
 
       if (type === 'evidence') {
-        const evidence = await storage.getEvidenceById(id);
+        const evidence = await storage.getEvidenceById(id as string);
         if (evidence && evidence.userId === req.session.userId) {
           storagePath = evidence.storagePath;
         }
       } else if (type === 'report') {
-        const report = await storage.getCreditReport(id);
+        const report = await storage.getCreditReport(id as string);
         if (report && report.userId === req.session.userId) {
           // Note: If reports also have storage paths, use them. 
           // Currently, reports might only be parsed data, but if we save the PDF:
@@ -2057,14 +2088,14 @@ Respond in JSON format with this structure:
         userId: req.session.userId!,
         action: 'FILE_VIEWED',
         resourceType: 'DOCUMENT',
-        resourceId: id,
+        resourceId: id as string,
         details: JSON.stringify({ type, status: 'SUCCESS' }),
         ipAddress: req.ip,
         userAgent: req.get('user-agent'),
       });
 
       res.json({ url: signedUrl });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -2074,7 +2105,7 @@ Respond in JSON format with this structure:
     try {
       const evidence = await storage.getAllEvidenceForUser(req.session.userId!);
       res.json(evidence);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -2084,7 +2115,7 @@ Respond in JSON format with this structure:
     try {
       const { id } = req.params;
 
-      const evidence = await storage.getEvidenceById(id);
+      const evidence = await storage.getEvidenceById(id as string);
       if (!evidence || evidence.userId !== req.session.userId) {
         return res.status(404).json({ message: "Evidence not found" });
       }
@@ -2094,7 +2125,7 @@ Respond in JSON format with this structure:
       }
 
       res.sendFile(evidence.storagePath, { root: '.' });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -2104,12 +2135,12 @@ Respond in JSON format with this structure:
     try {
       const { id } = req.params;
 
-      const evidence = await storage.getEvidenceById(id);
+      const evidence = await storage.getEvidenceById(id as string);
       if (!evidence || evidence.userId !== req.session.userId) {
         return res.status(404).json({ message: "Evidence not found" });
       }
 
-      const deleted = await storage.deleteEvidence(id);
+      const deleted = await storage.deleteEvidence(req.params.id as string);
 
       if (!deleted) {
         return res.status(404).json({ message: "Evidence not found" });
@@ -2120,14 +2151,14 @@ Respond in JSON format with this structure:
         userId: req.session.userId!,
         action: 'FILE_DELETED',
         resourceType: 'DOCUMENT',
-        resourceId: id,
+        resourceId: id as string,
         details: null,
         ipAddress: req.ip,
         userAgent: req.get('user-agent'),
       });
 
       res.json({ message: "Evidence deleted successfully" });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -2139,7 +2170,7 @@ Respond in JSON format with this structure:
     try {
       const logs = await storage.getAuditLogsForUser(req.session.userId!);
       res.json(logs);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -2196,7 +2227,7 @@ Respond in JSON format with this structure:
           url: a.url
         }))
       });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
@@ -2205,8 +2236,9 @@ Respond in JSON format with this structure:
   app.get("/api/affiliates/dispute/:disputeId", requireAuth, async (req, res, next) => {
     try {
       const { disputeId } = req.params;
+      const dispute_id = disputeId as string;
 
-      const dispute = await storage.getDispute(disputeId);
+      const dispute = await storage.getDispute(dispute_id);
       if (!dispute) {
         return res.status(404).json({ error: "Dispute not found" });
       }
@@ -2225,7 +2257,7 @@ Respond in JSON format with this structure:
       const affiliates = resolveAffiliatesForDispute(disputeStatus as any);
 
       res.json({
-        disputeId,
+        disputeId: dispute_id,
         disputeStatus: dispute.status,
         affiliates: affiliates.map((a: any) => ({
           id: a.id,
@@ -2235,144 +2267,145 @@ Respond in JSON format with this structure:
           url: a.url
         }))
       });
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
 
-  // ========== IOT DEVICE ROUTES ==========
+  // ========== EDUCATION ROUTES ==========
 
-  // GET /api/admin/iot-devices - Get all IoT devices
-  app.get("/api/admin/iot-devices", requireAdmin, async (req, res, next) => {
+  // GET /api/education/modules - Get all education modules
+  app.get("/api/education/modules", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const devices = await storage.getAllIotDevices();
-      res.json(devices);
-    } catch (error) {
+      const modules = await storage.getAllEducationModules();
+      res.json(modules);
+    } catch (error: any) {
       next(error);
     }
   });
 
-  // GET /api/admin/iot-devices/:id - Get single IoT device
-  app.get("/api/admin/iot-devices/:id", requireAdmin, async (req, res, next) => {
+  // GET /api/education/modules/:id - Get a specific module
+  app.get("/api/education/modules/:id", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const device = await storage.getIotDevice(req.params.id);
-      if (!device) {
-        return res.status(404).json({ message: "Device not found" });
+      const module = await storage.getEducationModule(req.params.id as string);
+      if (!module) {
+        return res.status(404).json({ message: "Education module not found" });
       }
-      res.json(device);
-    } catch (error) {
+      res.json(module);
+    } catch (error: any) {
       next(error);
     }
   });
 
-  // POST /api/admin/iot-devices - Create new IoT device
-  app.post("/api/admin/iot-devices", requireAdmin, async (req, res, next) => {
+  // GET /api/education/progress - Get user's learning progress
+  app.get("/api/education/progress", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const validationResult = insertIotDeviceSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({
-          message: "Invalid device data",
-          errors: validationResult.error.flatten().fieldErrors
-        });
-      }
+      const progress = await storage.getUserLearningProgress(req.session.userId!);
+      res.json(progress);
+    } catch (error: any) {
+      next(error);
+    }
+  });
 
-      const { deviceId, deviceName, deviceType, ownerDepartment, location, macAddress, ipAddress, firmwareVersion, manufacturer, model, serialNumber, status, networkSegment, notes } = validationResult.data;
+  // POST /api/education/progress/:moduleId - Update user's progress for a module
+  app.post("/api/education/progress/:moduleId", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { moduleId } = req.params;
+      const { completedLessons, completed, score } = req.body;
 
-      const existingDevice = await storage.getIotDeviceByDeviceId(deviceId);
-      if (existingDevice) {
-        return res.status(400).json({ message: "Device with this ID already exists" });
-      }
-
-      const device = await storage.createIotDevice({
-        deviceId,
-        deviceName,
-        deviceType,
-        ownerDepartment,
-        location,
-        macAddress: macAddress || null,
-        ipAddress: ipAddress || null,
-        firmwareVersion: firmwareVersion || null,
-        manufacturer: manufacturer || null,
-        model: model || null,
-        serialNumber: serialNumber || null,
-        status: status || "ACTIVE",
-        networkSegment: networkSegment || null,
-        notes: notes || null,
-        lastSeenAt: null
+      const progress = await storage.updateUserLearningProgress(req.session.userId!, moduleId as string, {
+        completed,
+        quizScore: score,
       });
 
-      res.status(201).json(device);
-    } catch (error) {
+      res.json(progress);
+    } catch (error: any) {
       next(error);
     }
   });
 
-  // Partial schema for IoT device updates
-  const updateIotDeviceSchema = insertIotDeviceSchema.partial().extend({
-    lastSeenAt: z.string().datetime().nullable().optional()
+  // GET /api/education/modules/:moduleId/quiz - Get quiz for a module
+  app.get("/api/education/modules/:moduleId/quiz", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const quiz = await storage.getQuizForModule(req.params.moduleId as string);
+      if (!quiz) {
+        return res.status(404).json({ message: "No quiz found for this module" });
+      }
+      res.json(quiz);
+    } catch (error: any) {
+      next(error);
+    }
   });
 
-  // PATCH /api/admin/iot-devices/:id - Update IoT device
-  app.patch("/api/admin/iot-devices/:id", requireAdmin, async (req, res, next) => {
+  // ========== ADVISOR & COMPLIANCE ROUTES ==========
+
+  // GET /api/advisor/clients - Get all clients for the logged in advisor
+  app.get("/api/advisor/clients", requireAdvisor, async (req, res, next) => {
     try {
-      const device = await storage.getIotDevice(req.params.id);
-      if (!device) {
-        return res.status(404).json({ message: "Device not found" });
+      const clients = await storage.getAdvisorClients(req.session.userId!);
+      res.json(clients.map(c => maskSensitiveData(c)));
+    } catch (error: any) {
+      next(error);
+    }
+  });
+
+  // GET /api/advisor/disputes - Get all disputes prepared by the logged in advisor
+  app.get("/api/advisor/disputes", requireAdvisor, async (req, res, next) => {
+    try {
+      const disputes = await storage.getDisputesByAdvisor(req.session.userId!);
+      res.json(disputes);
+    } catch (error: any) {
+      next(error);
+    }
+  });
+
+  // POST /api/disputes/:id/approve - Client signs off on a dispute prepared by an advisor
+  app.post("/api/disputes/:id/approve", requireAuth, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const dispute_id = id as string;
+
+      const dispute = await storage.getDispute(dispute_id);
+      if (!dispute || dispute.userId !== req.session.userId) {
+        return res.status(404).json({ message: "Dispute not found" });
       }
 
-      const validationResult = updateIotDeviceSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({
-          message: "Invalid device data",
-          errors: validationResult.error.flatten().fieldErrors
-        });
+      if (dispute.status !== "PENDING_CLIENT_APPROVAL") {
+        return res.status(400).json({ message: "Dispute is not in a state that requires approval" });
       }
 
-      const { deviceId, deviceName, deviceType, ownerDepartment, location, macAddress, ipAddress, firmwareVersion, manufacturer, model, serialNumber, status, networkSegment, notes, lastSeenAt } = validationResult.data;
+      const updated = await storage.updateDispute(dispute_id, {
+        status: "READY_TO_MAIL" as any,
+        approvedBy: req.session.userId,
+        approvedAt: new Date(),
+        approvalIp: req.ip,
+        approvalUserAgent: req.headers["user-agent"]
+      });
 
-      if (deviceId && deviceId !== device.deviceId) {
-        const existingDevice = await storage.getIotDeviceByDeviceId(deviceId);
-        if (existingDevice) {
-          return res.status(400).json({ message: "Device with this ID already exists" });
-        }
-      }
-
-      const updated = await storage.updateIotDevice(req.params.id, {
-        ...(deviceId !== undefined && { deviceId }),
-        ...(deviceName !== undefined && { deviceName }),
-        ...(deviceType !== undefined && { deviceType }),
-        ...(ownerDepartment !== undefined && { ownerDepartment }),
-        ...(location !== undefined && { location }),
-        ...(macAddress !== undefined && { macAddress }),
-        ...(ipAddress !== undefined && { ipAddress }),
-        ...(firmwareVersion !== undefined && { firmwareVersion }),
-        ...(manufacturer !== undefined && { manufacturer }),
-        ...(model !== undefined && { model }),
-        ...(serialNumber !== undefined && { serialNumber }),
-        ...(status !== undefined && { status }),
-        ...(networkSegment !== undefined && { networkSegment }),
-        ...(notes !== undefined && { notes }),
-        ...(lastSeenAt !== undefined && { lastSeenAt: lastSeenAt ? new Date(lastSeenAt) : null })
+      // Audit Log for compliance
+      await storage.createAuditLog({
+        userId: req.session.userId!,
+        action: "DISPUTE_APPROVED" as any,
+        resourceType: "DISPUTE",
+        resourceId: dispute_id,
+        details: JSON.stringify({
+          previousStatus: dispute.status,
+          nextStatus: "READY_TO_MAIL",
+          ip: req.ip,
+          userAgent: req.headers["user-agent"]
+        }),
+        ipAddress: req.ip || "",
+        userAgent: req.headers["user-agent"] || ""
       });
 
       res.json(updated);
-    } catch (error) {
+    } catch (error: any) {
       next(error);
     }
   });
 
-  // DELETE /api/admin/iot-devices/:id - Delete IoT device
-  app.delete("/api/admin/iot-devices/:id", requireAdmin, async (req, res, next) => {
-    try {
-      const deleted = await storage.deleteIotDevice(req.params.id);
-      if (!deleted) {
-        return res.status(404).json({ message: "Device not found" });
-      }
-      res.json({ success: true });
-    } catch (error) {
-      next(error);
-    }
-  });
+  // ========== END OF ROUTES ==========
+
 
   // ========== REPLIT AI INTEGRATIONS ==========
   registerReplitIntegrations(app);

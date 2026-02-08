@@ -44,10 +44,11 @@ export function ComplianceDisclaimer({ variant = "compact", showLinks = true }: 
         <div className="text-sm text-amber-900 space-y-2">
           <p className="font-semibold">Important Disclosures</p>
           <ul className="list-disc list-inside space-y-1 text-amber-800">
-            <li><strong>Educational Purposes Only:</strong> All content and tools are for educational purposes only and do not constitute legal advice.</li>
-            <li><strong>No Credit Repair Service:</strong> RiseOra is a document preparation and educational platform — we do not submit disputes on your behalf.</li>
-            <li><strong>No Guarantees:</strong> We make no promises or guarantees regarding credit score changes or dispute outcomes.</li>
-            <li><strong>Self-Service:</strong> You are responsible for reviewing, customizing, and submitting any documents you create.</li>
+            <li><strong>Educational Purposes Only:</strong> All content and tools do not constitute legal advice.</li>
+            <li><strong>Coaching Model:</strong> Advisors provide guidance and support only; they do not act as your legal representative.</li>
+            <li><strong>Zero Direct Interaction:</strong> Neither RiseOra nor any Advisor communicates directly with credit bureaus or the CFPB on your behalf.</li>
+            <li><strong>Client Ownership:</strong> You maintain full control. You are responsible for reviewing and submitting any prepared documents.</li>
+            <li><strong>No Guarantees:</strong> We make no promises regarding credit score changes or dispute outcomes.</li>
           </ul>
           {showLinks && (
             <p className="pt-2 text-xs">
