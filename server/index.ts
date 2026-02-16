@@ -49,6 +49,7 @@ const trustedDomainSuffixes = [
   ".replit.dev",
   ".replit.app",
   ".vercel.app",
+  ".up.railway.app",
 ];
 
 function isAllowedOrigin(origin: string): boolean {
