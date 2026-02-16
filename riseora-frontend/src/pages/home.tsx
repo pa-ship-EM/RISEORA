@@ -54,13 +54,13 @@ export default function Home() {
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <Link href="/auth?tab=signup">
-                                    <Button size="lg" className="relative overflow-hidden text-lg px-8 h-14 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-xl shadow-violet-500/30 hover:shadow-2xl hover:shadow-violet-500/50 transition-all duration-300 hover:scale-105 group animate-pulse-glow">
+                                    <Button size="lg" className="relative overflow-hidden text-lg px-8 h-14 bg-gradient-to-r from-[#B8860B] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#F1D27A] text-navy-dark shadow-xl shadow-gold/30 hover:shadow-2xl hover:shadow-gold/50 transition-all duration-300 hover:scale-105 group font-bold">
                                         <span className="relative z-10">Join Beta Program</span>
-                                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     </Button>
                                 </Link>
                                 <Link href="/services">
-                                    <Button variant="outline" size="lg" className="text-lg px-8 h-14 glass-card border-white/30 hover:bg-white/80 hover:scale-105 transition-all duration-300 shadow-lg">
+                                    <Button variant="outline" size="lg" className="text-lg px-8 h-14 glass border-gold/30 hover:bg-gold/10 hover:scale-105 transition-all duration-300 shadow-lg text-gold">
                                         Early Access Pricing
                                     </Button>
                                 </Link>
@@ -114,9 +114,9 @@ export default function Home() {
             </section>
 
             {/* Stats Section */}
-            <section className="py-20 bg-primary text-white">
+            <section className="py-20 bg-[#112240] text-gold border-y border-gold/10">
                 <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-white/10">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gold/10">
                         <Stat number="10k+" label="Documents Prepared" />
                         <Stat number="50k+" label="Consumer Records Reviewed" />
                         <Stat number="High" label="User Completion Rate" />
@@ -214,11 +214,11 @@ export default function Home() {
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-4">
                             <Link href="/auth?tab=signup">
-                                <Button size="lg" className="relative overflow-hidden text-lg px-10 h-14 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold shadow-xl shadow-violet-500/30 hover:shadow-2xl hover:shadow-violet-500/50 w-full sm:w-auto transition-all duration-300 hover:scale-105 group">
+                                <Button size="lg" className="relative overflow-hidden text-lg px-10 h-14 bg-gradient-to-r from-[#B8860B] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#F1D27A] text-navy-dark font-bold shadow-xl shadow-gold/30 hover:shadow-2xl hover:shadow-gold/50 w-full sm:w-auto transition-all duration-300 hover:scale-105 group">
                                     <span className="relative z-10 flex items-center gap-2">
                                         Get Early Access <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                     </span>
-                                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                 </Button>
                             </Link>
                         </div>

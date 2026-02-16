@@ -23,11 +23,10 @@ export function Navbar() {
     return (
         <nav className="sticky top-0 z-50 w-full border-b bg-background shadow-sm">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-105">
-                    <img src={logoIcon} alt="RiseOra Logo" className="h-10 w-auto object-contain mix-blend-multiply" />
+                <Link href="/" className="flex items-center gap-2 transition-all hover:scale-105 group">
+                    <img src={logoIcon} alt="RiseOra Logo" className="h-10 w-auto object-contain brightness-0 invert" />
                     <span className="text-2xl font-serif font-bold tracking-tight">
-                        <span className="text-primary">Rise</span>
-                        <span className="text-secondary">Ora</span>
+                        <span className="gradient-text">RiseOra</span>
                     </span>
                 </Link>
 
@@ -57,7 +56,7 @@ export function Navbar() {
                                     <Button variant="ghost" className="font-semibold">Log In</Button>
                                 </Link>
                                 <Link href="/auth?tab=signup">
-                                    <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
+                                    <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-lg shadow-secondary/20 font-bold px-6">
                                         Get Started
                                     </Button>
                                 </Link>

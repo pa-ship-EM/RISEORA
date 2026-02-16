@@ -1,10 +1,12 @@
 import { storage } from "./storage";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+const openai = process.env.AI_INTEGRATIONS_OPENAI_API_KEY
+  ? new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  })
+  : null;
 
 interface ReminderContext {
   disputeId: string;
@@ -17,6 +19,9 @@ interface ReminderContext {
 
 async function generateAIReminderMessage(context: ReminderContext): Promise<{ title: string; message: string }> {
   try {
+    if (!openai) {
+      throw new Error("AI Integrations OpenAI API Key is not configured.");
+    }
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -54,23 +59,23 @@ The notification should remind them about the upcoming deadline and suggest what
 async function checkAndCreateReminders() {
   try {
     const disputesNeedingReminders = await storage.getDisputesNeedingReminders();
-    
+
     for (const dispute of disputesNeedingReminders) {
       if (!dispute.responseDeadline) continue;
-      
+
       const deadline = new Date(dispute.responseDeadline);
       const now = new Date();
       const daysUntilDeadline = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      
+
       const existingNotifications = await storage.getNotificationsForUser(dispute.userId);
-      const hasRecentReminder = existingNotifications.some(n => 
-        n.disputeId === dispute.id && 
+      const hasRecentReminder = existingNotifications.some(n =>
+        n.disputeId === dispute.id &&
         n.type === "DEADLINE_APPROACHING" &&
         new Date(n.createdAt).getTime() > now.getTime() - (24 * 60 * 60 * 1000)
       );
-      
+
       if (hasRecentReminder) continue;
-      
+
       const context: ReminderContext = {
         disputeId: dispute.id,
         userId: dispute.userId,
@@ -79,9 +84,9 @@ async function checkAndCreateReminders() {
         daysUntilDeadline,
         status: dispute.status,
       };
-      
+
       const { title, message } = await generateAIReminderMessage(context);
-      
+
       await storage.createNotification({
         userId: dispute.userId,
         disputeId: dispute.id,
@@ -91,24 +96,24 @@ async function checkAndCreateReminders() {
         scheduledFor: new Date(),
         deliveredAt: new Date(),
       });
-      
+
       console.log(`Created deadline reminder for dispute ${dispute.id}`);
     }
-    
+
     const allMailed = await storage.getDisputesNeedingReminders();
     for (const dispute of allMailed) {
       if (!dispute.mailedAt || !dispute.responseDeadline) continue;
-      
+
       const deadline = new Date(dispute.responseDeadline);
       const now = new Date();
-      
+
       if (now > deadline && !dispute.responseReceivedAt) {
         const existingNotifications = await storage.getNotificationsForUser(dispute.userId);
-        const hasNoResponseReminder = existingNotifications.some(n => 
-          n.disputeId === dispute.id && 
+        const hasNoResponseReminder = existingNotifications.some(n =>
+          n.disputeId === dispute.id &&
           n.type === "NO_RESPONSE"
         );
-        
+
         if (!hasNoResponseReminder) {
           await storage.createNotification({
             userId: dispute.userId,
@@ -117,7 +122,7 @@ async function checkAndCreateReminders() {
             title: `No Response: ${dispute.creditorName}`,
             message: `The 30-day deadline has passed for your dispute with ${dispute.creditorName} (${dispute.bureau}) without a response. Under FCRA Section 611, the bureau must delete or correct the disputed item. Consider sending a follow-up letter or escalating your complaint.`,
           });
-          
+
           console.log(`Created no-response notification for dispute ${dispute.id}`);
         }
       }
@@ -129,9 +134,9 @@ async function checkAndCreateReminders() {
 
 export function startNotificationScheduler() {
   console.log("Starting notification scheduler...");
-  
+
   checkAndCreateReminders();
-  
+
   const intervalMs = 60 * 60 * 1000;
   setInterval(checkAndCreateReminders, intervalMs);
 }

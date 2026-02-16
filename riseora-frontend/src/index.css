@@ -34,48 +34,48 @@
     --color-chart-5: hsl(var(--chart-5));
 }
 
-/* Light Mode - RiseOra Brand Theme */
+/* Light Mode - RiseOra Navy & Gold Theme */
 :root {
-    /* Royal Blue Primary (from logo) */
-    --primary: 215 70% 25%;
-    --primary-foreground: 0 0% 100%;
+    /* Navy Dark (from prototype) */
+    --primary: 217 64% 11%;
+    --primary-foreground: 45 100% 95%;
 
-    /* Golden Orange Secondary (from logo) */
-    --secondary: 38 85% 55%;
-    --secondary-foreground: 215 70% 15%;
+    /* Premium Gold (from prototype) */
+    --secondary: 44 66% 51%;
+    --secondary-foreground: 217 64% 11%;
 
-    /* Warm Neutral Backgrounds */
-    --background: 45 40% 96%;
-    --foreground: 215 25% 10%;
+    /* Neutral Backgrounds */
+    --background: 217 64% 7%;
+    --foreground: 45 100% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 70% 15%;
+    --card: 217 64% 15%;
+    --card-foreground: 45 100% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 70% 15%;
+    --popover: 217 64% 20%;
+    --popover-foreground: 45 100% 95%;
 
     /* Muted/Accents */
-    --muted: 215 20% 95%;
-    --muted-foreground: 215 20% 45%;
+    --muted: 217 64% 25%;
+    --muted-foreground: 217 30% 70%;
 
-    --accent: 38 85% 95%;
-    --accent-foreground: 215 70% 25%;
+    --accent: 44 66% 70%;
+    --accent-foreground: 217 64% 11%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 215 20% 90%;
-    --input: 215 20% 90%;
-    --ring: 215 70% 25%;
+    --border: 217 64% 25%;
+    --input: 217 64% 25%;
+    --ring: 44 66% 51%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Charts */
-    --chart-1: 215 70% 25%;
-    --chart-2: 38 85% 55%;
-    --chart-3: 200 60% 45%;
-    --chart-4: 45 90% 60%;
-    --chart-5: 215 40% 40%;
+    --chart-1: 44 66% 51%;
+    --chart-2: 217 64% 30%;
+    --chart-3: 180 50% 50%;
+    --chart-4: 30 70% 50%;
+    --chart-5: 280 50% 50%;
 }
 
 .dark {
@@ -155,37 +155,37 @@
 
     /* Glassmorphism Effects */
     .glass {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        background: rgba(10, 25, 47, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
     }
 
     .glass-dark {
-        background: rgba(0, 0, 0, 0.2);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(2, 6, 23, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .glass-card {
-        background: rgba(255, 255, 255, 0.6);
+        background: rgba(17, 34, 64, 0.8);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(212, 175, 55, 0.1);
     }
 
     /* Gradient Text */
     .gradient-text {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #D4AF37 0%, #F1D27A 50%, #D4AF37 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
 
     .gradient-text-vibrant {
-        background: linear-gradient(135deg, #667eea 0%, #00d4ff 50%, #ff7eb3 100%);
+        background: linear-gradient(135deg, #FFD700 0%, #D4AF37 50%, #B8860B 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -194,18 +194,18 @@
     /* Gradient Backgrounds */
     .gradient-mesh {
         background:
-            radial-gradient(at 40% 20%, hsla(265, 70%, 65%, 0.3) 0px, transparent 50%),
-            radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 0.2) 0px, transparent 50%),
-            radial-gradient(at 0% 50%, hsla(340, 100%, 76%, 0.2) 0px, transparent 50%),
-            radial-gradient(at 80% 50%, hsla(200, 100%, 70%, 0.15) 0px, transparent 50%);
+            radial-gradient(at 40% 20%, hsla(44, 66%, 51%, 0.1) 0px, transparent 50%),
+            radial-gradient(at 80% 0%, hsla(217, 64%, 20%, 0.3) 0px, transparent 50%),
+            radial-gradient(at 0% 50%, hsla(44, 66%, 51%, 0.05) 0px, transparent 50%),
+            radial-gradient(at 80% 50%, hsla(217, 64%, 30%, 0.2) 0px, transparent 50%);
     }
 
-    .gradient-purple-cyan {
-        background: linear-gradient(135deg, #667eea 0%, #00d4ff 100%);
+    .gradient-gold {
+        background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #F1D27A 100%);
     }
 
-    .gradient-purple-pink {
-        background: linear-gradient(135deg, #764ba2 0%, #ff7eb3 100%);
+    .gradient-navy {
+        background: linear-gradient(135deg, #020617 0%, #0A192F 100%);
     }
 
     /* Glow Effects */
