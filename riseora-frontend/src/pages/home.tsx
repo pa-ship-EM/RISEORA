@@ -26,12 +26,12 @@ export default function Home() {
             <section className="relative pt-20 pb-32 md:pt-32 md:pb-48 overflow-hidden">
                 {/* Animated Gradient Mesh Background */}
                 <div className="absolute inset-0 z-0 gradient-mesh">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.3),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(255,122,127,0.2),transparent_50%)] animate-pulse-slow" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(212,175,55,0.05),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(10,25,47,0.4),transparent_50%)]" />
                 </div>
 
                 {/* Floating Glassmorphic Orbs */}
-                <div className="absolute top-20 right-10 w-72 h-72 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-full blur-3xl animate-float" />
-                <div className="absolute bottom-20 left-10 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-500/20 rounded-full blur-3xl animate-float-delayed" />
+                <div className="absolute top-20 right-10 w-72 h-72 bg-gradient-to-br from-[#D4AF37]/10 to-transparent rounded-full blur-3xl animate-float" />
+                <div className="absolute bottom-20 left-10 w-96 h-96 bg-gradient-to-br from-[#112240]/40 to-transparent rounded-full blur-3xl animate-float-delayed" />
 
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -78,7 +78,7 @@ export default function Home() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent" />
                             </div>
                             {/* Decorative elements */}
-                            <div className="absolute -top-6 -right-6 w-24 h-24 bg-secondary/20 rounded-full blur-xl animate-pulse" />
+                            <div className="absolute -top-6 -right-6 w-24 h-24 bg-secondary/10 rounded-full blur-xl animate-pulse" />
                             <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-primary/20 rounded-full blur-xl animate-pulse" />
                         </motion.div>
                     </div>
@@ -86,7 +86,7 @@ export default function Home() {
             </section>
 
             {/* Features Grid */}
-            <section className="py-24 bg-white">
+            <section className="py-24 bg-[#0A192F]">
                 <div className="container mx-auto px-4">
                     <div className="text-center max-w-2xl mx-auto mb-16">
                         <h2 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-4">Why Use The Dispute Wizard™?</h2>
