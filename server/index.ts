@@ -7,6 +7,9 @@ import connectPgSimple from "connect-pg-simple";
 import cors from "cors";
 import { startNotificationScheduler } from "./notification-scheduler";
 import { pool } from "./db";
+import { storage } from "./storage";
+import bcrypt from "bcryptjs";
+import { maskSensitiveData } from "./encryption";
 
 const app = express();
 const httpServer = createServer(app);
@@ -118,6 +121,7 @@ app.use(
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: isProduction ? "none" : "lax", // 'none' required for cross-origin in production
+      domain: isProduction ? ".riseora.org" : undefined, // Shared across subdomains in production
     },
   }),
 );
@@ -159,7 +163,9 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        // Sanitize response data before logging to prevent PII leaks
+        const maskedResponse = maskSensitiveData(capturedJsonResponse);
+        logLine += ` :: ${JSON.stringify(maskedResponse)}`;
       }
 
       log(logLine);
@@ -169,7 +175,33 @@ app.use((req, res, next) => {
   next();
 });
 
+async function bootstrapAdmin() {
+  try {
+    const userCount = await storage.countUsers();
+    if (userCount === 0) {
+      log("No users found in database. Bootstrapping default admin user...", "bootstrap");
+
+      const adminEmail = "admin@riseora.org";
+      const adminPassword = process.env.ADMIN_INITIAL_PASSWORD || "RiseOraAdmin2026!";
+      const passwordHash = await bcrypt.hash(adminPassword, 10);
+
+      await storage.createUser({
+        email: adminEmail,
+        passwordHash,
+        firstName: "System",
+        lastName: "Admin",
+        role: "ADMIN",
+      });
+
+      log(`Bootstrap admin created: ${adminEmail}`, "bootstrap");
+    }
+  } catch (error) {
+    console.error("Critical: Failed to bootstrap admin user:", error);
+  }
+}
+
 (async () => {
+  await bootstrapAdmin();
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

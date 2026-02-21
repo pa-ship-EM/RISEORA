@@ -52,7 +52,7 @@ declare module "express-session" {
 import { type Request, type Response, type NextFunction } from "express";
 
 // Authentication middleware
-async function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session?.userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -98,16 +98,21 @@ export async function registerRoutes(
   // POST /api/auth/signup
   app.post("/api/auth/signup", async (req, res, next) => {
     try {
-      const { email, password, firstName, lastName, betaAccessCode } = req.body;
+      const { password, firstName, lastName } = req.body;
+      const email = req.body.email?.toLowerCase().trim();
+      const betaAccessCode = req.body.betaAccessCode?.trim();
 
-      // Validate input
-      if (!email || !password || !firstName || !lastName || !betaAccessCode) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
+      // Validate input - individual field checks for better UX
+      if (!email) return res.status(400).json({ message: "Email is required" });
+      if (!password) return res.status(400).json({ message: "Password is required" });
+      if (!firstName) return res.status(400).json({ message: "First name is required" });
+      if (!lastName) return res.status(400).json({ message: "Last name is required" });
+      if (!betaAccessCode) return res.status(400).json({ message: "Beta access code is required" });
 
       // Beta Access Code Validation
       const VALID_BETA_CODE = process.env.BETA_ACCESS_CODE || "RISEORA2026";
       if (betaAccessCode !== VALID_BETA_CODE) {
+        log(`Invalid beta code attempt: ${betaAccessCode} for email: ${email}`, "auth");
         return res.status(403).json({ message: "Invalid Beta Access Code. This platform is currently invite-only." });
       }
 
@@ -148,7 +153,8 @@ export async function registerRoutes(
   // POST /api/auth/login
   app.post("/api/auth/login", async (req, res, next) => {
     try {
-      const { email, password } = req.body;
+      const { password } = req.body;
+      const email = req.body.email?.toLowerCase().trim();
 
       if (!email || !password) {
         return res.status(400).json({ message: "Missing email or password" });
@@ -721,6 +727,9 @@ export async function registerRoutes(
       let letterContent: string;
 
       if (currentStage === 'AI_ESCALATION') {
+        if (!openai) {
+          return res.status(503).json({ message: "AI services are currently unavailable. Please contact support or try again later." });
+        }
         // Use AI for escalation
         const systemPrompt = `You are a credit dispute expert. Generate an escalation letter for a consumer dispute based on the dispute history and current status. The letter should be professional, cite FCRA rights, and demand resolution. Do not guarantee outcomes.`;
 
@@ -1339,6 +1348,10 @@ Please provide educational guidance in this JSON format:
   "internalNotes": "Backend-only analysis for administrative purposes - include dispute context, escalation reasoning, case complexity notes. This is NOT shown to the customer."
 }`;
 
+      if (!openai) {
+        return res.status(503).json({ message: "AI guidance service is currently unavailable. Please try again later." });
+      }
+
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -1467,6 +1480,10 @@ Respond in JSON format with this structure:
   ],
   "summary": "Brief summary of what was found"
 }`;
+
+        if (!openai) {
+          return res.status(503).json({ message: "AI analysis service is currently unavailable. Please try again later." });
+        }
 
         const response = await openai.chat.completions.create({
           model: "gpt-4o",
@@ -1681,6 +1698,10 @@ Respond in JSON format with this structure:
   ],
   "summary": "Brief summary of what was found"
 }`;
+
+      if (!openai) {
+        return res.status(503).json({ message: "AI parsing service is currently unavailable. Please try again later." });
+      }
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",

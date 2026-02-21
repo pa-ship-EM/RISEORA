@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useAffiliates } from "@/hooks/use-affiliates";
+import { useLocation } from "wouter";
 
 const baseLearningModules = [
   { title: "Credit Fundamentals", lessons: 4, status: "Completed", progress: 100, tier: "Free", requiresCompliance: false },
@@ -17,6 +18,7 @@ export default function DashboardTools() {
   const { subscription } = useSubscription();
   const hasCompliancePlus = subscription?.tier === "COMPLIANCE_PLUS";
   const { affiliates, isLoading: affiliatesLoading } = useAffiliates("dashboard");
+  const [, setLocation] = useLocation();
 
   const learningModules = baseLearningModules.map(mod => {
     if (mod.requiresCompliance) {
@@ -69,7 +71,12 @@ export default function DashboardTools() {
                     <Progress value={mod.progress} className="h-1.5" />
                   </div>
                 )}
-                <Button className="w-full h-11 font-bold" variant={mod.status === 'Locked' ? 'outline' : 'default'} disabled={mod.status === 'Locked'}>
+                <Button
+                  className="w-full h-11 font-bold"
+                  variant={mod.status === 'Locked' ? 'outline' : 'default'}
+                  disabled={mod.status === 'Locked'}
+                  onClick={() => setLocation("/dashboard/education")}
+                >
                   {mod.status === 'Locked' ? 'Upgrade to Compliance+' : "Let's Learn"}
                 </Button>
               </CardContent>
@@ -87,40 +94,40 @@ export default function DashboardTools() {
           </p>
         </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-        {affiliatesLoading ? (
-          <div className="col-span-2 flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : affiliates.length === 0 ? (
-          <div className="col-span-2 text-center py-8 text-muted-foreground">
-            No affiliate resources available at this time.
-          </div>
-        ) : (
-          affiliates.map((res) => (
-            <div
-              key={res.id}
-              data-testid={`affiliate-card-${res.id}`}
-              className="group p-5 md:p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-secondary/50 transition-all cursor-pointer flex flex-col h-full"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-base md:text-lg font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">{res.name}</h3>
-                <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-secondary transition-colors shrink-0" />
-              </div>
-              <p className="text-slate-600 text-sm mb-4 leading-relaxed flex-grow">{res.description}</p>
-              <a
-                href={res.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid={`affiliate-link-${res.id}`}
-                className="text-sm font-bold text-primary underline underline-offset-4 decoration-secondary/30 hover:decoration-secondary transition-all mt-auto inline-flex items-center gap-1"
-              >
-                Learn More (Beta)
-              </a>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+          {affiliatesLoading ? (
+            <div className="col-span-2 flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ))
-        )}
-      </div>
+          ) : affiliates.length === 0 ? (
+            <div className="col-span-2 text-center py-8 text-muted-foreground">
+              No affiliate resources available at this time.
+            </div>
+          ) : (
+            affiliates.map((res) => (
+              <div
+                key={res.id}
+                data-testid={`affiliate-card-${res.id}`}
+                className="group p-5 md:p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-secondary/50 transition-all cursor-pointer flex flex-col h-full"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base md:text-lg font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">{res.name}</h3>
+                  <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-secondary transition-colors shrink-0" />
+                </div>
+                <p className="text-slate-600 text-sm mb-4 leading-relaxed flex-grow">{res.description}</p>
+                <a
+                  href={res.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`affiliate-link-${res.id}`}
+                  className="text-sm font-bold text-primary underline underline-offset-4 decoration-secondary/30 hover:decoration-secondary transition-all mt-auto inline-flex items-center gap-1"
+                >
+                  Learn More (Beta)
+                </a>
+              </div>
+            ))
+          )}
+        </div>
 
         <div className="flex gap-3 p-4 bg-white/50 rounded-xl border border-slate-200 text-slate-500 text-[10px] md:text-xs italic leading-relaxed">
           <Info className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />

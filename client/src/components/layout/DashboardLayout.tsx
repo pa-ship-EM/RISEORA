@@ -17,7 +17,8 @@ import {
   Upload,
   BarChart3,
   Cpu,
-  Mail
+  Mail,
+  GraduationCap
 } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
@@ -120,6 +121,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/dashboard/credit-reports", label: "Credit Reports", icon: Upload },
       { href: "/dashboard/disputes", label: "My Disputes", icon: FileText },
+      { href: "/dashboard/education", label: "Learning Center", icon: GraduationCap },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
       { href: "/dashboard/documents", label: "Documents", icon: FileText },
       { href: "/dashboard/activity", label: "Activity Log", icon: Activity },
@@ -139,7 +141,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       { href: "/admin/disputes", label: "Dispute Queue", icon: ShieldCheck },
       { href: "/admin/compliance", label: "Audit Logs", icon: FileText },
       { href: "/admin/affiliates", label: "Affiliates", icon: DollarSign },
-      { href: "/admin/iot", label: "IoT Devices", icon: Cpu },
       { href: "/contact", label: "Contact Support", icon: Mail },
     ]
   };
@@ -227,8 +228,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
                     <div className={`flex items-center gap-4 px-4 py-4 rounded-xl text-base font-medium transition-colors active:scale-[0.98] ${isActive
-                        ? "bg-primary text-white shadow-md"
-                        : "bg-slate-50 text-slate-900 active:bg-slate-100"
+                      ? "bg-primary text-white shadow-md"
+                      : "bg-slate-50 text-slate-900 active:bg-slate-100"
                       }`}>
                       <Icon className={`h-5 w-5 ${isActive ? "text-white" : "text-primary"}`} />
                       {item.label}

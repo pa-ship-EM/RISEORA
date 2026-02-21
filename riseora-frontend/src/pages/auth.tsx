@@ -105,6 +105,7 @@ export default function AuthPage() {
                 description: "Welcome to RiseOra. Let's get started!",
             });
         } catch (error: any) {
+            console.error("SIGNUP_ERROR:", error);
             toast({
                 variant: "destructive",
                 title: "Signup failed",

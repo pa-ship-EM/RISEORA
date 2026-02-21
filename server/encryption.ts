@@ -137,8 +137,17 @@ export function maskSensitiveData(data: any): any {
   if (typeof data === "object") {
     const masked: any = {};
     for (const key in data) {
-      // Completely strip encrypted blobs from responses
-      if (key.endsWith("Encrypted")) {
+      // Completely strip encrypted blobs and high-risk PII from responses
+      if (
+        key.endsWith("Encrypted") ||
+        key === "ssnLast4" ||
+        key === "birthYear" ||
+        key === "address" ||
+        key === "city" ||
+        key === "state" ||
+        key === "zip" ||
+        key === "phoneNumber"
+      ) {
         continue;
       }
 

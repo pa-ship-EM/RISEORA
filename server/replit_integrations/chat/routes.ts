@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import OpenAI from "openai";
 import { chatStorage } from "./storage";
+import { requireAuth } from "../../routes";
 
 const openai = process.env.AI_INTEGRATIONS_OPENAI_API_KEY
   ? new OpenAI({
@@ -11,9 +12,9 @@ const openai = process.env.AI_INTEGRATIONS_OPENAI_API_KEY
 
 export function registerChatRoutes(app: Express): void {
   // Get all conversations
-  app.get("/api/conversations", async (req: Request, res: Response) => {
+  app.get("/api/conversations", requireAuth, async (req: Request, res: Response) => {
     try {
-      const conversations = await chatStorage.getAllConversations();
+      const conversations = await chatStorage.getAllConversations(req.session.userId!);
       res.json(conversations);
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -22,14 +23,14 @@ export function registerChatRoutes(app: Express): void {
   });
 
   // Get single conversation with messages
-  app.get("/api/conversations/:id", async (req: Request, res: Response) => {
+  app.get("/api/conversations/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id as string);
-      const conversation = await chatStorage.getConversation(id);
+      const conversation = await chatStorage.getConversation(id, req.session.userId!);
       if (!conversation) {
         return res.status(404).json({ error: "Conversation not found" });
       }
-      const messages = await chatStorage.getMessagesByConversation(id);
+      const messages = await chatStorage.getMessagesByConversation(id, req.session.userId!);
       res.json({ ...conversation, messages });
     } catch (error) {
       console.error("Error fetching conversation:", error);
@@ -38,10 +39,10 @@ export function registerChatRoutes(app: Express): void {
   });
 
   // Create new conversation
-  app.post("/api/conversations", async (req: Request, res: Response) => {
+  app.post("/api/conversations", requireAuth, async (req: Request, res: Response) => {
     try {
       const { title } = req.body;
-      const conversation = await chatStorage.createConversation(title || "New Chat");
+      const conversation = await chatStorage.createConversation(title || "New Chat", req.session.userId!);
       res.status(201).json(conversation);
     } catch (error) {
       console.error("Error creating conversation:", error);
@@ -50,10 +51,10 @@ export function registerChatRoutes(app: Express): void {
   });
 
   // Delete conversation
-  app.delete("/api/conversations/:id", async (req: Request, res: Response) => {
+  app.delete("/api/conversations/:id", requireAuth, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id as string);
-      await chatStorage.deleteConversation(id);
+      await chatStorage.deleteConversation(id, req.session.userId!);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting conversation:", error);
@@ -62,16 +63,22 @@ export function registerChatRoutes(app: Express): void {
   });
 
   // Send message and get AI response (streaming)
-  app.post("/api/conversations/:id/messages", async (req: Request, res: Response) => {
+  app.post("/api/conversations/:id/messages", requireAuth, async (req: Request, res: Response) => {
     try {
       const conversationId = parseInt(req.params.id as string);
       const { content } = req.body;
+
+      // Verify conversation belongs to user
+      const conversation = await chatStorage.getConversation(conversationId, req.session.userId!);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
 
       // Save user message
       await chatStorage.createMessage(conversationId, "user", content);
 
       // Get conversation history for context
-      const messages = await chatStorage.getMessagesByConversation(conversationId);
+      const messages = await chatStorage.getMessagesByConversation(conversationId, req.session.userId!);
       const chatMessages = messages.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,

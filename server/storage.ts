@@ -23,6 +23,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  countUsers(): Promise<number>;
   updateUserProfile(id: string, data: Partial<User>): Promise<User | undefined>;
 
   // Subscription methods
@@ -133,6 +134,13 @@ export class DatabaseStorage implements IStorage {
         .values(insertUser)
         .returning();
       return user;
+    });
+  }
+
+  async countUsers(): Promise<number> {
+    return withRetry(async () => {
+      const result = await db.select().from(users);
+      return result.length;
     });
   }
 

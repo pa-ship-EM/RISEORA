@@ -1,13 +1,18 @@
 import type { Express, Request, Response } from "express";
 import { openai } from "./client";
+import { requireAuth } from "../../routes";
 
 export function registerImageRoutes(app: Express): void {
-  app.post("/api/generate-image", async (req: Request, res: Response) => {
+  app.post("/api/generate-image", requireAuth, async (req: Request, res: Response) => {
     try {
       const { prompt, size = "1024x1024" } = req.body;
 
       if (!prompt) {
         return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      if (!openai) {
+        return res.status(503).json({ error: "AI Image processing service is currently unavailable. Please try again later." });
       }
 
       const response = await openai.images.generate({

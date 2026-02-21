@@ -33,10 +33,10 @@ import AdminAffiliatesPage from "@/pages/admin/affiliates";
 import AdminDisputesPage from "@/pages/admin/disputes";
 import AdminCompliancePage from "@/pages/admin/compliance";
 import AdminSettingsPage from "@/pages/admin/settings";
-import AdminIotPage from "@/pages/admin/iot";
 import ActivityPage from "@/pages/dashboard/activity";
 import CreditReportsPage from "@/pages/dashboard/credit-reports";
 import AnalyticsPage from "@/pages/dashboard/analytics";
+import EducationPage from "@/pages/dashboard/education";
 
 function Router() {
   return (
@@ -100,6 +100,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
+      <Route path="/dashboard/education">
+        <ProtectedRoute allowedRoles={['CLIENT']}>
+          <EducationPage />
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/affiliate">
         <ProtectedRoute allowedRoles={['AFFILIATE']}>
           <AffiliateDashboard />
@@ -139,12 +145,6 @@ function Router() {
       <Route path="/admin/settings">
         <ProtectedRoute allowedRoles={['ADMIN']}>
           <AdminSettingsPage />
-        </ProtectedRoute>
-      </Route>
-
-      <Route path="/admin/iot">
-        <ProtectedRoute allowedRoles={['ADMIN']}>
-          <AdminIotPage />
         </ProtectedRoute>
       </Route>
 
